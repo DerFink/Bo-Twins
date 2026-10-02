@@ -3,7 +3,7 @@
    - Bibliotheken (Leaflet, Chart.js, Tailwind, Schriften): einmal laden, dann aus dem Zwischenspeicher
    - Kartenkacheln: nur was angezeigt wurde, wird gespeichert und beim nächsten Mal nicht erneut geladen
    - Routing-Abfragen gehen immer direkt ins Netz */
-const VER = 'v2';
+const VER = 'v3';   // v3: alte Kacheln (CARTO-Platzhalter) werden verworfen
 const SHELL = 'bt-shell-' + VER;
 const LIBS = 'bt-libs-' + VER;
 const TILES = 'bt-tiles-' + VER;
@@ -17,7 +17,7 @@ const LIB_URLS = [
   'https://cdn.tailwindcss.com/',
   'https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap'
 ];
-const TILE_HOST = /(^|\.)(basemaps\.cartocdn\.com|tile\.openstreetmap\.org)$/;
+const TILE_HOST = /(^|\.)(tile\.openstreetmap\.org)$/;
 const LIB_HOST = /(^|\.)(cdnjs\.cloudflare\.com|cdn\.tailwindcss\.com|fonts\.googleapis\.com|fonts\.gstatic\.com|cdn\.jsdelivr\.net)$/;
 
 self.addEventListener('install', e => {
@@ -70,7 +70,7 @@ async function lib(req) {
   return res;
 }
 
-const keyOf = u => u.replace(/^https:\/\/[a-d]\.basemaps/, 'https://a.basemaps');   // Subdomains zusammenfassen
+const keyOf = u => u;
 let puts = 0;
 function note(m) {
   self.clients.matchAll().then(cs => cs.forEach(c => c.postMessage(Object.assign({type: 'tile'}, m))));

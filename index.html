@@ -94,6 +94,7 @@ main{position:relative;flex:1;min-height:0}
 .tg-i svg{display:block}
 .tg.alarm .tg-i::after{content:"";position:absolute;left:-12px;top:-9px;width:52px;height:52px;border-radius:50%;border:2px solid var(--alarm);animation:ring 1.2s ease-out infinite}
 .rl{font-size:11px;color:#bfe9ff;text-shadow:0 0 3px #000,0 0 3px #000;white-space:nowrap;transform:translate(6px,-4px);font-family:var(--ui)}
+.leaflet-tile.tiles-dark{filter:invert(1) hue-rotate(180deg) saturate(.55) brightness(.93) contrast(.95)}
 .leaflet-container{background:#0b1220;background-image:linear-gradient(#15233b 1px,transparent 1px),linear-gradient(90deg,#15233b 1px,transparent 1px);background-size:48px 48px;font-family:var(--ui)}
 .leaflet-control-attribution{background:rgba(10,16,25,.7)!important;color:#8fa2bf!important;font-size:10px}
 .leaflet-control-attribution a{color:#b7c8e2!important}
@@ -400,7 +401,6 @@ main{position:relative;flex:1;min-height:0}
     <div class="r"><span>Tempo</span><div class="seg" data-key="speed"><button data-v="1">1×</button><button data-v="5">5×</button><button data-v="10" class="on">10×</button><button data-v="30">30×</button></div></div>
     <div class="r"><span>Pilot Orbit</span><div class="seg" data-key="mode"><button data-v="auto" class="on">Auto</button><button data-v="climb">Steigen</button><button data-v="hold">Halten</button><button data-v="sink">Sinken</button></div></div>
     <div class="r"><span>Karte</span><div class="seg" data-key="map"><button data-v="dark" class="on">Dunkel</button><button data-v="light">Hell (Sonne)</button></div></div>
-    <div class="r"><span>Kartenschärfe</span><div class="seg" data-key="sharp"><button data-v="0" class="on">Daten sparen</button><button data-v="1">Scharf</button></div></div>
     <div class="r"><span>Ansicht</span><div class="seg" data-key="frame"><button data-v="auto" class="on">Voll</button><button data-v="portrait">Hoch</button><button data-v="land">Quer</button></div></div>
     <div style="margin:2px 0 12px;padding:9px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--line)">
       <div class="lbl">Datenverbrauch seit App-Start</div>
@@ -451,7 +451,7 @@ const S = {
   t:0, pkts:0,
   orbit:{e:0,n:0,alt:81,vario:0,ve:0,vn:0},
   base:{e:-25,n:-15,hdg:60,spd:0},
-  track:[], btrack:[], hist:[], targets:[], thr:[], met:[], forceFit:true, sharp:'0',
+  track:[], btrack:[], hist:[], targets:[], thr:[], met:[], forceFit:true,
   o2:{active:false,e:70,n:15,alt:0,vario:0,ve:0,vn:0,track:[]},
   fc:{on:false,e:35,n:-30,hdg:0,spd:0},
   link:{rssi:-80,snr:8,batt:3.95}
@@ -731,8 +731,10 @@ seedMet();
 mkTargets();
 
 /* ---------------- Karten ---------------- */
-const tileDark  = () => L.tileLayer(`https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}${S.sharp==='1'?'{r}':''}.png`,{subdomains:'abcd',maxZoom:19,attribution:'© OpenStreetMap, © CARTO'});
-const tileLight = () => L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'});
+const OSM_URL  = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const OSM_ATTR = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende';
+const tileDark  = () => L.tileLayer(OSM_URL,{maxZoom:19,className:'tiles-dark',attribution:OSM_ATTR});   // gleiche Kacheln, per CSS dunkel eingefärbt
+const tileLight = () => L.tileLayer(OSM_URL,{maxZoom:19,attribution:OSM_ATTR});
 let tileErr=0, tileOk=0, tileFell=false;
 function syncMapSeg(){ document.querySelectorAll('#sim [data-key="map"] button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.map)); }
 function checkTiles(){
@@ -1110,7 +1112,7 @@ function bindSeg(el,onPick){ el.querySelectorAll('button').forEach(b=>b.addEvent
 document.querySelectorAll('#sim .seg').forEach(el=>bindSeg(el,v=>{
   const k=el.dataset.key;
   if(k==='speed') S.speed=+v; else S[k]=v;
-  if(k==='map'||k==='sharp') applyTiles();
+  if(k==='map') applyTiles();
   if(k==='frame'){ document.body.className='frame-'+v; setTimeout(()=>{ map1.invalidateSize(); map3.invalidateSize(); setRange(S.range); render(); },60); }
 }));
 $('btn-sim').addEventListener('click',()=>$('sim').classList.toggle('open'));
@@ -1127,7 +1129,7 @@ $('btn-clear').addEventListener('click',async()=>{
 });
 $('btn-o2').addEventListener('click',()=>{ if(!S.o2.active) activateO2(); $('sim').classList.remove('open'); });
 function updData(){
-  $('tile-diag').textContent=`Kartenkacheln: ${tileOk} geladen, ${tileErr} Fehler. Quelle: ${S.map==='dark'?'CARTO dunkel':'OpenStreetMap hell'}.`;
+  $('tile-diag').textContent=`Kartenkacheln: ${tileOk} geladen, ${tileErr} Fehler. Quelle: OpenStreetMap${S.map==='dark'?', dunkel eingefärbt':''}.`;
   const mb=v=>(v/1048576).toFixed(1).replace('.',',')+' MB', all=DATA.tileHit+DATA.tileNet;
   if(!DATA.sw){ $('data-line').textContent='–'; $('data-sub').textContent='Der Zähler läuft ab dem zweiten Start der installierten App.'; return; }
   $('data-line').textContent=mb(DATA.tileBytes+DATA.routeBytes);
