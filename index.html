@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a1019">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>The Bo Twins – Companion-App (Prototyp)</title>
+
+<!-- Leaflet (Karte) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<!-- Chart.js (Meteo-Profil) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<!-- Tailwind (Layout-Utilities) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Schriften: Barlow für die Oberfläche, Barlow Condensed für Instrumentenzahlen -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#0a1019; --pan:#111b2b; --pan2:#17253b; --line:#27385200;
+  --line:#28395a; --tx:#eef3fa; --mut:#9aabc4;
+  --orb:#ff9f1c;   /* Orbit: Brennerflamme */
+  --base:#4cc9ff;  /* Base: Himmel */
+  --fr:#ff7ad9;    /* Freunde: Orbit 2 und Chaser 2 */
+  --up:#5fe3a1; --dn:#ff6e5f; --warn:#ffe14d; --alarm:#ff4a4a;
+  --ui:'Barlow','Segoe UI',system-ui,sans-serif;
+  --num:'Barlow Condensed','Arial Narrow','Segoe UI',system-ui,sans-serif;
+}
+html,body{height:100%;margin:0;background:#04070c;color:var(--tx);font-family:var(--ui);-webkit-tap-highlight-color:transparent}
+body{display:flex;align-items:center;justify-content:center}
+button{font-family:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--base);outline-offset:2px}
+
+#app{position:relative;width:100%;height:100dvh;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;container-type:size}
+body.frame-portrait #app{width:min(430px,100vw);height:min(100dvh,900px);border-radius:30px;border:1px solid var(--line)}
+body.frame-land #app{width:min(980px,100vw);height:min(100dvh,470px);border-radius:24px;border:1px solid var(--line)}
+
+.num{font-family:var(--num);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.lbl{font-size:12px;color:var(--mut);line-height:1.1}
+
+/* Kopfzeile */
+.hdr{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:max(8px,env(safe-area-inset-top)) 12px 8px;border-bottom:1px solid var(--line);background:var(--bg)}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--num);font-weight:700;font-size:21px;letter-spacing:.02em}
+.chip{display:flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid var(--line);border-radius:999px;font-size:13px;background:var(--pan);white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--up);box-shadow:0 0 0 3px rgba(95,227,161,.18)}
+.iconbtn{width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--pan);display:grid;place-items:center}
+.bars{display:flex;gap:2px;align-items:flex-end;height:16px}
+.bars i{width:5px;background:#2c3f60;border-radius:1px;display:block}
+.bars i:nth-child(1){height:5px}.bars i:nth-child(2){height:8px}.bars i:nth-child(3){height:12px}.bars i:nth-child(4){height:16px}
+.bars i.on{background:var(--up)}
+
+main{position:relative;flex:1;min-height:0}
+.screen{position:absolute;inset:0;display:none}
+.screen.active{display:block}
+.map{position:absolute;inset:0;z-index:0}
+.ov{position:absolute;z-index:10}
+
+/* Navigation */
+.nav{flex:none;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);background:var(--bg);padding-bottom:env(safe-area-inset-bottom)}
+.nav button{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px 8px;background:none;border:0;color:var(--mut);font-size:13px;font-weight:500}
+.nav button svg{width:24px;height:24px}
+.nav button.active{color:var(--tx)}
+.nav button.active::before{content:"";position:absolute;top:-1px;left:22%;right:22%;height:3px;border-radius:0 0 3px 3px;background:var(--orb)}
+.nav .badge{position:absolute;top:6px;left:calc(50% + 10px);width:11px;height:11px;border-radius:50%;background:var(--alarm);border:2px solid var(--bg);display:none}
+.nav .badge.on{display:block;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.25}}
+
+/* Karten über der Karte */
+.card{background:rgba(10,16,25,.9);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(6px)}
+.pbtn{min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:rgba(10,16,25,.92);font-weight:500;font-size:15px}
+.pbtn.on{background:var(--orb);color:#1a1000;border-color:var(--orb);font-weight:600}
+.kv{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.kv b{font-family:var(--num);font-weight:600;font-size:21px;font-variant-numeric:tabular-nums}
+.kv span{font-size:13px;color:var(--mut)}
+
+/* Marker */
+.mk{background:none;border:0}
+.car{width:40px;height:40px;transition:transform .2s linear}
+.pulse{position:relative;width:44px;height:54px}
+.pulse::before{content:"";position:absolute;left:2px;top:10px;width:40px;height:40px;border-radius:50%;border:2px solid var(--pc,var(--orb));animation:ring 2.2s ease-out infinite}
+@keyframes ring{0%{transform:scale(.6);opacity:.9}100%{transform:scale(1.9);opacity:0}}
+.ptip{background:rgba(10,16,25,.88);color:#ffc277;border:0;box-shadow:none;font-size:12px;padding:1px 6px;font-family:var(--ui)}
+.ptip::before{display:none}
+.stip{color:#eef3fa}
+.tg{width:76px;text-align:center;font-family:var(--num);font-weight:600;font-size:13px;line-height:1.05;text-shadow:0 0 3px #000,0 0 4px #000}
+.tg-i{position:relative;width:28px;height:30px;margin:0 auto}
+.tg-i svg{display:block}
+.tg.alarm .tg-i::after{content:"";position:absolute;left:-12px;top:-9px;width:52px;height:52px;border-radius:50%;border:2px solid var(--alarm);animation:ring 1.2s ease-out infinite}
+.rl{font-size:11px;color:#bfe9ff;text-shadow:0 0 3px #000,0 0 3px #000;white-space:nowrap;transform:translate(6px,-4px);font-family:var(--ui)}
+.leaflet-container{background:#0b1220;background-image:linear-gradient(#15233b 1px,transparent 1px),linear-gradient(90deg,#15233b 1px,transparent 1px);background-size:48px 48px;font-family:var(--ui)}
+.leaflet-control-attribution{background:rgba(10,16,25,.7)!important;color:#8fa2bf!important;font-size:10px}
+.leaflet-control-attribution a{color:#b7c8e2!important}
+.leaflet-bar a{background:rgba(10,16,25,.92);color:var(--tx);border-color:var(--line)}
+.leaflet-bar a:hover{background:var(--pan2);color:var(--tx)}
+
+/* Ballon-Modus */
+.vbar{position:relative;width:82px;flex:none;border:1px solid var(--line);border-radius:16px;background:var(--pan);overflow:hidden}
+.vbar .zero{position:absolute;left:0;right:0;top:50%;height:2px;background:var(--tx);opacity:.8;z-index:2}
+.vbar .tick{position:absolute;left:8px;font-size:12px;color:var(--mut);transform:translateY(-50%);font-family:var(--num);z-index:2}
+.vbar .tl{position:absolute;left:0;width:6px;height:1px;background:var(--line)}
+.vbar .fill{position:absolute;left:38px;right:8px;border-radius:5px;transition:height .25s linear}
+.vnum{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
+.vnum .big{font-family:var(--num);font-weight:700;line-height:.85;font-variant-numeric:tabular-nums;font-size:clamp(4.2rem,min(27cqw,19cqh),11rem)}
+.vnum .unit{font-size:20px;color:var(--mut);margin-top:6px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{background:none;border:0;padding:7px 11px;font-size:13px;color:var(--mut);min-height:34px}
+.seg button.on{background:var(--pan2);color:var(--tx);font-weight:600}
+#b-alert{display:none;margin:0 0 -2px;padding:9px 12px;border-radius:12px;background:var(--alarm);color:#1c0000;font-weight:600;font-size:16px}
+#b-alert.on{display:block;animation:blink 1s steps(2) infinite}
+
+/* Flug und Profil */
+.fl{position:absolute;inset:0;display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px;padding:8px 12px 12px}
+.fl-inst{display:flex;gap:12px;min-height:0;height:clamp(180px,32cqh,320px)}
+.fl-v{display:flex;gap:10px;flex:1.3;min-width:0}
+.fl .vbar{width:62px}
+.fl .vnum .big{font-size:clamp(3.6rem,min(19cqw,13cqh),8rem)}
+.fl-a{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:3px}
+.fl-a .big{font-family:var(--num);font-weight:700;font-variant-numeric:tabular-nums;font-size:clamp(2.6rem,min(12cqw,9cqh),4.6rem);line-height:1}
+.fl-a small{font-size:16px;color:var(--mut)}
+.rd{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:12px;color:var(--mut)}
+.rd b{font-family:var(--num);font-size:18px;font-weight:600;color:var(--tx);font-variant-numeric:tabular-nums}
+.fl-chart{min-height:0;display:flex;flex-direction:column;padding:8px}
+.fl-cv{position:relative;flex:1;min-height:180px}
+#s-flight #b-alert{position:absolute;left:12px;right:12px;top:8px;z-index:30;margin:0}
+.sm{min-height:34px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--pan2);font-size:13px;font-weight:600}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:40;max-height:80%;overflow:auto;background:#0d1626;border-top:1px solid var(--line);border-radius:20px 20px 0 0;box-shadow:0 -18px 40px rgba(0,0,0,.5);padding:12px 12px 20px;transform:translateY(105%);visibility:hidden;transition:transform .25s ease,visibility 0s .25s}
+.sheet.open{transform:none;visibility:visible;transition:transform .25s ease}
+
+/* Orbit-Fokus */
+.orb{position:absolute;inset:0;display:grid;grid-template-rows:minmax(0,60%) minmax(0,1fr)}
+.orb-map{position:relative;min-height:0;overflow:hidden}
+.orb-list{min-height:0;overflow:auto;border-top:1px solid var(--line);background:var(--bg);padding:8px 10px 10px}
+.lrow{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,.9fr) minmax(0,.8fr);align-items:center;gap:8px;padding:8px 6px;border-bottom:1px solid #1b2a43;border-left:4px solid transparent}
+.lrow.lv1{border-left-color:var(--warn);background:rgba(255,225,77,.07)}
+.lrow.lv2{border-left-color:var(--alarm);background:rgba(255,74,74,.12)}
+.lrow b{font-weight:600;font-size:16px}
+.lrow small{display:block;font-size:12px;color:var(--mut)}
+.lrow .num{font-size:20px;font-weight:600}
+.pos{color:#9fd0ff}.neg{color:#ffc277}
+#o-status{border-radius:12px;padding:9px 12px;font-weight:600;font-size:15px;border:1px solid var(--line);background:rgba(10,16,25,.92)}
+#o-status.lv1{background:var(--warn);color:#241c00;border-color:var(--warn)}
+#o-status.lv2{background:var(--alarm);color:#1c0000;border-color:var(--alarm);animation:blink 1s steps(2) infinite}
+
+@container (orientation:landscape){
+  .fl{grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr);grid-template-rows:minmax(0,1fr)}
+  .fl-inst{flex-direction:column;height:auto}
+  .fl .vnum .big{font-size:clamp(3rem,min(10cqw,26cqh),7rem)}
+  .orb{grid-template-rows:1fr;grid-template-columns:minmax(0,58%) minmax(0,1fr)}
+  .orb-list{border-top:0;border-left:1px solid var(--line)}
+}
+}
+
+
+/* Profil-Bausteine */
+.card2{border:1px solid var(--line);border-radius:16px;background:var(--pan);padding:10px}
+.leg{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font-size:12px;color:var(--mut)}
+.leg span{display:inline-flex;align-items:center;gap:5px}
+.leg i{display:inline-block;width:12px;height:12px;border-radius:3px}
+.lyr{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid #1b2a43}
+.lyr i{width:10px;height:28px;border-radius:3px;display:block}
+.lyr b{font-size:15px;font-weight:600}
+.lyr small{display:block;font-size:12px;color:var(--mut)}
+.lyr .num{font-size:19px;font-weight:600}
+.rw{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0;font-size:14px}
+.wc{width:100%;height:120px;display:block;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.wn{font-size:12px;color:var(--mut);margin-top:3px;line-height:1.25}
+#met-off{width:100%;accent-color:var(--orb)}
+/* Schalter, Hinweis */
+.sw{display:flex;align-items:center;gap:8px;padding:7px 10px;font-size:13px;font-weight:500;text-align:left;line-height:1.15;min-height:44px}
+.sw .tr{position:relative;width:34px;height:20px;border-radius:12px;background:#2c3f60;flex:none;transition:background .2s}
+.sw .tr::after{content:"";position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#eef3fa;transition:transform .2s}
+.sw[aria-checked="true"] .tr{background:var(--fr)}
+.sw[aria-checked="true"] .tr::after{transform:translateX(14px)}
+.ptip.friend{color:#ffb3ea}
+#toast{position:absolute;left:50%;top:64px;transform:translate(-50%,-12px);z-index:2600;padding:9px 14px;border-radius:12px;background:#10243d;border:1px solid var(--line);font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;max-width:calc(100% - 24px);text-align:center}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* Simulations-Panel */
+.simpanel{display:none;position:absolute;z-index:3000;top:56px;right:8px;width:min(340px,calc(100% - 16px));padding:12px;border-radius:16px;background:#0d1626;border:1px solid var(--line);box-shadow:0 18px 40px rgba(0,0,0,.55)}
+.simpanel.open{display:block}
+.simpanel .r{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;font-size:14px}
+.simpanel .act{min-height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--pan2);font-size:14px;font-weight:500}
+@media (prefers-reduced-motion:reduce){.sheet,#toast{transition:none}.pulse::before,.tg.alarm .tg-i::after,.nav .badge.on,#b-alert.on,#o-status.lv2{animation:none}}
+</style>
+</head>
+
+<body class="frame-auto">
+<div id="app">
+
+  <!-- Kopfzeile -->
+  <header class="hdr">
+    <div class="brand">
+      <svg width="30" height="22" viewBox="0 0 30 22" aria-hidden="true"><circle cx="8" cy="11" r="6" fill="none" stroke="#4cc9ff" stroke-width="2.5"/><circle cx="22" cy="11" r="6" fill="#ff9f1c"/><path d="M13 11h4" stroke="#9aabc4" stroke-width="2" stroke-dasharray="1.5 2"/></svg>
+      Bo Twins
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="chip" title="Smartphone-Verbindung zur Base (BLE-GATT)"><i class="dot"></i><span>Base verbunden</span></div>
+      <div class="chip" title="LoRa-Link Orbit zu Base"><span class="bars" id="hbars"><i></i><i></i><i></i><i></i></span><span id="h-rssi" class="num" style="font-size:16px;font-weight:600">–</span></div>
+      <button id="btn-sim" class="iconbtn" aria-label="Simulation einstellen">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- 1. Chaser -->
+    <section id="s-chaser" class="screen active">
+      <div id="map1" class="map"></div>
+
+      <div class="ov flex flex-col gap-2" style="left:8px;top:8px;width:min(210px,52%)">
+        <div class="card p-2.5">
+          <div class="flex items-center gap-2 mb-1.5"><span style="width:10px;height:10px;border-radius:50%;background:var(--orb)"></span><span style="font-weight:600">Orbit</span></div>
+          <div class="kv"><span>Höhe NN</span><b id="c-alt">–</b></div>
+          <div class="kv"><span>Vario</span><b id="c-var">–</b></div>
+          <div class="kv"><span>Tempo</span><b id="c-gs">–</b></div>
+          <div class="kv"><span>Kurs</span><b id="c-hdg">–</b></div>
+        <div class="kv" id="c-o2row" style="display:none"><span style="color:var(--fr)">Orbit 2</span><b id="c-o2">–</b></div>
+        </div>
+        <div class="card p-2.5">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="lbl">Abstand Base zu Orbit</div>
+              <div class="num" id="c-dist" style="font-size:34px;font-weight:700;line-height:1.05">–</div>
+              <div class="lbl mt-1">Peilung <span id="c-brg" class="num" style="font-size:15px;color:var(--tx)">–</span></div>
+            </div>
+            <svg id="c-arrow" width="46" height="46" viewBox="0 0 46 46" style="transition:transform .3s"><circle cx="23" cy="23" r="21" fill="none" stroke="#28395a" stroke-width="2"/><path d="M23 6l8 20-8-4-8 4z" fill="#ff9f1c"/></svg>
+          </div>
+          <div class="kv mt-1.5"><span>Orbit über Base</span><b id="c-dh">–</b></div>
+          <div class="mt-2 flex flex-col gap-1" style="font-size:12px;color:var(--mut)">
+            <div class="flex items-center gap-2"><svg width="30" height="6"><line x1="0" y1="3" x2="30" y2="3" stroke="#ff9f1c" stroke-width="4"/></svg>Bisheriger Track</div>
+            <div class="flex items-center gap-2"><svg width="30" height="6"><line x1="0" y1="3" x2="30" y2="3" stroke="#ffc277" stroke-width="3" stroke-dasharray="6 5"/></svg>Prognose bei gleichem Kurs</div>
+            <div class="flex items-center gap-2"><svg width="30" height="6"><line x1="0" y1="3" x2="30" y2="3" stroke="#4cc9ff" stroke-width="3" stroke-dasharray="2 6" stroke-linecap="round"/></svg><span id="c-route">Route der Base</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ov flex flex-col gap-2 items-end" style="right:8px;top:8px;width:min(190px,44%)">
+      <div class="card p-2 w-full">
+        <div class="lbl mb-1">LoRa-Link</div>
+        <div class="flex items-end gap-2"><span class="bars" id="cbars"><i></i><i></i><i></i><i></i></span><span class="num" id="c-rssi" style="font-size:20px;font-weight:600">–</span></div>
+        <div class="num" id="c-snr" style="font-size:15px;color:var(--mut)">–</div>
+        <div class="num" id="c-pk" style="font-size:15px;color:var(--mut)">–</div>
+        <div class="num" id="c-bat" style="font-size:15px;color:var(--mut)">–</div>
+      </div>
+      <button id="fc-toggle" class="card sw w-full" role="switch" aria-checked="false"><span class="tr"></span><span>Freunde-Chaser einblenden</span></button>
+      </div>
+
+      <div class="ov flex justify-center gap-2" style="left:0;right:0;bottom:30px;padding:0 8px" id="followbar">
+        <button class="pbtn" data-f="orbit">Orbit folgen</button>
+        <button class="pbtn on" data-f="both">Beide zeigen</button>
+        <button class="pbtn" data-f="base">Base folgen</button>
+      </div>
+    </section>
+
+    <!-- 2. Flug und Profil -->
+    <section id="s-flight" class="screen">
+      <div class="fl">
+        <div class="fl-inst">
+          <div class="fl-v">
+            <div class="vbar" id="vbar"><div class="zero"></div><div class="fill" id="vfill"></div></div>
+            <div class="vnum">
+              <div class="lbl" style="font-size:15px">Vario</div>
+              <div class="big" id="b-var">+0.0</div>
+              <div class="unit">m/s <span id="b-avg" class="num" style="margin-left:6px">Ø 30 s +0.0</span></div>
+            </div>
+          </div>
+          <div class="fl-a">
+            <div class="lbl">Höhe NN</div>
+            <div><span class="big" id="b-alt">–</span> <small>m</small></div>
+            <div class="rd"><span>über Grund</span><b id="b-agl">–</b></div>
+            <div class="rd"><span>Temperatur</span><b id="fl-T">–</b></div>
+            <div class="rd"><span>γ in K/100 m</span><b id="fl-g">–</b></div>
+            <div class="rd"><span>Mischungsschicht</span><b id="fl-mix">–</b></div>
+            <div class="rd" id="fl-o2row" style="display:none"><span style="color:var(--fr)">Orbit 2</span><b id="fl-o2">–</b></div>
+          </div>
+        </div>
+        <div class="fl-chart card2">
+          <div class="flex items-center justify-between gap-2 flex-wrap mb-2">
+            <div class="seg" id="seg-mx"><button data-v="T" class="on">Temperatur</button><button data-v="G">Gradient</button></div>
+            <div class="seg" id="seg-my"><button data-v="nn" class="on">NN</button><button data-v="agl">Über Grund</button></div>
+            <div class="seg" id="seg-mw"><button data-v="1" class="on">Gewichtet</button><button data-v="0">Roh</button></div>
+            <button class="sm" id="btn-sheet">Details</button>
+          </div>
+          <div class="fl-cv">
+            <canvas id="met-canvas"></canvas>
+            <div id="met-nolib" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--mut)">Chart.js konnte nicht geladen werden. Für das Profil ist eine Internetverbindung nötig.</div>
+          </div>
+          <div class="leg" id="met-leg"></div>
+        </div>
+      </div>
+      <div id="b-alert" role="alert"></div>
+
+      <div class="sheet" id="sheet" role="dialog" aria-label="Schichtung und Gewichtung">
+        <div class="flex items-center justify-between mb-2"><b style="font-size:17px">Schichtung und Gewichtung</b><button id="btn-sheet-x" class="iconbtn" aria-label="Schließen" style="font-size:22px;line-height:1">×</button></div>
+        <div class="card2 mb-2.5">
+          <div class="flex items-baseline justify-between mb-1"><b style="font-size:16px">Schichten</b><span class="lbl">von oben nach unten</span></div>
+          <div id="lyr-list"></div>
+          <div class="rw" style="margin-bottom:0"><span>Datenqualität</span><b class="num" id="q-val" style="font-size:20px">–</b></div>
+          <div class="wn" id="q-sub">–</div>
+        </div>
+        <div class="card2 mb-2.5">
+          <b style="font-size:16px">So liest du das Profil</b>
+          <div class="lbl mt-1" style="font-size:13px;line-height:1.4">Die grünen Linien sind Trockenadiabaten, also Linien gleicher potenzieller Temperatur θ im Abstand von 2 K. Ein aufsteigendes Luftpaket folgt ihnen. Fällt die Profilkurve nach oben schneller ab als eine grüne Linie, ist die Schicht labil und trägt Thermik. Steht sie senkrechter oder knickt nach rechts, ist sie stabil. Eine Inversion bremst das Steigen. Im Gradient-Modus zeigt die grüne Linie 0,98 K/100 m.</div>
+        </div>
+        <div class="card2">
+          <div style="font-weight:600;font-size:16px">Gewichtung der Messpunkte</div>
+          <div class="lbl mt-1" style="font-size:13px;line-height:1.4">Gewicht w = Zeitverfall × Distanzgewicht. Zeit: exp(−Alter / τ). Distanz: volles Gewicht bis d₀ = 25 km, danach Gauß-Abfall mit Breite σ. Je blasser ein Punkt im Diagramm, desto kleiner sein Gewicht.</div>
+          <div class="rw"><span>Zeitkonstante τ</span><div class="seg" id="seg-tau"><button data-v="30">30 min</button><button data-v="60" class="on">60 min</button><button data-v="120">120 min</button></div></div>
+          <div class="rw"><span>Gauß-Breite σ</span><div class="seg" id="seg-sig"><button data-v="8">8 km</button><button data-v="15" class="on">15 km</button><button data-v="25">25 km</button></div></div>
+          <div class="rw"><span>Labil ab γ =</span><div class="seg" id="seg-thr"><button data-v="0.65">0,65</button><button data-v="0.9" class="on">0,90</button><button data-v="0.98">0,98</button></div></div>
+          <div style="margin-top:12px">
+            <div class="flex justify-between" style="font-size:14px"><span>Orbit-Abstand simulieren</span><b class="num" id="met-off-v" style="font-size:18px">+0 km</b></div>
+            <input type="range" id="met-off" min="0" max="60" step="5" value="0" aria-label="Zusätzlicher Abstand zur Base">
+            <div class="lbl">Neue Messpunkte entstehen in diesem Zusatzabstand zur Base. Ab 25 km werden sie gedämpft.</div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mt-3">
+            <div><div class="lbl mb-1">Zeitverfall</div><canvas id="cv-wt" class="wc"></canvas><div class="wn" id="cv-wt-n">–</div></div>
+            <div><div class="lbl mb-1">Distanzgewicht</div><canvas id="cv-wd" class="wc"></canvas><div class="wn" id="cv-wd-n">–</div></div>
+          </div>
+          <div class="flex gap-2 mt-3 flex-wrap"><button class="sm" id="met-ff">30 min vorspulen</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Orbit-Fokus & OGN -->
+    <section id="s-orbit" class="screen">
+      <div class="orb">
+        <div class="orb-map">
+          <div id="map3" class="map"></div>
+          <div class="ov" style="left:8px;right:8px;top:8px"><div id="o-status">Luftraum frei</div></div>
+          <div class="ov card p-2.5" style="left:8px;top:62px;width:112px">
+            <div class="lbl">Vario</div>
+            <div class="flex items-center gap-2 mt-1">
+              <div style="position:relative;width:14px;height:84px;border-radius:7px;background:var(--pan);border:1px solid var(--line);overflow:hidden;flex:none"><div style="position:absolute;left:0;right:0;top:50%;height:1px;background:#fff;opacity:.7"></div><div id="o-vfill" style="position:absolute;left:2px;right:2px;border-radius:4px"></div></div>
+              <div><div class="num" id="o-var" style="font-size:40px;font-weight:700;line-height:1">+0.0</div><div class="lbl">m/s</div></div>
+            </div>
+          </div>
+          <div class="ov card p-2.5" style="right:8px;top:62px;width:112px;text-align:right">
+            <div class="lbl">Höhe NN</div>
+            <div class="num" id="o-alt" style="font-size:40px;font-weight:700;line-height:1">–</div>
+            <div class="lbl">m</div>
+            <div class="num mt-1" id="o-agl" style="font-size:19px;font-weight:600;color:var(--mut)">–</div>
+            <div class="lbl">über Grund</div>
+          </div>
+          <div class="ov flex gap-2" style="left:8px;bottom:26px" id="rangebar">
+            <div class="seg" style="background:rgba(10,16,25,.92)"><button data-r="2">2 km</button><button data-r="5" class="on">5 km</button><button data-r="10">10 km</button></div>
+          </div>
+        </div>
+        <div class="orb-list">
+          <div class="flex items-baseline justify-between mb-1">
+            <div style="font-weight:600;font-size:16px" id="o-count">Verkehr</div>
+            <div class="lbl">OGN, simulierte Ziele</div>
+          </div>
+          <div id="o-list"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="nav" id="nav">
+    <button data-s="chaser" class="active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0113 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+      Chaser
+    </button>
+    <button data-s="flight">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5c-4 0-6.5 3-6.5 6.5 0 3.3 2.4 6 4.6 7.5h3.8c2.2-1.5 4.6-4.2 4.6-7.5 0-3.5-2.5-6.5-6.5-6.5z"/><path d="M10 20h4v1.5h-4z"/></svg>
+      Flug und Profil
+    </button>
+    <button data-s="orbit">
+      <span class="badge" id="nav-badge"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/><path d="M12 12l6-6"/></svg>
+      Luftraum
+    </button>
+  </nav>
+
+  <div id="net-note" style="display:none;position:absolute;z-index:2500;left:8px;right:8px;top:62px;padding:10px 12px;border-radius:12px;background:#3a2a05;border:1px solid var(--orb);font-size:14px">Kartenkacheln und Straßenrouting brauchen eine Internetverbindung (OpenStreetMap, OSRM). Ohne Netz bleibt ein Raster, die Base fährt dann in Luftlinie.</div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Simulations-Panel -->
+  <div class="simpanel" id="sim">
+    <div style="font-weight:600;font-size:16px;margin-bottom:10px">Simulation</div>
+    <div class="r"><span>Tempo</span><div class="seg" data-key="speed"><button data-v="1">1×</button><button data-v="5">5×</button><button data-v="10" class="on">10×</button><button data-v="30">30×</button></div></div>
+    <div class="r"><span>Pilot Orbit</span><div class="seg" data-key="mode"><button data-v="auto" class="on">Auto</button><button data-v="climb">Steigen</button><button data-v="hold">Halten</button><button data-v="sink">Sinken</button></div></div>
+    <div class="r"><span>Karte</span><div class="seg" data-key="map"><button data-v="dark" class="on">Dunkel</button><button data-v="light">Hell (Sonne)</button></div></div>
+    <div class="r"><span>Kartenschärfe</span><div class="seg" data-key="sharp"><button data-v="0" class="on">Daten sparen</button><button data-v="1">Scharf</button></div></div>
+    <div class="r"><span>Ansicht</span><div class="seg" data-key="frame"><button data-v="auto" class="on">Voll</button><button data-v="portrait">Hoch</button><button data-v="land">Quer</button></div></div>
+    <div style="margin:2px 0 12px;padding:9px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--line)">
+      <div class="lbl">Datenverbrauch seit App-Start</div>
+      <div class="num" id="data-line" style="font-size:19px;font-weight:600;margin-top:2px">–</div>
+      <div class="lbl" id="data-sub" style="margin-top:2px">–</div>
+    </div>
+    <div class="flex gap-2 flex-wrap">
+      <button class="act" id="btn-pause">Pause</button>
+      <button class="act" id="btn-hunter">Konfliktziel erzeugen</button>
+      <button class="act" id="btn-o2">Orbit 2 jetzt starten</button>
+      <button class="act" id="btn-reset">Neustart</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   The Bo Twins – Companion-App Prototyp
+   Alles ist simuliert. Reale Daten kämen später per BLE-GATT von der Base
+   (Base empfängt per LoRa die Orbit-Pakete: GPS, Baro/BME280, Akku).
+   Rechenraum: lokale Ost/Nord-Koordinaten in Metern um einen Ursprung.
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const O = {lat:51.62458, lon:12.29456};   // Ballonstartplatz Bitterfeld, Richard-Schütze-Str. 1 (Quelle: Ballonsport im Bitterfelder VfL e.V.)
+const KLAT = 111320, KLON = 111320*Math.cos(O.lat*Math.PI/180);
+const ll = (e,n) => [O.lat + n/KLAT, O.lon + e/KLON];
+const rad = d => d*Math.PI/180, deg = r => r*180/Math.PI;
+const brg = (de,dn) => (deg(Math.atan2(de,dn))+360)%360;
+const clamp = (x,a,b) => Math.min(b,Math.max(a,x));
+const rnd = (a,b) => a + Math.random()*(b-a);
+const fmtV = v => { if(Math.abs(v)<0.05) v=0; return (v>=0?'+':'−')+Math.abs(v).toFixed(1); };
+const fmtD = d => d<1000 ? Math.round(d)+' m' : (d/1000).toFixed(1)+' km';
+const fmtDh = d => (d>=0?'+':'−')+Math.abs(Math.round(d))+' m';
+const vcol = v => v>0.3 ? 'var(--up)' : v<-0.3 ? 'var(--dn)' : 'var(--tx)';
+const ground = (e,n) => 78 + 5*Math.sin(e/1800) + 3*Math.cos(n/1300) + 2*Math.sin((e+n)/700);   // flaches Land, rund 80 m NN
+const GREF = ground(0,0);   // Bezugshöhe Startplatz
+function wind(alt){ // Wind dreht mit der Höhe: Prognose-Linie und Track krümmen sich beim Steigen/Sinken
+  const c = rad(65 + (alt-300)*0.045), s = 3.8 + alt*0.0035;
+  return [Math.sin(c)*s, Math.cos(c)*s];
+}
+
+/* ---------------- Zustand ---------------- */
+const S = {
+  screen:'chaser', follow:'both', speed:10, mode:'auto', map:'dark', frame:'auto', paused:false,
+  pmode:'nn', pwin:10, range:5,
+  t:0, pkts:0,
+  orbit:{e:0,n:0,alt:81,vario:0,ve:0,vn:0},
+  base:{e:-25,n:-15,hdg:60,spd:0},
+  track:[], btrack:[], hist:[], targets:[], thr:[], met:[], forceFit:true, sharp:'0',
+  o2:{active:false,e:70,n:15,alt:0,vario:0,ve:0,vn:0,track:[]},
+  fc:{on:false,e:35,n:-30,hdg:0,spd:0},
+  link:{rssi:-80,snr:8,batt:3.95}
+};
+
+/* ---------------- Datenzähler (Mobilfunk-Verbrauch) ---------------- */
+const DATA = {tileBytes:0, tileNet:0, tileHit:0, routeBytes:0, routeN:0, sw:false};
+
+/* ---------------- Meteorologie: Atmosphärenmodell, Gewichtung, Schichtung ---------------- */
+const ATM_T0 = 7200;   // Flugbeginn 2 h nach Sonnenaufgang
+const MET = {x:'T',y:'nn',weighted:true,tau:60,sigma:15,d0:25,thr:0.9,distOffset:0,R:null,last:0};
+const CAT = {inv:{c:'#5aa9ff',n:'Inversion'},stab:{c:'#4fd1a5',n:'Stabil'},neut:{c:'#ffc83d',n:'Bedingt labil'},labil:{c:'#ff5d5d',n:'Labil'}};
+const catOf = g => g<0 ? 'inv' : g<0.5 ? 'stab' : g<MET.thr ? 'neut' : 'labil';   // g = Temperaturabnahme in K/100 m
+function gauss(){ let u=0,v=0; while(!u) u=Math.random(); while(!v) v=Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+// Wahre Schichtung (Simulation): Mischungsschicht wächst mit der Tageserwärmung, Inversion an ihrer Obergrenze
+function atmT(h,ta){
+  const hf=1-Math.exp(-ta/4000), T0=8+5*(1-Math.exp(-ta/6000)), zi=140+620*(1-Math.exp(-ta/7000));
+  let T=T0, z=0;
+  const seg=(top,l)=>{ const d=Math.min(h,top)-z; if(d>0){ T+=l*d; z+=d; } };
+  seg(Math.min(zi,90),-0.012*hf-0.0065*(1-hf));   // bodennah überadiabatisch
+  seg(zi,-0.0098);                                 // durchmischt, trockenadiabatisch
+  seg(zi+110,0.011);                               // Inversion
+  seg(1150,-0.0058);                               // freie Atmosphäre
+  seg(1250,-0.001);                                // Isothermie
+  seg(1e5,-0.0065);
+  return T;
+}
+// Trockenadiabaten: Linien konstanter potentieller Temperatur θ, Druck aus der Standardatmosphäre
+const pAt = z => 1013.25*Math.pow(1-2.25577e-5*z,5.25588);                 // hPa, z in m NN
+const thetaOf = (T,z) => (T+273.15)*Math.pow(1000/pAt(z),0.2857);           // K
+const tOfTheta = (th,z) => th*Math.pow(pAt(z)/1000,0.2857)-273.15;          // °C
+// BME280-Messpunkt. Weit entfernte Messungen enthalten eine Luftmassen-Verzerrung (0,05 K je km ab 5 km).
+function metSample(t,alt,g,dist,src){
+  const h=Math.max(0,alt-g);
+  return {t,alt,g,d:dist,src,
+    T:atmT(h,t+ATM_T0)+0.07*gauss()+0.05*Math.max(0,dist-5),
+    p:1013.25*Math.pow(1-2.25577e-5*alt,5.25588)+0.15*gauss(),
+    rh:clamp(72-0.02*h+4*Math.sin(t/900)+gauss(),20,100), w:1, wt:1, wd:1};
+}
+// Vorflug: Auf- und Abstieg vor rund 80 bis 95 min (zeigt den Zeitverfall von Beginn an)
+function seedMet(){
+  const a=[];
+  for(let k=0;k<150;k++) a.push(metSample(-5700+k*4, GREF+3+(1400-GREF)*(k/149), GREF, 1.5+k*0.01, 'prior'));
+  for(let k=0;k<85;k++)  a.push(metSample(-5100+k*4, 1400-(1400-GREF-3)*(k/84), GREF, 2.5+k*0.02, 'prior'));
+  S.met=a.concat(S.met);
+}
+function metCompute(){
+  const bs=25, now=S.t, bins=new Map(); let nDamp=0;
+  for(const m of S.met){
+    m.wt = MET.weighted ? Math.exp(-(now-m.t)/(MET.tau*60)) : 1;
+    m.wd = (MET.weighted && m.d>MET.d0) ? Math.exp(-Math.pow(m.d-MET.d0,2)/(2*MET.sigma*MET.sigma)) : 1;
+    m.w = m.wt*m.wd; if(m.w<0.5) nDamp++;
+    const k=Math.floor(m.alt/bs); let b=bins.get(k); if(!b){ b={k,sw:0,swT:0}; bins.set(k,b); }
+    b.sw+=m.w; b.swT+=m.w*m.T;
+  }
+  const prof=[...bins.values()].sort((a,b)=>a.k-b.k).filter(b=>b.sw>=0.3).map(b=>({k:b.k,z:(b.k+0.5)*bs,T:b.swT/b.sw,W:b.sw,g:null,cat:null}));
+  for(let i=0;i<prof.length;i++){            // Gradient: gewichtete Regression über ±2 Höhenklassen
+    let sw=0,sz=0,sT=0,szz=0,szT=0,n=0;
+    for(let j=Math.max(0,i-3);j<=Math.min(prof.length-1,i+3);j++){
+      if(Math.abs(prof[j].k-prof[i].k)>2) continue;
+      const w=Math.min(prof[j].W,3), q=prof[j]; sw+=w; sz+=w*q.z; sT+=w*q.T; szz+=w*q.z*q.z; szT+=w*q.z*q.T; n++;
+    }
+    const den=sw*szz-sz*sz;
+    if(n>=3 && den>1e-6){ prof[i].g=-(sw*szT-sz*sT)/den*100; prof[i].cat=catOf(prof[i].g); }
+  }
+  let layers=[];
+  for(const p of prof){ if(!p.cat) continue;
+    const L=layers[layers.length-1];
+    if(L && L.cat===p.cat && p.z-L.zEnd<=bs*1.5){ L.zEnd=p.z; L.n++; L.gs+=p.g; L.Tend=p.T; }
+    else layers.push({cat:p.cat,zStart:p.z,zEnd:p.z,n:1,gs:p.g,Tstart:p.T,Tend:p.T});
+  }
+  const merged=[];                            // Schichten unter 2 Klassen dem Nachbarn zuschlagen
+  for(const L of layers){ const P=merged[merged.length-1];
+    if(L.n<2 && P && L.zStart-P.zEnd<=bs*1.5){ P.zEnd=L.zEnd; P.Tend=L.Tend; } else if(L.n>=2||!P) merged.push(L); }
+  layers=merged.map(L=>({cat:L.cat,z0:L.zStart-bs/2,z1:L.zEnd+bs/2,g:L.gs/L.n,dT:L.Tend-L.Tstart}));
+  const inv=layers.find(L=>L.cat==='inv' && L.z0-GREF>60);
+  const conf=prof.length?prof.reduce((s,p)=>s+(1-Math.exp(-p.W/2)),0)/prof.length:0;
+  return {prof,layers,mix:inv?inv.z0:null,conf,nDamp,n:S.met.length,zTop:prof.length?prof[prof.length-1].z:GREF};
+}
+
+/* ---------------- Straßen-Routing für die Chaser (OSRM) ---------------- */
+const toENU = (lat,lon) => [(lon-O.lon)*KLON, (lat-O.lat)*KLAT];
+const mkRouter = () => ({pts:[],cum:[],total:0,s:0,i:0,tgt:null,pending:false,lastReq:0,mode:'wait'});   // wait | osrm | direct
+const ROUTE = mkRouter(), ROUTE2 = mkRouter();
+function setRoute(R,pts){
+  const clean=[pts[0]];
+  for(let k=1;k<pts.length;k++){ const q=clean[clean.length-1]; if(Math.hypot(pts[k][0]-q[0],pts[k][1]-q[1])>0.5) clean.push(pts[k]); }
+  R.pts=clean; R.cum=[0];
+  for(let k=1;k<clean.length;k++) R.cum.push(R.cum[k-1]+Math.hypot(clean[k][0]-clean[k-1][0],clean[k][1]-clean[k-1][1]));
+  R.total=R.cum[R.cum.length-1]; R.s=0; R.i=0;
+}
+function routePos(R,s){
+  let i=R.i; while(i<R.pts.length-2 && R.cum[i+1]<s) i++; R.i=i;
+  const a=R.pts[i], b=R.pts[i+1], seg=(R.cum[i+1]-R.cum[i])||1, f=clamp((s-R.cum[i])/seg,0,1);
+  return [a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f, brg(b[0]-a[0],b[1]-a[1])];
+}
+async function fetchRoute(R,car,orb){
+  if(R.pending) return;
+  R.pending=true; R.lastReq=Date.now();
+  const te=orb.e+orb.ve*600, tn=orb.n+orb.vn*600;   // Ziel: Ballon-Position in 10 min
+  R.tgt=[te,tn];
+  const a=ll(car.e,car.n), c=ll(te,tn);
+  const url=`https://router.project-osrm.org/route/v1/driving/${a[1].toFixed(6)},${a[0].toFixed(6)};${c[1].toFixed(6)},${c[0].toFixed(6)}?overview=full&geometries=geojson`;
+  try{
+    const ctl=new AbortController(), to=setTimeout(()=>ctl.abort(),7000);
+    const r=await fetch(url,{signal:ctl.signal}); clearTimeout(to);
+    const raw=await r.text(); DATA.routeBytes+=raw.length; DATA.routeN++;
+    const j=JSON.parse(raw);
+    if(j.code!=='Ok'||!j.routes||!j.routes[0]) throw new Error('keine Route');
+    let pts=j.routes[0].geometry.coordinates.map(q=>toENU(q[1],q[0]));
+    let bi=0, bd=Infinity;   // ab der Stelle weiterfahren, die dem Auto am nächsten liegt
+    pts.forEach((q,k)=>{ const d=(q[0]-car.e)**2+(q[1]-car.n)**2; if(d<bd){bd=d;bi=k;} });
+    pts=pts.slice(bi); pts.unshift([car.e,car.n]);
+    if(pts.length>1){ setRoute(R,pts); R.mode='osrm'; }
+  }catch(err){ if(R.mode==='wait') R.mode='direct'; }
+  R.pending=false;
+}
+function maybeRoute(R,car,orb){
+  const now=Date.now();
+  if(R.pending||S.paused) return;
+  const te=orb.e+orb.ve*600, tn=orb.n+orb.vn*600;
+  const none=R.pts.length<2, done=!none && R.s>=R.total-20;
+  const moved=R.tgt ? Math.hypot(te-R.tgt[0],tn-R.tgt[1])>500 : true;
+  if(R.mode==='direct' && now-R.lastReq<60000) return;
+  if(!none && !moved) return;
+  if(now-R.lastReq < (none?5000:(done?4000:20000))) return;
+  fetchRoute(R,car,orb);
+}
+function driveCar(R,car,orb,dt){   // folgt der Straßenroute; ohne Netz Luftlinie
+  if(R.mode==='osrm' && R.pts.length>1){
+    if(R.s<R.total){ const sp=14; R.s=Math.min(R.total,R.s+sp*dt); const q=routePos(R,R.s); car.e=q[0]; car.n=q[1]; car.hdg=q[2]; car.spd=sp; } else car.spd=0;
+  } else if(R.mode==='direct'){
+    const sp=Math.hypot(orb.ve,orb.vn)||1, ux=orb.ve/sp, un=orb.vn/sp, a=rad(35);
+    const rx=ux*Math.cos(a)+un*Math.sin(a), rn=un*Math.cos(a)-ux*Math.sin(a);
+    const dx=orb.e+rx*1100-car.e, dn=orb.n+rn*1100-car.n, d=Math.hypot(dx,dn);
+    if(d>30){ const bs=Math.min(16,2+d/25); car.e+=dx/d*bs*dt; car.n+=dn/d*bs*dt; car.hdg=brg(dx,dn); car.spd=bs; } else car.spd=0;
+  } else car.spd=0;
+}
+
+/* ---------------- Simulation: Startsequenz Orbit, dann Orbit 2 ---------------- */
+const LAUNCH1 = 20, LAUNCH2 = 150;   // Startzeitpunkte in Sekunden Simulationszeit
+let lastSample = -1;
+function stepBalloon(o,dt,tt,mode){
+  const agl = o.alt - ground(o.e,o.n);
+  let vt;
+  if(mode==='climb') vt = 2.6 + 0.4*Math.sin(tt/5);
+  else if(mode==='hold') vt = 0.15*Math.sin(tt/7);
+  else if(mode==='sink') vt = -2.6 + 0.4*Math.sin(tt/6);
+  else vt = 1.7*Math.sin(tt/150) + 0.9*Math.sin(tt/41+1) + 0.35*Math.sin(tt/9);
+  if(agl<120) vt = Math.max(vt,2.0);      // Bodenabstand halten
+  if(o.alt>1450) vt = Math.min(vt,-2);    // Obergrenze
+  o.vario += (vt-o.vario)*(1-Math.exp(-dt/6));
+  o.alt += o.vario*dt;
+  const [we,wn] = wind(o.alt), k = 1-Math.exp(-dt/20);
+  o.ve += (we + 0.4*Math.sin(tt/17) - o.ve)*k;
+  o.vn += (wn + 0.4*Math.cos(tt/23) - o.vn)*k;
+  o.e += o.ve*dt; o.n += o.vn*dt;
+}
+function activateO2(){
+  const q=S.o2; if(q.active) return;
+  q.active=true; q.e=70; q.n=15; q.alt=ground(q.e,q.n)+3; q.vario=0; q.ve=0; q.vn=0; q.track=[];
+  const t={id:'Orbit 2',type:'friend',name:'Befreundeter Ballon',mode:'friend',e:q.e,n:q.n,ve:0,vn:0,vz:0,alt:q.alt,spd:0};
+  S.targets.push(t);
+  if(typeof onO2Start==='function') onO2Start(t);
+}
+function step(dt){
+  const o=S.orbit, b=S.base, q=S.o2, f=S.fc;
+  S.t += dt;
+  if(S.t>=LAUNCH1){
+    if(!S.launched1){ S.launched1=true; if(typeof toast==='function') toast('Orbit gestartet, Aufstieg läuft'); }
+    stepBalloon(o,dt,S.t-LAUNCH1,S.mode);
+  }
+  if(!q.active && S.t>=LAUNCH2) activateO2();
+  if(q.active) stepBalloon(q,dt,S.t*1.15+900,'auto');
+
+  driveCar(ROUTE,b,o,dt);
+  if(f.on && q.active) driveCar(ROUTE2,f,q,dt); else f.spd=0;   // Freunde-Chaser fährt nur, wenn eingeblendet
+
+  stepTargets(dt);
+
+  // LoRa-Link (Funkdämpfung nach Entfernung)
+  const dist = Math.hypot(o.e-b.e,o.n-b.n);
+  S.link.rssi = -40 - 22*Math.log10(Math.max(dist,10)/10) + 3*Math.sin(S.t/13);
+  S.link.snr = clamp(12 - dist/600 + 1.5*Math.sin(S.t/7), -5, 12);
+  S.link.batt = 3.98 - S.t*0.00004;
+
+  const kk = Math.floor(S.t/2);
+  if(kk!==lastSample){ lastSample=kk; S.pkts++; sample(); }
+}
+function sample(){
+  const o=S.orbit, b=S.base, g=ground(o.e,o.n);
+  S.track.push([o.e,o.n]);  if(S.track.length>1200) S.track.shift();
+  S.btrack.push([b.e,b.n]); if(S.btrack.length>500) S.btrack.shift();
+  if(S.o2.active){ S.o2.track.push([S.o2.e,S.o2.n]); if(S.o2.track.length>1200) S.o2.track.shift(); }
+  S.hist.push({t:S.t,alt:o.alt,agl:o.alt-g,g,v:o.vario}); if(S.hist.length>720) S.hist.shift();
+  S.met.push(metSample(S.t,o.alt,g,Math.hypot(o.e-b.e,o.n-b.n)/1000+MET.distOffset,'live')); if(S.met.length>3000) S.met.shift();
+}
+
+/* ---------------- OGN-Ziele (simuliert) ---------------- */
+const DEFS = [
+  {id:'D-8421',  type:'glider', name:'Segelflieger (ASK 21)', mode:'circle', r:150, w:0.12,  alt:900},
+  {id:'D-KOMA',  type:'glider', name:'Segelflieger (LS4)',    mode:'circle', r:190, w:-0.10, alt:1150},
+  {id:'OE-5517', type:'glider', name:'Segelflieger (Discus)', mode:'cruise', spd:30, amp:60,  per:300},
+  {id:'D-KMRT',  type:'motor',  name:'Motorsegler',           mode:'cruise', spd:36, amp:20,  per:600},
+  {id:'D-ELBA',  type:'tow',    name:'Schleppflugzeug',       mode:'cruise', spd:32, amp:250, per:420},
+  {id:'D-ORBN',  type:'balloon',name:'Ballon',                mode:'drift',  alt:620},
+  {id:'D-OHEI',  type:'balloon',name:'Ballon',                mode:'drift',  alt:780},
+  {id:'FLR3E4A21',type:'glider',name:'FLARM, unbekannt',      mode:'cruise', spd:27, amp:40,  per:200},
+  {id:'D-KTWN',  type:'glider', name:'Segelflieger (Duo)',    mode:'cruise', spd:26, hunter:true}
+];
+function respawn(t, dist=9500){
+  const o=S.orbit, ang=Math.random()*2*Math.PI;
+  t.e = o.e+Math.sin(ang)*dist; t.n = o.n+Math.cos(ang)*dist;
+  const tt = dist/t.spd, jit = t.hunter?120:2200;
+  const ax = o.e+o.ve*tt+rnd(-jit,jit), an = o.n+o.vn*tt+rnd(-jit,jit);
+  const dx=ax-t.e, dn=an-t.n, d=Math.hypot(dx,dn);
+  t.ve=dx/d*t.spd; t.vn=dn/d*t.spd;
+  t.alt = o.alt + (t.hunter ? rnd(-40,40) : rnd(-300,300));
+  t.dz0 = t.hunter ? rnd(-40,40) : 0;
+}
+function mkTargets(){
+  const o=S.orbit;
+  S.targets = DEFS.map(d=>{
+    const t = Object.assign({e:0,n:0,ve:0,vn:0,vz:0,alt:d.alt||800,ph0:rnd(0,6.28),ph:rnd(0,6.28),dir:1,dz0:0}, d);
+    if(t.mode==='circle'){ const a=rnd(0,6.28), r=rnd(2500,6500); t.cx=o.e+Math.sin(a)*r; t.cy=o.n+Math.cos(a)*r; }
+    else if(t.mode==='drift'){ const a=rnd(0,6.28), r=rnd(2200,4200); t.e=o.e+Math.sin(a)*r; t.n=o.n+Math.cos(a)*r; [t.ve,t.vn]=wind(t.alt); }
+    else respawn(t, t.hunter?8500:rnd(3000,8000));
+    return t;
+  });
+}
+function stepTargets(dt){
+  const o=S.orbit;
+  for(const t of S.targets){
+    if(t.mode==='circle'){
+      const [we,wn]=wind(t.alt);
+      t.cx+=we*dt*0.6; t.cy+=wn*dt*0.6; t.ph+=t.w*dt;
+      t.e=t.cx+t.r*Math.sin(t.ph); t.n=t.cy+t.r*Math.cos(t.ph);
+      t.ve=t.r*t.w*Math.cos(t.ph)+we*0.6; t.vn=-t.r*t.w*Math.sin(t.ph)+wn*0.6;
+      if(t.alt>1350) t.dir=-1; if(t.alt<850) t.dir=1;
+      t.vz = t.dir>0 ? 1.6+0.5*Math.sin(S.t/20+t.ph0) : -2.6;
+      t.alt += t.vz*dt;
+    } else if(t.mode==='friend'){
+      const q=S.o2; t.e=q.e; t.n=q.n; t.ve=q.ve; t.vn=q.vn; t.alt=q.alt; t.vz=q.vario;
+    } else if(t.mode==='drift'){
+      const [we,wn]=wind(t.alt);
+      t.ve+=(we-t.ve)*0.05; t.vn+=(wn-t.vn)*0.05; t.e+=t.ve*dt; t.n+=t.vn*dt;
+      t.vz = 0.8*Math.sin(S.t/45+t.ph0);
+      if((t.alt<350&&t.vz<0)||(t.alt>1000&&t.vz>0)) t.vz=0;
+      t.alt += t.vz*dt;
+    } else {
+      t.e+=t.ve*dt; t.n+=t.vn*dt;
+      if(t.hunter) t.vz = clamp((o.alt+t.dz0-t.alt)*0.03,-4,4);           // steuert auf Orbit-Höhe zu
+      else t.vz = t.amp*(2*Math.PI/t.per)*Math.cos(S.t*2*Math.PI/t.per+t.ph0);
+      t.alt += t.vz*dt;
+      const de=t.e-o.e, dn=t.n-o.n;
+      if(Math.hypot(de,dn)>11000 && (de*t.ve+dn*t.vn)>0) respawn(t);
+    }
+  }
+}
+// Kollisionsabschätzung: kleinster Abstand (CPA) in den nächsten 3 Minuten
+function threat(t){
+  const o=S.orbit;
+  const pe=t.e-o.e, pn=t.n-o.n, ve=t.ve-o.ve, vn=t.vn-o.vn, v2=ve*ve+vn*vn;
+  const tc = v2>0.01 ? clamp(-(pe*ve+pn*vn)/v2,0,180) : 0;
+  const dcpa = Math.hypot(pe+ve*tc, pn+vn*tc);
+  const dzc = (t.alt+t.vz*tc)-(o.alt+o.vario*tc);
+  const d = Math.hypot(pe,pn), dh = t.alt-o.alt;
+  let lvl=0;
+  if(dcpa<1000 && Math.abs(dzc)<300) lvl=1;
+  if((dcpa<500 && Math.abs(dzc)<150 && tc<100) || (d<400 && Math.abs(dh)<100)) lvl=2;
+  return {t, d, brg:brg(pe,pn), dh, tc, dcpa, lvl};
+}
+
+/* ---------------- Start am Ballonstartplatz ---------------- */
+sample();
+seedMet();
+mkTargets();
+
+/* ---------------- Karten ---------------- */
+const tileDark  = () => L.tileLayer(`https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}${S.sharp==='1'?'{r}':''}.png`,{subdomains:'abcd',maxZoom:19,attribution:'© OpenStreetMap, © CARTO'});
+const tileLight = () => L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'});
+let tileErr=0, tileOk=0, tileFell=false;
+function syncMapSeg(){ document.querySelectorAll('#sim [data-key="map"] button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.map)); }
+function checkTiles(){
+  if(tileOk>0){ $('net-note').style.display='none'; return; }
+  if(tileErr>6 && S.map==='dark' && !tileFell){ tileFell=true; tileErr=0; S.map='light'; syncMapSeg(); applyTiles(); return; }
+  if(tileErr>6) $('net-note').style.display='block';
+}
+function applyTiles(){
+  for(const m of [map1,map3]){
+    if(m._tl) m.removeLayer(m._tl);
+    const tl=(S.map==='dark'?tileDark():tileLight());
+    tl.on('tileload',()=>{ tileOk++; checkTiles(); }); tl.on('tileerror',()=>{ tileErr++; checkTiles(); });
+    m._tl=tl.addTo(m); tl.bringToBack();
+  }
+}
+const carSVG = c => `<svg class="car" viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="#0a1019" stroke="${c}" stroke-width="2.5"/><rect x="14" y="8" width="12" height="24" rx="4.5" fill="${c}"/><rect x="15.5" y="13" width="9" height="5.5" rx="1.5" fill="#0a1019"/><rect x="15.5" y="24" width="9" height="3.5" rx="1" fill="#0a1019"/></svg>`;
+const balloonSVG = c => `<svg viewBox="0 0 44 54" width="44" height="54"><path d="M22 2C11 2 4 10 4 20c0 8 6 14.5 13 19h10c7-4.5 13-11 13-19C40 10 33 2 22 2z" fill="${c}" stroke="#0a1019" stroke-width="2"/><path d="M22 2c-6 5-8 12-5 37M22 2c6 5 8 12 5 37" fill="none" stroke="#0a1019" stroke-opacity=".35" stroke-width="1.6"/><path d="M17 39l3 6M27 39l-3 6" stroke="#eef3fa" stroke-width="1.4"/><rect x="18" y="45" width="8" height="6" rx="1.5" fill="#eef3fa" stroke="#0a1019" stroke-width="1.5"/></svg>`;
+const orbIcon = (c='#ff9f1c') => L.divIcon({className:'mk',iconSize:[44,54],iconAnchor:[22,28],html:`<div class="pulse" style="--pc:${c}">${balloonSVG(c)}</div>`});
+const baseIcon = (c='#4cc9ff') => L.divIcon({className:'mk',iconSize:[40,40],iconAnchor:[20,20],html:carSVG(c)});
+
+// Karte 1: Chaser
+const map1 = L.map('map1',{zoomControl:false,preferCanvas:true,maxZoom:17}); map1.attributionControl.setPrefix(false);
+L.control.zoom({position:'bottomright'}).addTo(map1);
+const bRoute  = L.polyline([],{color:'#4cc9ff',weight:3.5,opacity:.9,dashArray:'2 8',lineCap:'round'}).addTo(map1);
+const bTrail  = L.polyline([],{color:'#4cc9ff',weight:2,opacity:.45}).addTo(map1);
+const oTrack  = L.polyline([],{color:'#ff9f1c',weight:5,opacity:.95,lineCap:'round'}).addTo(map1);
+const oPred   = L.polyline([],{color:'#ffc277',weight:4,opacity:.95,dashArray:'3 11',lineCap:'round'}).addTo(map1);
+const predPts = [5,10,20].map(m=>{ const c=L.circleMarker([0,0],{radius:5,color:'#0a1019',weight:2,fillColor:'#ffc277',fillOpacity:1}).addTo(map1); c.bindTooltip('+'+m+' min',{permanent:true,direction:'right',offset:[8,0],className:'ptip'}); c._m=m; return c; });
+const baseMk1 = L.marker([0,0],{icon:baseIcon(),keyboard:false,zIndexOffset:500}).addTo(map1);
+const orbMk1  = L.marker([0,0],{icon:orbIcon(),keyboard:false,zIndexOffset:900}).addTo(map1);
+orbMk1.bindTooltip('Orbit',{permanent:true,direction:'right',offset:[22,0],className:'ptip'});
+// Freunde: erscheinen erst, wenn Orbit 2 startet bzw. der Schalter aktiv ist
+const o2Mk1   = L.marker([0,0],{icon:orbIcon('#ff7ad9'),keyboard:false,zIndexOffset:850});
+o2Mk1.bindTooltip('Orbit 2',{permanent:true,direction:'right',offset:[22,0],className:'ptip friend'});
+const o2Track = L.polyline([],{color:'#ff7ad9',weight:4,opacity:.9,lineCap:'round'});
+const fcMk1   = L.marker([0,0],{icon:baseIcon('#ff7ad9'),keyboard:false,zIndexOffset:450});
+fcMk1.bindTooltip('Chaser 2',{permanent:true,direction:'right',offset:[22,0],className:'ptip friend'});
+const fcRoute = L.polyline([],{color:'#ff7ad9',weight:3.5,opacity:.9,dashArray:'2 8',lineCap:'round'});
+function onO2Start(t){ o2Track.addTo(map1); o2Mk1.addTo(map1); addTargetMarker(t); toast('Orbit 2 gestartet, befreundeter Ballon'); }
+function setFc(on){
+  S.fc.on=on; $('fc-toggle').setAttribute('aria-checked',on?'true':'false');
+  if(on){ fcRoute.addTo(map1); fcMk1.addTo(map1); } else { fcRoute.remove(); fcMk1.remove(); }
+  lastFit=0; S.forceFit=true;
+}
+map1.setView(ll(S.orbit.e,S.orbit.n),15);
+const startMark = () => L.circleMarker(ll(0,0),{radius:7,color:'#0a1019',weight:2,fillColor:'#eef3fa',fillOpacity:1}).bindTooltip('Ballonstartplatz Bitterfeld',{permanent:true,direction:'bottom',offset:[0,8],className:'ptip stip'});
+startMark().addTo(map1);
+
+// Karte 3: Orbit im Zentrum
+const map3 = L.map('map3',{zoomControl:false,dragging:false,doubleClickZoom:false,boxZoom:false,keyboard:false,scrollWheelZoom:'center',touchZoom:'center'});
+map3.attributionControl.setPrefix(false); map3.setView(ll(0,0),12);
+const oTrack3 = L.polyline([],{color:'#ff9f1c',weight:3,opacity:.8}).addTo(map3);
+const oPred3  = L.polyline([],{color:'#ffc277',weight:3,opacity:.9,dashArray:'3 9'}).addTo(map3);
+const rings = [1,2,5,10].map(km=>({km, c:L.circle([0,0],{radius:km*1000,color:'#4cc9ff',weight:1.2,opacity:.5,dashArray:'4 7',fill:false,interactive:false}).addTo(map3),
+  l:L.marker([0,0],{interactive:false,keyboard:false,icon:L.divIcon({className:'mk',iconSize:[40,14],iconAnchor:[0,0],html:`<div class="rl">${km} km</div>`})}).addTo(map3)}));
+const alarmLine = L.polyline([],{color:'#ff4a4a',weight:3,dashArray:'6 6',opacity:.95}).addTo(map3);
+const orbMk3 = L.marker([0,0],{icon:orbIcon(),keyboard:false,zIndexOffset:1000}).addTo(map3);
+startMark().addTo(map3);
+const tMarkers = {};
+function addTargetMarker(t){ const m=L.marker([0,0],{keyboard:false,icon:L.divIcon({className:'mk',html:''})}).addTo(map3); m._k=''; tMarkers[t.id]=m; }
+S.targets.forEach(addTargetMarker);
+applyTiles();
+
+function tIcon(t,lvl,dh){
+  const col = lvl===2?'#ff4a4a':lvl===1?'#ffe14d':(t.type==='friend'?'#ff7ad9':'#d5deec');
+  const hdg = Math.round(brg(t.ve,t.vn));
+  const ico = (t.type==='balloon'||t.type==='friend')
+    ? `<svg viewBox="0 0 28 30" width="28" height="30"><circle cx="14" cy="12" r="9" fill="none" stroke="${col}" stroke-width="3"/><rect x="11" y="23" width="6" height="5" rx="1" fill="${col}"/></svg>`
+    : `<svg viewBox="0 0 28 30" width="28" height="30" style="transform:rotate(${hdg}deg)"><path d="M14 1l2.200 10.500 11 5.500v2.500l-11-2.500-.8 7 3.500 2.500v2L14 27.300 9.100 28.500v-2l3.500-2.500-.8-7-11 2.500V16.500l11-5.500z" fill="${col}" stroke="#0a1019" stroke-width=".8"/></svg>`;
+  return L.divIcon({className:'mk',iconSize:[76,52],iconAnchor:[38,15],html:`<div class="tg ${lvl===2?'alarm':''}" style="color:${col}"><div class="tg-i">${ico}</div>${t.id}<br>${fmtDh(dh)}</div>`});
+}
+function setRange(r){
+  S.range=r;
+  document.querySelectorAll('#rangebar button').forEach(b=>b.classList.toggle('on',+b.dataset.r===r));
+  if(S.screen!=='orbit') return;
+  map3.invalidateSize();
+  const c=ll(S.orbit.e,S.orbit.n), b=L.latLng(c).toBounds(r*2000*1.12);
+  map3.setView(c,map3.getBoundsZoom(b,false),{animate:false});
+}
+
+/* ---------------- Anzeige ---------------- */
+function setBar(el,v){
+  v=clamp(v,-5,5); const h=Math.abs(v)/5*50;
+  if(v>=0){el.style.bottom='50%';el.style.top='auto';} else {el.style.top='50%';el.style.bottom='auto';}
+  el.style.height=h+'%'; el.style.background=v>=0?'var(--up)':'var(--dn)';
+}
+(function buildVbar(){
+  const vb=$('vbar');
+  for(let v=-4;v<=4;v+=2){ if(v===0) continue;
+    const top=(1-(v+5)/10)*100;
+    vb.insertAdjacentHTML('beforeend',`<div class="tl" style="top:${top}%"></div><div class="tick" style="top:${top}%;left:12px">${v>0?'+'+v:'−'+Math.abs(v)}</div>`);
+  }
+})();
+const bars = (el,rssi)=>{ const n=rssi>-80?4:rssi>-90?3:rssi>-100?2:1; [...el.children].forEach((i,k)=>i.classList.toggle('on',k<n)); };
+let lastFit=0;
+function updChaser(){
+  const o=S.orbit,b=S.base, oc=ll(o.e,o.n), bc=ll(b.e,b.n);
+  orbMk1.setLatLng(oc); baseMk1.setLatLng(bc);
+  const be=baseMk1.getElement(); if(be&&be.firstElementChild) be.firstElementChild.style.transform=`rotate(${b.hdg}deg)`;
+  oTrack.setLatLngs(S.track.map(p=>ll(p[0],p[1]))); bTrail.setLatLngs(S.btrack.map(p=>ll(p[0],p[1])));
+  if(ROUTE.pts.length>1) bRoute.setLatLngs([ll(b.e,b.n),...ROUTE.pts.slice(ROUTE.i+1).map(q=>ll(q[0],q[1]))]);
+  $('c-route').textContent = ROUTE.mode==='osrm' ? 'Route der Base (Straße)' : ROUTE.mode==='direct' ? 'Base in Luftlinie, Routing offline' : 'Route wird berechnet';
+  const T=1800; oPred.setLatLngs([oc,ll(o.e+o.ve*T,o.n+o.vn*T)]);
+  predPts.forEach(p=>p.setLatLng(ll(o.e+o.ve*p._m*60,o.n+o.vn*p._m*60)));
+  if(S.o2.active){
+    const q=S.o2; o2Mk1.setLatLng(ll(q.e,q.n)); o2Track.setLatLngs(q.track.map(p=>ll(p[0],p[1])));
+    $('c-o2row').style.display='flex'; $('c-o2').textContent=fmtD(Math.hypot(q.e-o.e,q.n-o.n))+', '+Math.round(q.alt)+' m';
+  }
+  if(S.fc.on){
+    const f=S.fc; fcMk1.setLatLng(ll(f.e,f.n));
+    const fe=fcMk1.getElement(); if(fe&&fe.firstElementChild) fe.firstElementChild.style.transform=`rotate(${f.hdg}deg)`;
+    if(ROUTE2.pts.length>1) fcRoute.setLatLngs([ll(f.e,f.n),...ROUTE2.pts.slice(ROUTE2.i+1).map(q=>ll(q[0],q[1]))]);
+  }
+  const gs=Math.hypot(o.ve,o.vn)*3.6, hd=brg(o.ve,o.vn), de=o.e-b.e, dn=o.n-b.n, dist=Math.hypot(de,dn);
+  $('c-alt').textContent=Math.round(o.alt)+' m';
+  const cv=$('c-var'); cv.textContent=fmtV(o.vario)+' m/s'; cv.style.color=vcol(o.vario);
+  $('c-gs').textContent=Math.round(gs)+' km/h'; $('c-hdg').textContent=String(Math.round(hd)).padStart(3,'0')+'°';
+  $('c-dist').textContent=fmtD(dist); $('c-brg').textContent=String(Math.round(brg(de,dn))).padStart(3,'0')+'°';
+  $('c-arrow').style.transform=`rotate(${brg(de,dn)}deg)`;
+  $('c-dh').textContent=fmtDh(o.alt-ground(b.e,b.n));
+  $('c-rssi').textContent=Math.round(S.link.rssi)+' dBm'; bars($('cbars'),S.link.rssi);
+  $('c-snr').textContent='SNR '+S.link.snr.toFixed(1)+' dB'; $('c-pk').textContent=S.pkts+' Pakete';
+  $('c-bat').textContent='Orbit '+S.link.batt.toFixed(2)+' V';
+  const now=Date.now();
+  if(S.follow==='orbit') map1.setView(oc,map1.getZoom(),{animate:false});
+  else if(S.follow==='base') map1.setView(bc,map1.getZoom(),{animate:false});
+  else if(S.follow==='both' && now-lastFit>1500){
+    lastFit=now;
+    const fb=[bc,oc,ll(o.e+o.ve*300,o.n+o.vn*300)]; if(S.o2.active) fb.push(ll(S.o2.e,S.o2.n)); if(S.fc.on) fb.push(ll(S.fc.e,S.fc.n));
+    const bb=L.latLngBounds(fb);
+    if(S.forceFit || !map1.getBounds().pad(-0.12).contains(bb)){   // nur anpassen, wenn nötig: spart Kachel-Nachladen
+      S.forceFit=false;
+      map1.fitBounds(bb,{paddingTopLeft:[24,200],paddingBottomRight:[24,90],maxZoom:15,animate:false});
+    }
+  }
+}
+function updFlight(){
+  const o=S.orbit, g=ground(o.e,o.n);
+  const bv=$('b-var'); bv.textContent=fmtV(o.vario); bv.style.color=vcol(o.vario);
+  setBar($('vfill'),o.vario);
+  const last=S.hist.slice(-15); const avg=last.reduce((s,h)=>s+h.v,0)/Math.max(1,last.length);
+  $('b-avg').textContent='Ø 30 s '+fmtV(avg);
+  $('b-alt').textContent=Math.round(o.alt); $('b-agl').textContent=Math.round(o.alt-g)+' m';
+  const hot=S.thr.filter(x=>x.lvl===2).sort((a,b)=>a.d-b.d)[0], al=$('b-alert');
+  if(hot){ al.classList.add('on'); al.textContent=`Verkehr: ${hot.t.id} in ${fmtD(hot.d)}, ${fmtDh(hot.dh)}`; } else al.classList.remove('on');
+  const q=S.o2;
+  if(q.active){ $('fl-o2row').style.display='flex'; $('fl-o2').textContent=fmtD(Math.hypot(q.e-o.e,q.n-o.n))+', '+fmtDh(q.alt-o.alt); }
+  updMeteo();
+}
+let prevLvl=0;
+const t0f = t => t.type==='friend'?'#ff7ad9':'#d5deec';
+function updOrbit(){
+  const o=S.orbit, c=ll(o.e,o.n);
+  orbMk3.setLatLng(c);
+  map3.setView(c,map3.getZoom(),{animate:false});
+  oTrack3.setLatLngs(S.track.slice(-300).map(p=>ll(p[0],p[1])));
+  oPred3.setLatLngs([c,ll(o.e+o.ve*300,o.n+o.vn*300)]);
+  rings.forEach(r=>{ r.c.setLatLng(c); r.l.setLatLng(ll(o.e,o.n+r.km*1000)); });
+  const ov=$('o-var'); ov.textContent=fmtV(o.vario); ov.style.color=vcol(o.vario); setBar($('o-vfill'),o.vario);
+  $('o-alt').textContent=Math.round(o.alt); $('o-agl').textContent=Math.round(o.alt-ground(o.e,o.n));
+  let alarm=null;
+  for(const x of S.thr){
+    const m=tMarkers[x.t.id], dhr=Math.round(x.dh/10)*10, key=x.lvl+'|'+Math.round(brg(x.t.ve,x.t.vn)/6)+'|'+dhr;
+    m.setLatLng(ll(x.t.e,x.t.n)); if(m._k!==key){ m._k=key; m.setIcon(tIcon(x.t,x.lvl,dhr)); }
+    if(x.lvl===2 && (!alarm||x.d<alarm.d)) alarm=x;
+  }
+  alarmLine.setLatLngs(alarm?[c,ll(alarm.t.e,alarm.t.n)]:[]);
+  const items=S.thr.filter(x=>x.d<=S.range*1000).sort((a,b)=>b.lvl-a.lvl||a.d-b.d);
+  const mx=items.reduce((m,x)=>Math.max(m,x.lvl),0), st=$('o-status');
+  st.className = mx?('lv'+mx):'';
+  if(mx===2){ const x=items.find(i=>i.lvl===2); st.textContent=`Kollisionswarnung: ${x.t.id}, ${fmtD(x.d)}, ${fmtDh(x.dh)}, Annäherung in ${Math.round(x.tc)} s`; }
+  else if(mx===1){ const x=items.find(i=>i.lvl===1); st.textContent=`Verkehrshinweis: ${x.t.id} kreuzt in ${fmtD(x.dcpa)} Abstand`; }
+  else st.textContent='Luftraum frei, kein Konflikt absehbar';
+  $('o-count').textContent=`${items.length} ${items.length===1?'Ziel':'Ziele'} im Umkreis von ${S.range} km`;
+  $('o-list').innerHTML = items.length ? items.map(x=>{
+    const t=x.t, col=x.lvl===2?'#ff4a4a':x.lvl===1?'#ffe14d':(t0f(x.t));
+    const ic = (t.type==='balloon'||t.type==='friend') ? `<svg width="22" height="22" viewBox="0 0 28 30"><circle cx="14" cy="12" r="9" fill="none" stroke="${col}" stroke-width="3"/><rect x="11" y="23" width="6" height="5" fill="${col}"/></svg>`
+      : `<svg width="22" height="22" viewBox="0 0 28 30" style="transform:rotate(${Math.round(brg(t.ve,t.vn))}deg)"><path d="M14 1l2.200 10.500 11 5.500v2.500l-11-2.500-.8 7 3.500 2.500v2L14 27.300 9.100 28.500v-2l3.500-2.500-.8-7-11 2.500V16.500l11-5.500z" fill="${col}"/></svg>`;
+    return `<div class="lrow lv${x.lvl}"><div class="flex items-center gap-2" style="min-width:0">${ic}<div style="min-width:0"><b>${t.id}</b><small>${t.name}</small></div></div>
+      <div class="num">${fmtD(x.d)} <span style="display:inline-block;color:var(--mut);transform:rotate(${Math.round(x.brg)}deg)">↑</span></div>
+      <div class="num ${x.dh>=0?'pos':'neg'}">${fmtDh(x.dh)}</div>
+      <div class="num" style="color:${vcol(t.vz)}">${fmtV(t.vz)}</div></div>`;
+  }).join('') : '<div class="lbl" style="padding:14px 4px;font-size:14px">Keine Ziele in diesem Umkreis. Größeren Radius wählen.</div>';
+}
+function render(){
+  maybeRoute(ROUTE,S.base,S.orbit);
+  if(S.fc.on && S.o2.active) maybeRoute(ROUTE2,S.fc,S.o2);
+  $('h-rssi').textContent=Math.round(S.link.rssi)+' dBm'; bars($('hbars'),S.link.rssi);
+  S.thr=S.targets.map(threat);
+  const mx=S.thr.reduce((m,x)=>Math.max(m,x.lvl),0);
+  $('nav-badge').classList.toggle('on',mx===2);
+  if(mx===2&&prevLvl!==2&&navigator.vibrate) navigator.vibrate([200,100,200]);
+  prevLvl=mx;
+  if(S.screen==='chaser') updChaser(); else if(S.screen==='flight') updFlight(); else updOrbit();
+}
+
+/* ---------------- Meteo-Screen ---------------- */
+const hexA=(h,a)=>{ const n=parseInt(h.slice(1),16); return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`; };
+const ys=v=>MET.y==='nn'?v:v-GREF;
+const fmtAge=q=>q<90?Math.round(q)+' s':Math.round(q/60)+' min';
+let metChart=null, metLineCol=[];
+const metPlugin={id:'metLayers',beforeDatasetsDraw(ch){
+  const R=MET.R; if(!R) return;
+  const {ctx,chartArea:a,scales:{x,y}}=ch;
+  ctx.save(); ctx.beginPath(); ctx.rect(a.left,a.top,a.right-a.left,a.bottom-a.top); ctx.clip();
+  const yg=y.getPixelForValue(ys(GREF)); ctx.fillStyle='rgba(150,120,90,.28)'; ctx.fillRect(a.left,yg,a.right-a.left,a.bottom-yg);
+  for(const L of R.layers){
+    const p0=y.getPixelForValue(ys(L.z0)), p1=y.getPixelForValue(ys(L.z1)), top=Math.min(p0,p1), h=Math.abs(p0-p1);
+    ctx.fillStyle=hexA(CAT[L.cat].c,.13); ctx.fillRect(a.left,top,a.right-a.left,h);
+    ctx.fillStyle=hexA(CAT[L.cat].c,.95); ctx.fillRect(a.right-8,top,8,h);
+  }
+  if(MET.x==='T'){   // Trockenadiabaten im Hintergrund: dünne grüne Linien, θ alle 2 K
+    const zlo=MET.y==='nn'?y.min:y.min+GREF, zhi=MET.y==='nn'?y.max:y.max+GREF;
+    const th=[thetaOf(x.min,zlo),thetaOf(x.max,zlo),thetaOf(x.min,zhi),thetaOf(x.max,zhi)];
+    const t0=Math.floor(Math.min(...th)/2)*2, t1=Math.ceil(Math.max(...th)/2)*2;
+    ctx.setLineDash([]); ctx.lineWidth=1; ctx.strokeStyle='rgba(95,227,161,.42)'; ctx.fillStyle='rgba(95,227,161,.85)';
+    ctx.font='10.5px Barlow, system-ui, sans-serif'; ctx.textAlign='left'; ctx.textBaseline='top';
+    for(let t=t0;t<=t1;t+=2){
+      ctx.beginPath();
+      for(let k=0;k<=12;k++){ const z=zlo+(zhi-zlo)*k/12, px=x.getPixelForValue(tOfTheta(t,z)), py=y.getPixelForValue(ys(z)); k?ctx.lineTo(px,py):ctx.moveTo(px,py); }
+      ctx.stroke();
+      const pt=x.getPixelForValue(tOfTheta(t,zhi)); if(pt>a.left+4 && pt<a.right-36) ctx.fillText(t+' K',pt+3,a.top+3);
+    }
+  }
+  const yo=y.getPixelForValue(ys(S.orbit.alt));
+  ctx.setLineDash([3,5]); ctx.strokeStyle='rgba(255,159,28,.75)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(a.left,yo); ctx.lineTo(a.right,yo); ctx.stroke();
+  if(MET.x==='G'){
+    const w='rgba(238,243,250,.4)', g='rgba(95,227,161,.85)';
+    const refs=[[0,'isotherm',w]];
+    if(MET.thr<0.98){ refs.push([MET.thr,'labil ab',w]); refs.push([0.98,'trockenadiabatisch',g]); } else refs.push([0.98,'labil ab, trockenadiabatisch',g]);
+    ctx.setLineDash([]); ctx.font='11px Barlow, system-ui, sans-serif'; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    for(const [v,t,c] of refs){ const px=x.getPixelForValue(v); ctx.strokeStyle=c; ctx.fillStyle=c; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(px,a.top); ctx.lineTo(px,a.bottom); ctx.stroke();
+      ctx.save(); ctx.translate(px+4,a.top+6); ctx.rotate(Math.PI/2); ctx.fillText(t,0,0); ctx.restore(); }
+  }
+  ctx.restore();
+}};
+function initMetChart(){
+  if(typeof Chart==='undefined'){ $('met-nolib').style.display='flex'; return; }
+  Chart.defaults.font.family="Barlow,'Segoe UI',system-ui,sans-serif"; Chart.defaults.font.size=12; Chart.defaults.color='#9aabc4';
+  const grid='rgba(154,171,196,.16)', border={color:'#28395a'};
+  metChart=new Chart($('met-canvas'),{
+    type:'scatter',
+    data:{datasets:[
+      {label:'Messpunkte',data:[],pointRadius:3,hitRadius:7,hoverRadius:5,backgroundColor:[],borderWidth:0,order:4},
+      {label:'Trockenadiabate durch die Bodenschicht',type:'line',data:[],borderColor:'rgba(95,227,161,.95)',borderDash:[5,4],borderWidth:1.8,pointRadius:0,hitRadius:0,order:3},
+      {label:'Gewichtetes Profil',type:'line',data:[],borderWidth:5,pointRadius:0,hitRadius:8,borderColor:'#ffc83d',tension:0,segment:{borderColor:c=>metLineCol[c.p1DataIndex]||'#ffc83d'},order:2},
+      {label:'Orbit',data:[],pointRadius:8,hoverRadius:9,backgroundColor:'#ff9f1c',borderColor:'#0a1019',borderWidth:3,order:1}
+    ]},
+    options:{animation:false,responsive:true,maintainAspectRatio:false,parsing:false,
+      interaction:{mode:'nearest',intersect:true},layout:{padding:{right:4,top:4}},
+      scales:{x:{type:'linear',grid:{color:grid},border,title:{display:true,text:'Temperatur (°C)'}},
+              y:{type:'linear',grid:{color:grid},border,title:{display:true,text:'Höhe (m NN)'}}},
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(10,16,25,.95)',borderColor:'#28395a',borderWidth:1,padding:9,
+        callbacks:{
+          title:it=>it[0].dataset.label,
+          label:it=>{ const r=it.raw;
+            if(r.m){ const m=r.m; return [`${m.T.toFixed(1)} °C auf ${Math.round(m.alt)} m NN`,`Alter ${fmtAge(S.t-m.t)}, Abstand ${m.d.toFixed(0)} km`,`Gewicht ${m.w.toFixed(2)} (Zeit ${m.wt.toFixed(2)} × Distanz ${m.wd.toFixed(2)})`]; }
+            if(r.p){ const p=r.p; return [`${p.T.toFixed(1)} °C auf ${Math.round(p.z)} m NN`,`Gradient ${p.g==null?'–':p.g.toFixed(2)} K/100 m`,p.cat?CAT[p.cat].n:'',`Summe der Gewichte ${p.W.toFixed(1)}`]; }
+            return `Orbit auf ${Math.round(S.orbit.alt)} m NN`; }
+        }}}},
+    plugins:[metPlugin]
+  });
+}
+function buildLegend(){
+  const th=String(MET.thr).replace('.',',');
+  $('met-leg').innerHTML=
+    `<span><i style="background:${CAT.inv.c}"></i>Inversion, γ unter 0</span>`+
+    `<span><i style="background:${CAT.stab.c}"></i>Stabil, bis 0,5</span>`+
+    `<span><i style="background:${CAT.neut.c}"></i>Bedingt labil, bis ${th}</span>`+
+    `<span><i style="background:${CAT.labil.c}"></i>Labil, ab ${th} K/100 m</span>`+
+    `<span><i style="background:#5fe3a1;height:2px;border-radius:0"></i>Trockenadiabaten, θ in K</span>`+
+    `<span><i style="background:#9fe3ff;border-radius:50%"></i>Messpunkte jetzt</span>`+
+    `<span><i style="background:#c9b8ff;border-radius:50%"></i>Vorflug</span>`;
+}
+function drawCurve(cv,fn,xmax,unit,marks){
+  const r=cv.getBoundingClientRect(), dpr=window.devicePixelRatio||1, W=Math.round(r.width), H=Math.round(r.height); if(!W||!H) return;
+  if(cv.width!==W*dpr||cv.height!==H*dpr){ cv.width=W*dpr; cv.height=H*dpr; }
+  const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+  const L0=26,R0=8,T0=8,B0=20, X=v=>L0+v/xmax*(W-L0-R0), Y=w=>T0+(1-w)*(H-T0-B0);
+  ctx.font='11px Barlow, system-ui, sans-serif'; ctx.textBaseline='middle'; ctx.textAlign='right'; ctx.fillStyle='#9aabc4'; ctx.strokeStyle='rgba(154,171,196,.22)'; ctx.lineWidth=1;
+  for(const w of [0,.5,1]){ const y=Math.round(Y(w))+.5; ctx.beginPath(); ctx.moveTo(L0,y); ctx.lineTo(W-R0,y); ctx.stroke(); ctx.fillText(String(w).replace('.',','),L0-4,y); }
+  ctx.beginPath(); for(let k=0;k<=100;k++){ const v=k/100*xmax; k?ctx.lineTo(X(v),Y(fn(v))):ctx.moveTo(X(v),Y(fn(v))); }
+  ctx.lineWidth=2.5; ctx.strokeStyle='#4cc9ff'; ctx.stroke();
+  ctx.lineTo(X(xmax),Y(0)); ctx.lineTo(X(0),Y(0)); ctx.closePath(); ctx.fillStyle='rgba(76,201,255,.12)'; ctx.fill();
+  for(const m of marks){ ctx.beginPath(); ctx.arc(X(clamp(m.x,0,xmax)),Y(m.w),5.5,0,7); ctx.fillStyle=m.c; ctx.fill(); ctx.strokeStyle='#0a1019'; ctx.lineWidth=2; ctx.stroke(); }
+  ctx.fillStyle='#9aabc4'; ctx.textBaseline='top'; ctx.textAlign='left'; ctx.fillText('0',L0,H-B0+5); ctx.textAlign='center'; ctx.fillText(Math.round(xmax/2),(L0+W-R0)/2,H-B0+5); ctx.textAlign='right'; ctx.fillText(Math.round(xmax)+' '+unit,W-R0,H-B0+5);
+}
+function drawCurves(){
+  const live=S.met.filter(m=>m.src==='live'), prior=S.met.filter(m=>m.src==='prior');
+  const wtf=a=>MET.weighted?Math.exp(-a/MET.tau):1;
+  const wdf=d=>(MET.weighted&&d>MET.d0)?Math.exp(-Math.pow(d-MET.d0,2)/(2*MET.sigma*MET.sigma)):1;
+  const marks=[{x:0,w:1,c:'#9fe3ff'}]; let note='Aktuelle Punkte: Gewicht 1,00';
+  const oldest=S.met.length?(S.t-S.met[0].t)/60:0;
+  if(prior.length){ const a=prior.reduce((s,m)=>s+(S.t-m.t),0)/prior.length/60; marks.push({x:a,w:wtf(a),c:'#c9b8ff'}); note=`Vorflug (violett): Ø ${Math.round(a)} min alt, w = ${wtf(a).toFixed(2)}`; }
+  if(live.length){ const a=(S.t-live[0].t)/60; if(a>2){ marks.push({x:a,w:wtf(a),c:'#ff9f1c'}); note+=`. Ältester Livepunkt: ${Math.round(a)} min, w = ${wtf(a).toFixed(2)}`; } }
+  drawCurve($('cv-wt'),wtf,Math.max(180,Math.ceil(oldest/30)*30),'min',marks);
+  $('cv-wt-n').textContent=note;
+  const last=live[live.length-1], dEff=last?last.d:0, dReal=dEff-MET.distOffset;
+  const dm=[{x:dEff,w:wdf(dEff),c:'#ff9f1c'}]; if(MET.distOffset>0.5) dm.push({x:dReal,w:wdf(dReal),c:'#9fe3ff'});
+  drawCurve($('cv-wd'),wdf,70,'km',dm);
+  $('cv-wd-n').textContent=`Orbit ${dEff.toFixed(1)} km von der Base, w = ${wdf(dEff).toFixed(2)}`+(MET.distOffset>0.5?`. Reale Distanz ${dReal.toFixed(1)} km`:'');
+}
+function updMeteo(force){
+  const now=Date.now(); if(!force && now-MET.last<500) return; MET.last=now;
+  const R=MET.R=metCompute(), o=S.orbit, live=[...S.met].reverse().find(m=>m.src==='live');
+  let near=null, nd=Infinity; for(const p of R.prof){ const d=Math.abs(p.z-o.alt); if(p.g!=null&&d<nd){ nd=d; near=p; } }
+  $('fl-T').textContent=live?live.T.toFixed(1)+' °C':'–';
+  const fg=$('fl-g'); fg.textContent=near?near.g.toFixed(2):'–'; fg.style.color=near?CAT[near.cat].c:'';
+  $('fl-mix').textContent=R.mix!=null?Math.round(ys(R.mix))+' m':'offen';
+  $('q-val').textContent=Math.round(R.conf*100)+' %';
+  $('q-sub').textContent=`${R.n} Messpunkte, davon ${Math.round(R.nDamp/Math.max(1,R.n)*100)} % gedämpft`;
+  const names={inv:'Inversion, Deckel für Thermik',stab:'Stabile Schicht',neut:'Bedingt labil',labil:'Labile Schicht'}, r10=v=>Math.round(v/10)*10;
+  $('lyr-list').innerHTML=R.layers.length?[...R.layers].reverse().map(L=>`<div class="lyr"><i style="background:${CAT[L.cat].c}"></i><div><b>${names[L.cat]}</b><small>${r10(ys(L.z0))} bis ${r10(ys(L.z1))} m ${MET.y==='nn'?'NN':'über Grund'}</small></div><div class="num">${L.cat==='inv'?'ΔT '+(L.dT>=0?'+':'−')+Math.abs(L.dT).toFixed(1)+' K':'γ '+L.g.toFixed(2)}</div></div>`).join(''):'<div class="lbl" style="padding:10px 0;font-size:14px">Noch keine Schichten erkannt. Der Orbit muss steigen oder sinken.</div>';
+  if($('sheet').classList.contains('open')) drawCurves();
+  if(!metChart) return;
+  const gm=MET.x==='G', D=metChart.data.datasets, n=S.met.length, stride=Math.max(1,Math.ceil(n/1100));
+  const pts=[],cols=[],rad=[];
+  if(!gm) for(let i=0;i<n;i+=stride){ const m=S.met[i], al=(0.07+0.93*Math.pow(m.w,0.7)).toFixed(2);
+    pts.push({x:m.T,y:ys(m.alt),m}); cols.push(m.src==='prior'?`rgba(201,184,255,${al})`:`rgba(159,227,255,${al})`); rad.push(2+2*m.w); }
+  D[0].data=pts; D[0].backgroundColor=cols; D[0].pointRadius=rad;
+  const pp=R.prof.filter(p=>gm?p.g!=null:true);
+  D[2].data=pp.map(p=>({x:gm?p.g:p.T,y:ys(p.z),p})); metLineCol=pp.map(p=>p.cat?CAT[p.cat].c:'#9aabc4');
+  const yLoNN=MET.y==='nn'?Math.floor((GREF-15)/10)*10:GREF-10, yHiNN=Math.max(GREF+500,Math.ceil((Math.max(o.alt,R.zTop)+60)/100)*100);
+  if(!gm && R.prof.length){   // hervorgehobene Adiabate: θ der untersten Messschicht
+    const b0=R.prof[0], th0=thetaOf(b0.T,b0.z), line=[];
+    for(let z=b0.z; z<yHiNN; z+=100) line.push({x:tOfTheta(th0,z),y:ys(z)});
+    line.push({x:tOfTheta(th0,yHiNN),y:ys(yHiNN)}); D[1].data=line;
+  } else D[1].data=[];
+  D[3].data=live?[{x:gm?(near?near.g:0):live.T,y:ys(o.alt)}]:[];
+  const sc=metChart.options.scales;
+  sc.y.min=ys(yLoNN); sc.y.max=ys(yHiNN); sc.y.title.text=MET.y==='nn'?'Höhe (m NN)':'Höhe (m über Grund, Bezug Startplatz)';
+  if(gm){ sc.x.min=-2.5; sc.x.max=2.5; sc.x.ticks.stepSize=0.5; sc.x.title.text='Gradient γ (K/100 m), positiv = Temperaturabnahme'; }
+  else { let lo=Infinity,hi=-Infinity; for(const m of S.met){ lo=Math.min(lo,m.T); hi=Math.max(hi,m.T); } if(!isFinite(lo)){lo=0;hi=15;}
+    sc.x.min=Math.floor(lo-0.5); sc.x.max=Math.ceil(hi+0.5); sc.x.ticks.stepSize=undefined; sc.x.title.text='Temperatur (°C)'; }
+  metChart.update('none');
+}
+function bindMeteo(){
+  bindSeg($('seg-mx'),v=>{ MET.x=v; updMeteo(true); });
+  bindSeg($('seg-my'),v=>{ MET.y=v; updMeteo(true); });
+  bindSeg($('seg-mw'),v=>{ MET.weighted=v==='1'; updMeteo(true); });
+  bindSeg($('seg-tau'),v=>{ MET.tau=+v; updMeteo(true); });
+  bindSeg($('seg-sig'),v=>{ MET.sigma=+v; updMeteo(true); });
+  bindSeg($('seg-thr'),v=>{ MET.thr=+v; buildLegend(); updMeteo(true); });
+  $('met-off').addEventListener('input',e=>{ MET.distOffset=+e.target.value; $('met-off-v').textContent='+'+MET.distOffset+' km'; });
+  $('met-ff').addEventListener('click',()=>{ for(let i=0;i<1800;i++) step(1); updMeteo(true); });
+  $('btn-sheet').addEventListener('click',()=>{ $('sheet').classList.add('open'); updMeteo(true); });
+  $('btn-sheet-x').addEventListener('click',()=>$('sheet').classList.remove('open'));
+}
+buildLegend(); initMetChart();
+
+/* ---------------- Steuerung ---------------- */
+let acc=0;
+setInterval(()=>{ if(!S.paused){ acc+=0.2*S.speed; while(acc>=1){ step(1); acc-=1; } } render(); },200);
+
+function showScreen(name){
+  S.screen=name;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id==='s-'+name));
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.s===name));
+  requestAnimationFrame(()=>{
+    if(name==='chaser'){ map1.invalidateSize(); lastFit=0; }
+    if(name==='orbit'){ setRange(S.range); }
+    if(name==='flight'){ if(metChart) metChart.resize(); updMeteo(true); }
+    render();
+  });
+}
+document.querySelectorAll('#nav button').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.s)));
+document.addEventListener('keydown',e=>{ const m={'1':'chaser','2':'flight','3':'orbit'}[e.key]; if(m) showScreen(m); });
+
+document.querySelectorAll('#followbar button').forEach(b=>b.addEventListener('click',()=>{ S.follow=b.dataset.f; lastFit=0; S.forceFit=true; markFollow(); render(); }));
+function markFollow(){ document.querySelectorAll('#followbar button').forEach(x=>x.classList.toggle('on',x.dataset.f===S.follow)); }
+map1.on('dragstart',()=>{ S.follow='free'; markFollow(); });
+document.querySelectorAll('#rangebar button').forEach(b=>b.addEventListener('click',()=>setRange(+b.dataset.r)));
+
+function bindSeg(el,onPick){ el.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); onPick(b.dataset.v); })); }
+document.querySelectorAll('#sim .seg').forEach(el=>bindSeg(el,v=>{
+  const k=el.dataset.key;
+  if(k==='speed') S.speed=+v; else S[k]=v;
+  if(k==='map'||k==='sharp') applyTiles();
+  if(k==='frame'){ document.body.className='frame-'+v; setTimeout(()=>{ map1.invalidateSize(); map3.invalidateSize(); setRange(S.range); render(); },60); }
+}));
+$('btn-sim').addEventListener('click',()=>$('sim').classList.toggle('open'));
+$('btn-pause').addEventListener('click',e=>{ S.paused=!S.paused; e.target.textContent=S.paused?'Fortsetzen':'Pause'; });
+$('btn-hunter').addEventListener('click',()=>{ const h=S.targets.find(t=>t.hunter); respawn(h,5500); $('sim').classList.remove('open'); showScreen('orbit'); });
+$('btn-reset').addEventListener('click',()=>location.reload());
+window.addEventListener('resize',()=>{ if(S.screen==='flight') updMeteo(true); map1.invalidateSize(); map3.invalidateSize(); if(S.screen==='orbit') setRange(S.range); });
+
+let toastTimer=0;
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('on'),3500); }
+$('fc-toggle').addEventListener('click',()=>setFc(!S.fc.on));
+$('btn-o2').addEventListener('click',()=>{ if(!S.o2.active) activateO2(); $('sim').classList.remove('open'); });
+function updData(){
+  const mb=v=>(v/1048576).toFixed(1).replace('.',',')+' MB', all=DATA.tileHit+DATA.tileNet;
+  if(!DATA.sw){ $('data-line').textContent='–'; $('data-sub').textContent='Der Zähler läuft ab dem zweiten Start der installierten App.'; return; }
+  $('data-line').textContent=mb(DATA.tileBytes+DATA.routeBytes);
+  $('data-sub').textContent=`Karten ${mb(DATA.tileBytes)}, Routen ${Math.round(DATA.routeBytes/1024)} KB. ${all?Math.round(DATA.tileHit/all*100):0} % der Kartenkacheln kamen aus dem Zwischenspeicher.`;
+}
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.addEventListener('message',e=>{
+    const m=e.data; if(!m||m.type!=='tile') return;
+    DATA.sw=true; if(m.hit) DATA.tileHit++; if(m.net){ DATA.tileNet++; DATA.tileBytes+=m.bytes||0; }
+  });
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').then(()=>{ if(navigator.serviceWorker.controller) DATA.sw=true; }).catch(()=>{});
+  });
+}
+setInterval(updData,1000); updData();
+bindMeteo();
+showScreen('chaser');
+toast('Orbit steht am Startplatz Bitterfeld bereit');
+</script>
+</body>
+</html>
