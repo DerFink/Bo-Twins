@@ -37,16 +37,16 @@ body{display:flex;align-items:center;justify-content:center}
 button{font-family:inherit;color:inherit;cursor:pointer}
 button:focus-visible{outline:2px solid var(--base);outline-offset:2px}
 
-#app{position:relative;width:100%;height:100dvh;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;container-type:size}
-body.frame-portrait #app{width:min(430px,100vw);height:min(100dvh,900px);border-radius:30px;border:1px solid var(--line)}
-body.frame-land #app{width:min(980px,100vw);height:min(100dvh,470px);border-radius:24px;border:1px solid var(--line)}
+#app{position:relative;width:100%;height:100vh;height:100dvh;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;container-type:size}
+body.frame-portrait #app{width:min(430px,100vw);height:min(100vh,900px);height:min(100dvh,900px);border-radius:30px;border:1px solid var(--line)}
+body.frame-land #app{width:min(980px,100vw);height:min(100vh,470px);height:min(100dvh,470px);border-radius:24px;border:1px solid var(--line)}
 
 .num{font-family:var(--num);font-variant-numeric:tabular-nums;letter-spacing:.01em}
 .lbl{font-size:12px;color:var(--mut);line-height:1.1}
 
 /* Kopfzeile */
 .hdr{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:max(8px,env(safe-area-inset-top)) 12px 8px;border-bottom:1px solid var(--line);background:var(--bg)}
-.brand{display:flex;align-items:center;gap:8px;font-family:var(--num);font-weight:700;font-size:21px;letter-spacing:.02em}
+.brand{white-space:nowrap;display:flex;align-items:center;gap:8px;font-family:var(--num);font-weight:700;font-size:21px;letter-spacing:.02em}
 .chip{display:flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid var(--line);border-radius:999px;font-size:13px;background:var(--pan);white-space:nowrap}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--up);box-shadow:0 0 0 3px rgba(95,227,161,.18)}
 .iconbtn{width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--pan);display:grid;place-items:center}
@@ -61,6 +61,7 @@ main{position:relative;flex:1;min-height:0}
 .map{position:absolute;inset:0;z-index:0}
 .ov{position:absolute;z-index:10}
 
+@media (max-width:380px){.chip[title^="Smartphone"] span{display:none}}
 /* Navigation */
 .nav{flex:none;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);background:var(--bg);padding-bottom:env(safe-area-inset-bottom)}
 .nav button{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px 8px;background:none;border:0;color:var(--mut);font-size:13px;font-weight:500}
@@ -106,7 +107,7 @@ main{position:relative;flex:1;min-height:0}
 .vbar .tl{position:absolute;left:0;width:6px;height:1px;background:var(--line)}
 .vbar .fill{position:absolute;left:38px;right:8px;border-radius:5px;transition:height .25s linear}
 .vnum{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
-.vnum .big{font-family:var(--num);font-weight:700;line-height:.85;font-variant-numeric:tabular-nums;font-size:clamp(4.2rem,min(27cqw,19cqh),11rem)}
+.vnum .big{font-family:var(--num);font-weight:700;line-height:.85;font-variant-numeric:tabular-nums;font-size:4.5rem;font-size:clamp(4.2rem,min(27cqw,19cqh),11rem)}
 .vnum .unit{font-size:20px;color:var(--mut);margin-top:6px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .seg button{background:none;border:0;padding:7px 11px;font-size:13px;color:var(--mut);min-height:34px}
@@ -114,20 +115,27 @@ main{position:relative;flex:1;min-height:0}
 #b-alert{display:none;margin:0 0 -2px;padding:9px 12px;border-radius:12px;background:var(--alarm);color:#1c0000;font-weight:600;font-size:16px}
 #b-alert.on{display:block;animation:blink 1s steps(2) infinite}
 
-/* Flug und Profil */
-.fl{position:absolute;inset:0;display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px;padding:8px 12px 12px}
-.fl-inst{display:flex;gap:12px;min-height:0;height:clamp(180px,32cqh,320px)}
-.fl-v{display:flex;gap:10px;flex:1.3;min-width:0}
-.fl .vbar{width:62px}
-.fl .vnum .big{font-size:clamp(3.6rem,min(19cqw,13cqh),8rem)}
-.fl-a{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:3px}
-.fl-a .big{font-family:var(--num);font-weight:700;font-variant-numeric:tabular-nums;font-size:clamp(2.6rem,min(12cqw,9cqh),4.6rem);line-height:1}
-.fl-a small{font-size:16px;color:var(--mut)}
+/* Flug und Profil: Hochformat = kompakte Kopfzeile, das Profil füllt den Rest */
+.fl{position:absolute;inset:0;display:flex;flex-direction:column;gap:8px;padding:8px 12px 10px}
+.fl-inst{flex:none;display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;align-items:end}
+.fl-v{display:flex;gap:10px;min-width:0}
+.fl .vbar{display:none;width:56px}
+.fl .vnum{justify-content:flex-end}
+.fl .vnum .big{font-size:3rem;font-size:clamp(2.4rem,11cqw,3.4rem);line-height:.95}
+.fl .vnum .unit{font-size:14px;margin-top:2px}
+#b-avg{display:none}
+.fl-a{min-width:0;display:flex;flex-direction:column;justify-content:flex-end;gap:1px}
+.fl-a .big{font-family:var(--num);font-weight:700;font-variant-numeric:tabular-nums;font-size:3rem;font-size:clamp(2.4rem,11cqw,3.4rem);line-height:.95}
+.fl-a small{font-size:15px;color:var(--mut)}
 .rd{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:12px;color:var(--mut)}
-.rd b{font-family:var(--num);font-size:18px;font-weight:600;color:var(--tx);font-variant-numeric:tabular-nums}
-.fl-chart{min-height:0;display:flex;flex-direction:column;padding:8px}
-.fl-cv{position:relative;flex:1;min-height:180px}
+.rd b{font-family:var(--num);font-size:16px;font-weight:600;color:var(--tx);font-variant-numeric:tabular-nums}
+.rds{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(86px,1fr));gap:6px}
+.chip2{display:flex;flex-direction:column;padding:4px 8px;border:1px solid var(--line);border-radius:10px;background:var(--pan);font-size:11px;color:var(--mut);line-height:1.15;min-width:0}
+.chip2 b{font-family:var(--num);font-size:18px;font-weight:600;color:var(--tx);font-variant-numeric:tabular-nums}
+.fl-chart{flex:1;min-height:0;display:flex;flex-direction:column;padding:8px}
+.fl-cv{position:relative;flex:1;min-height:0}
 #s-flight #b-alert{position:absolute;left:12px;right:12px;top:8px;z-index:30;margin:0}
+.fl .seg button{padding:6px 9px}
 .sm{min-height:34px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--pan2);font-size:13px;font-weight:600}
 .sheet{position:absolute;left:0;right:0;bottom:0;z-index:40;max-height:80%;overflow:auto;background:#0d1626;border-top:1px solid var(--line);border-radius:20px 20px 0 0;box-shadow:0 -18px 40px rgba(0,0,0,.5);padding:12px 12px 20px;transform:translateY(105%);visibility:hidden;transition:transform .25s ease,visibility 0s .25s}
 .sheet.open{transform:none;visibility:visible;transition:transform .25s ease}
@@ -148,9 +156,9 @@ main{position:relative;flex:1;min-height:0}
 #o-status.lv2{background:var(--alarm);color:#1c0000;border-color:var(--alarm);animation:blink 1s steps(2) infinite}
 
 @container (orientation:landscape){
-  .fl{grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr);grid-template-rows:minmax(0,1fr)}
-  .fl-inst{flex-direction:column;height:auto}
-  .fl .vnum .big{font-size:clamp(3rem,min(10cqw,26cqh),7rem)}
+  .fl{flex-direction:row}
+  .fl-inst{flex:0 0 42%;align-self:center}
+  .fl .vbar{display:block;height:84px;align-self:flex-end}
   .orb{grid-template-rows:1fr;grid-template-columns:minmax(0,58%) minmax(0,1fr)}
   .orb-list{border-top:0;border-left:1px solid var(--line)}
 }
@@ -265,7 +273,7 @@ main{position:relative;flex:1;min-height:0}
           <div class="fl-v">
             <div class="vbar" id="vbar"><div class="zero"></div><div class="fill" id="vfill"></div></div>
             <div class="vnum">
-              <div class="lbl" style="font-size:15px">Vario</div>
+              <div class="lbl">Vario</div>
               <div class="big" id="b-var">+0.0</div>
               <div class="unit">m/s <span id="b-avg" class="num" style="margin-left:6px">Ø 30 s +0.0</span></div>
             </div>
@@ -274,24 +282,24 @@ main{position:relative;flex:1;min-height:0}
             <div class="lbl">Höhe NN</div>
             <div><span class="big" id="b-alt">–</span> <small>m</small></div>
             <div class="rd"><span>über Grund</span><b id="b-agl">–</b></div>
-            <div class="rd"><span>Temperatur</span><b id="fl-T">–</b></div>
-            <div class="rd"><span>γ in K/100 m</span><b id="fl-g">–</b></div>
-            <div class="rd"><span>Mischungsschicht</span><b id="fl-mix">–</b></div>
-            <div class="rd" id="fl-o2row" style="display:none"><span style="color:var(--fr)">Orbit 2</span><b id="fl-o2">–</b></div>
+          </div>
+          <div class="rds">
+            <div class="chip2"><span>Temperatur</span><b id="fl-T">–</b></div>
+            <div class="chip2"><span>γ in K/100 m</span><b id="fl-g">–</b></div>
+            <div class="chip2"><span>Mischungsschicht</span><b id="fl-mix">–</b></div>
+            <div class="chip2" id="fl-o2row" style="display:none"><span style="color:var(--fr)">Orbit 2</span><b id="fl-o2">–</b></div>
           </div>
         </div>
         <div class="fl-chart card2">
           <div class="flex items-center justify-between gap-2 flex-wrap mb-2">
             <div class="seg" id="seg-mx"><button data-v="T" class="on">Temperatur</button><button data-v="G">Gradient</button></div>
-            <div class="seg" id="seg-my"><button data-v="nn" class="on">NN</button><button data-v="agl">Über Grund</button></div>
-            <div class="seg" id="seg-mw"><button data-v="1" class="on">Gewichtet</button><button data-v="0">Roh</button></div>
+            <div class="seg" id="seg-my"><button data-v="nn" class="on">NN</button><button data-v="agl">Grund</button></div>
             <button class="sm" id="btn-sheet">Details</button>
           </div>
           <div class="fl-cv">
             <canvas id="met-canvas"></canvas>
             <div id="met-nolib" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--mut)">Chart.js konnte nicht geladen werden. Für das Profil ist eine Internetverbindung nötig.</div>
           </div>
-          <div class="leg" id="met-leg"></div>
         </div>
       </div>
       <div id="b-alert" role="alert"></div>
@@ -306,11 +314,13 @@ main{position:relative;flex:1;min-height:0}
         </div>
         <div class="card2 mb-2.5">
           <b style="font-size:16px">So liest du das Profil</b>
+          <div class="leg" id="met-leg" style="margin:8px 0"></div>
           <div class="lbl mt-1" style="font-size:13px;line-height:1.4">Die grünen Linien sind Trockenadiabaten, also Linien gleicher potenzieller Temperatur θ im Abstand von 2 K. Ein aufsteigendes Luftpaket folgt ihnen. Fällt die Profilkurve nach oben schneller ab als eine grüne Linie, ist die Schicht labil und trägt Thermik. Steht sie senkrechter oder knickt nach rechts, ist sie stabil. Eine Inversion bremst das Steigen. Im Gradient-Modus zeigt die grüne Linie 0,98 K/100 m.</div>
         </div>
         <div class="card2">
           <div style="font-weight:600;font-size:16px">Gewichtung der Messpunkte</div>
           <div class="lbl mt-1" style="font-size:13px;line-height:1.4">Gewicht w = Zeitverfall × Distanzgewicht. Zeit: exp(−Alter / τ). Distanz: volles Gewicht bis d₀ = 25 km, danach Gauß-Abfall mit Breite σ. Je blasser ein Punkt im Diagramm, desto kleiner sein Gewicht.</div>
+          <div class="rw"><span>Darstellung</span><div class="seg" id="seg-mw"><button data-v="1" class="on">Gewichtet</button><button data-v="0">Roh</button></div></div>
           <div class="rw"><span>Zeitkonstante τ</span><div class="seg" id="seg-tau"><button data-v="30">30 min</button><button data-v="60" class="on">60 min</button><button data-v="120">120 min</button></div></div>
           <div class="rw"><span>Gauß-Breite σ</span><div class="seg" id="seg-sig"><button data-v="8">8 km</button><button data-v="15" class="on">15 km</button><button data-v="25">25 km</button></div></div>
           <div class="rw"><span>Labil ab γ =</span><div class="seg" id="seg-thr"><button data-v="0.65">0,65</button><button data-v="0.9" class="on">0,90</button><button data-v="0.98">0,98</button></div></div>
@@ -396,11 +406,13 @@ main{position:relative;flex:1;min-height:0}
       <div class="lbl">Datenverbrauch seit App-Start</div>
       <div class="num" id="data-line" style="font-size:19px;font-weight:600;margin-top:2px">–</div>
       <div class="lbl" id="data-sub" style="margin-top:2px">–</div>
+      <div class="lbl" id="tile-diag" style="margin-top:6px">–</div>
     </div>
     <div class="flex gap-2 flex-wrap">
       <button class="act" id="btn-pause">Pause</button>
       <button class="act" id="btn-hunter">Konfliktziel erzeugen</button>
       <button class="act" id="btn-o2">Orbit 2 jetzt starten</button>
+      <button class="act" id="btn-clear">Zwischenspeicher leeren</button>
       <button class="act" id="btn-reset">Neustart</button>
     </div>
   </div>
@@ -503,7 +515,7 @@ function metCompute(){
       const w=Math.min(prof[j].W,3), q=prof[j]; sw+=w; sz+=w*q.z; sT+=w*q.T; szz+=w*q.z*q.z; szT+=w*q.z*q.T; n++;
     }
     const den=sw*szz-sz*sz;
-    if(n>=3 && den>1e-6){ prof[i].g=-(sw*szT-sz*sT)/den*100; prof[i].cat=catOf(prof[i].g); }
+    if(n>=3 && den>1e-6){ const g=-(sw*szT-sz*sT)/den*100; if(Math.abs(g)<=3){ prof[i].g=g; prof[i].cat=catOf(g); } }   // unplausible Randwerte weglassen
   }
   let layers=[];
   for(const p of prof){ if(!p.cat) continue;
@@ -726,7 +738,7 @@ function syncMapSeg(){ document.querySelectorAll('#sim [data-key="map"] button')
 function checkTiles(){
   if(tileOk>0){ $('net-note').style.display='none'; return; }
   if(tileErr>6 && S.map==='dark' && !tileFell){ tileFell=true; tileErr=0; S.map='light'; syncMapSeg(); applyTiles(); return; }
-  if(tileErr>6) $('net-note').style.display='block';
+  if(tileErr>6){ $('net-note').style.display='block'; $('net-note').textContent=`Es werden keine Kartenkacheln geladen (${tileErr} Fehler). Mögliche Ursachen: kein Empfang, Werbeblocker, Datenschutz-Erweiterung oder gesperrtes Firmen-WLAN.`; }
 }
 function applyTiles(){
   for(const m of [map1,map3]){
@@ -1110,8 +1122,12 @@ window.addEventListener('resize',()=>{ if(S.screen==='flight') updMeteo(true); m
 let toastTimer=0;
 function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('on'),3500); }
 $('fc-toggle').addEventListener('click',()=>setFc(!S.fc.on));
+$('btn-clear').addEventListener('click',async()=>{
+  try{ for(const k of await caches.keys()) await caches.delete(k); toast('Zwischenspeicher geleert, bitte App neu öffnen'); }catch(e){ toast('Zwischenspeicher nicht verfügbar'); }
+});
 $('btn-o2').addEventListener('click',()=>{ if(!S.o2.active) activateO2(); $('sim').classList.remove('open'); });
 function updData(){
+  $('tile-diag').textContent=`Kartenkacheln: ${tileOk} geladen, ${tileErr} Fehler. Quelle: ${S.map==='dark'?'CARTO dunkel':'OpenStreetMap hell'}.`;
   const mb=v=>(v/1048576).toFixed(1).replace('.',',')+' MB', all=DATA.tileHit+DATA.tileNet;
   if(!DATA.sw){ $('data-line').textContent='–'; $('data-sub').textContent='Der Zähler läuft ab dem zweiten Start der installierten App.'; return; }
   $('data-line').textContent=mb(DATA.tileBytes+DATA.routeBytes);

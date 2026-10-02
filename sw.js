@@ -3,10 +3,10 @@
    - Bibliotheken (Leaflet, Chart.js, Tailwind, Schriften): einmal laden, dann aus dem Zwischenspeicher
    - Kartenkacheln: nur was angezeigt wurde, wird gespeichert und beim nächsten Mal nicht erneut geladen
    - Routing-Abfragen gehen immer direkt ins Netz */
-const VER = 'v1';
+const VER = 'v2';
 const SHELL = 'bt-shell-' + VER;
-const LIBS = 'bt-libs-v1';
-const TILES = 'bt-tiles-v1';
+const LIBS = 'bt-libs-' + VER;
+const TILES = 'bt-tiles-' + VER;
 const MAX_TILES = 5000;   // ca. 100 MB Obergrenze, älteste werden verworfen
 
 const SHELL_FILES = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
@@ -35,7 +35,7 @@ self.addEventListener('install', e => {
 
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
-    for (const k of await caches.keys()) if (k.startsWith('bt-shell-') && k !== SHELL) await caches.delete(k);
+    for (const k of await caches.keys()) if (k.startsWith('bt-') && ![SHELL, LIBS, TILES].includes(k)) await caches.delete(k);
     await self.clients.claim();
   })());
 });
