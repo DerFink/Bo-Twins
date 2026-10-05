@@ -3,7 +3,7 @@
    - Bibliotheken (Leaflet, Chart.js, Tailwind, Schriften): einmal laden, dann aus dem Zwischenspeicher
    - Kartenkacheln: nur was angezeigt wurde, wird gespeichert und beim nächsten Mal nicht erneut geladen
    - Routing-Abfragen gehen immer direkt ins Netz */
-const VER = 'v3';   // v3: alte Kacheln (CARTO-Platzhalter) werden verworfen
+const VER = 'v4';   // v4: Tailwind entfernt, neue Oberfläche; ältere Zwischenspeicher werden verworfen
 const SHELL = 'bt-shell-' + VER;
 const LIBS = 'bt-libs-' + VER;
 const TILES = 'bt-tiles-' + VER;
@@ -14,7 +14,6 @@ const LIB_URLS = [
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js',
-  'https://cdn.tailwindcss.com/',
   'https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap'
 ];
 const TILE_HOST = /(^|\.)(tile\.openstreetmap\.org)$/;
