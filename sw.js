@@ -3,7 +3,7 @@
    - Bibliotheken (Leaflet, Chart.js, Tailwind, Schriften): einmal laden, dann aus dem Zwischenspeicher
    - Kartenkacheln: nur was angezeigt wurde, wird gespeichert und beim nächsten Mal nicht erneut geladen
    - Routing-Abfragen gehen immer direkt ins Netz */
-const VER = 'v4';   // v4: Tailwind entfernt, neue Oberfläche; ältere Zwischenspeicher werden verworfen
+const VER = 'v5';   // v5: Startdatei wird immer beim Server geprüft; ältere Zwischenspeicher werden verworfen
 const SHELL = 'bt-shell-' + VER;
 const LIBS = 'bt-libs-' + VER;
 const TILES = 'bt-tiles-' + VER;
@@ -52,7 +52,7 @@ self.addEventListener('fetch', e => {
 async function shell(req) {
   const cache = await caches.open(SHELL);
   try {
-    const res = await fetch(req);
+    const res = await fetch(req, {cache: 'no-cache'});   // immer beim Server nachfragen, nicht den Browser-Cache nehmen
     if (res.ok) cache.put(req, res.clone());
     return res;
   } catch (err) {

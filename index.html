@@ -369,6 +369,7 @@ main{position:relative;flex:1;min-height:0}
       <div class="num" id="data-line" style="font-size:19px;font-weight:600;margin-top:2px">–</div>
       <div class="lbl" id="data-sub" style="margin-top:2px">–</div>
       <div class="lbl" id="tile-diag" style="margin-top:6px">–</div>
+      <div class="lbl" id="ver" style="margin-top:6px">–</div>
     </div>
     <div class="r"><span data-i="s_view">Ansicht</span><div class="seg" data-key="frame"><button data-v="auto" class="on" data-i="v_full">Voll</button><button data-v="portrait" data-i="v_port">Hoch</button><button data-v="land" data-i="v_land">Quer</button></div></div>
     <div style="border-top:1px solid var(--line);margin:4px 0 12px"></div>
@@ -537,13 +538,15 @@ const TX = {
  b_resume:["Fortsetzen","Resume","Reprendre","Wznów","Pokračovat","繼續"],
  b_hunter:["Konfliktziel erzeugen","Create conflict target","Créer une cible en conflit","Utwórz cel kolizyjny","Vytvořit konfliktní cíl","建立衝突目標"],
  b_o2:["Orbit 2 jetzt starten","Start Orbit 2 now","Lancer Orbit 2 maintenant","Uruchom Orbit 2 teraz","Spustit Orbit 2 hned","立即啟動 Orbit 2"],
- b_clear:["Zwischenspeicher leeren","Clear cache","Vider le cache","Wyczyść pamięć podręczną","Vymazat mezipaměť","清除快取"],
+ b_clear:["Speicher leeren und neu laden","Clear cache and reload","Vider le cache et recharger","Wyczyść pamięć i przeładuj","Vymazat mezipaměť a znovu načíst","清除快取並重新載入"],
+ ver:["Version","Version","Version","Wersja","Verze","版本"],
  b_reset:["Neustart","Restart","Redémarrer","Uruchom ponownie","Restart","重新開始"],
  // Hinweise
  toast_ready:["Orbit steht am Startplatz Bitterfeld bereit","Orbit is ready at the Bitterfeld launch site","L’Orbit est prêt sur le site de Bitterfeld","Orbit czeka na miejscu startu w Bitterfeld","Orbit je připraven na startovišti Bitterfeld","Orbit 已在 Bitterfeld 起飛場就緒"],
  toast_o1:["Orbit gestartet, Aufstieg läuft","Orbit launched, climb in progress","Orbit décollé, montée en cours","Orbit wystartował, trwa wznoszenie","Orbit odstartoval, probíhá stoupání","Orbit 已起飛，正在爬升"],
  toast_o2:["Orbit 2 gestartet, befreundeter Ballon","Orbit 2 launched, friend's balloon","Orbit 2 décollé, ballon d’un ami","Orbit 2 wystartował, balon znajomego","Orbit 2 odstartoval, balon přítele","Orbit 2 已起飛，朋友的熱氣球"],
- toast_cleared:["Zwischenspeicher geleert, bitte App neu öffnen","Cache cleared, please reopen the app","Cache vidé, rouvrez l’app","Pamięć podręczna wyczyszczona, otwórz aplikację ponownie","Mezipaměť vymazána, otevřete aplikaci znovu","快取已清除，請重新開啟 App"],
+ toast_cleared:["Zwischenspeicher geleert, App lädt neu","Cache cleared, reloading","Cache vidé, rechargement en cours","Pamięć wyczyszczona, przeładowuję","Mezipaměť vymazána, načítám znovu","快取已清除，正在重新載入"],
+ toast_newver:["Neue Version geladen. Beim nächsten Start ist sie aktiv.","New version downloaded. It will be active at the next start.","Nouvelle version chargée. Elle sera active au prochain démarrage.","Pobrano nową wersję. Będzie aktywna po następnym uruchomieniu.","Nová verze je stažena. Aktivuje se při dalším spuštění.","已下載新版本，下次啟動時生效。"],
  toast_nocache:["Zwischenspeicher nicht verfügbar","Cache not available","Cache indisponible","Pamięć podręczna niedostępna","Mezipaměť není dostupná","快取無法使用"],
  net_err:["Es werden keine Kartenkacheln geladen ({n} Fehler). Mögliche Ursachen: kein Empfang, Werbeblocker, Datenschutz-Erweiterung oder gesperrtes Firmen-WLAN.","No map tiles are loading ({n} errors). Possible causes: no reception, ad blocker, privacy extension or a blocked company Wi-Fi.","Aucune tuile ne se charge ({n} erreurs). Causes possibles : pas de réseau, bloqueur de publicités, extension de confidentialité ou Wi-Fi d’entreprise bloqué.","Kafelki mapy się nie ładują ({n} błędów). Możliwe przyczyny: brak zasięgu, blokada reklam, rozszerzenie prywatności lub zablokowane firmowe Wi-Fi.","Dlaždice mapy se nenačítají ({n} chyb). Možné příčiny: žádný signál, blokování reklam, rozšíření pro soukromí nebo blokovaná firemní Wi-Fi.","地圖圖磚無法載入（{n} 個錯誤）。可能原因：沒有訊號、廣告攔截器、隱私權擴充功能或受限的公司 Wi-Fi。"],
  // Luftraum (Demo)
@@ -1359,12 +1362,18 @@ let toastTimer=0;
 function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('on'),3500); }
 $('fc-toggle').addEventListener('click',()=>setFc(!S.fc.on));
 $('btn-o2').addEventListener('click',()=>{ if(!S.o2.active) activateO2(); $('sim').classList.remove('open'); });
-$('btn-clear').addEventListener('click',async()=>{
-  try{ for(const k of await caches.keys()) await caches.delete(k); toast(tr('toast_cleared')); }catch(e){ toast(tr('toast_nocache')); }
+$('btn-clear').addEventListener('click',async()=>{   // alles verwerfen und neu laden: erzwingt die neueste Version
+  try{
+    for(const k of await caches.keys()) await caches.delete(k);
+    if('serviceWorker' in navigator){ for(const r of await navigator.serviceWorker.getRegistrations()) await r.unregister(); }
+    toast(tr('toast_cleared')); setTimeout(()=>location.reload(),900);
+  }catch(e){ toast(tr('toast_nocache')); }
 });
 
 /* ---------------- Datenzähler und Service Worker ---------------- */
+const BUILD = '2026-10-05.3';   // bei jeder Auslieferung erhöhen; steht in den Einstellungen
 function updData(){
+  $('ver').textContent=tr('ver')+' '+BUILD;
   const mb=v=>(v/1048576).toFixed(1).replace('.',',')+' MB', all=DATA.tileHit+DATA.tileNet;
   $('tile-diag').textContent=tr('d_tiles',{ok:tileOk,err:tileErr,dark:S.map==='dark'?tr('d_dark'):''});
   if(!DATA.sw){ $('data-line').textContent='–'; $('data-sub').textContent=tr('d_none'); return; }
@@ -1376,8 +1385,10 @@ if('serviceWorker' in navigator){
     const m=e.data; if(!m||m.type!=='tile') return;
     DATA.sw=true; if(m.hit) DATA.tileHit++; if(m.net){ DATA.tileNet++; DATA.tileBytes+=m.bytes||0; }
   });
+  let hadController=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(hadController) toast(tr('toast_newver')); hadController=true; });
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./sw.js').then(()=>{ if(navigator.serviceWorker.controller) DATA.sw=true; }).catch(()=>{});
+    navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>{ if(navigator.serviceWorker.controller) DATA.sw=true; reg.update(); }).catch(()=>{});
   });
 }
 
