@@ -215,6 +215,12 @@ main{position:relative;flex:1;min-height:0}
 .rdbtn b small{border-bottom:1px dotted var(--mut)}
 .notice{margin-top:12px;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg)}
 .notice b{font-size:13px}
+
+.ptip.own-o{color:#ffd9a3}
+.ptip.own-b{color:#bfeaff}
+.wbsec{font-size:12px;font-weight:600;color:var(--mut);letter-spacing:.04em;text-transform:uppercase;margin:8px 0 2px}
+.wbsec:first-child{margin-top:0}
+.wbrow.own .wbico.own{display:grid;place-items:center;width:44px;height:36px}
 </style>
 </head>
 
@@ -443,6 +449,7 @@ const TX = {
  f_orbit:["Orbit folgen","Follow Orbit","Suivre Orbit","Śledź Orbit","Sledovat Orbit","追蹤 Orbit"],
  f_both:["Beide zeigen","Show both","Voir les deux","Pokaż oba","Zobrazit oba","顯示兩者"],
  f_base:["Base folgen","Follow Base","Suivre Base","Śledź Base","Sledovat Base","追蹤 Base"],
+ wb_mine:["Meine Geräte","My devices","Mes appareils","Moje urządzenia","Má zařízení","我的裝置"],
  wb_menu:["Weitere Ballons","More balloons","Autres ballons","Więcej balonów","Další balony","其他熱氣球"],
  wb_reset:["Namen zurücksetzen","Reset names","Réinitialiser les noms","Zresetuj nazwy","Obnovit názvy","重設名稱"],
  wb_hint:["Namen gehören zur LoRa-ID und bleiben gespeichert.","Names belong to the LoRa ID and stay saved.","Les noms sont liés à l’ID LoRa et restent enregistrés.","Nazwy są powiązane z ID LoRa i pozostają zapisane.","Názvy patří k ID LoRa a zůstávají uloženy.","名稱綁定 LoRa ID 並會保存。"],
@@ -956,7 +963,7 @@ const bTrail  = L.polyline([],{color:'#4cc9ff',weight:2,opacity:.45}).addTo(map1
 const oTrack  = L.polyline([],{color:'#ff9f1c',weight:5,opacity:.95,lineCap:'round'}).addTo(map1);
 const oPred   = L.polyline([],{color:'#ffc277',weight:4,opacity:.95,dashArray:'3 11',lineCap:'round'}).addTo(map1);
 const hLabel = h => '+'+String(h).replace('.',['de','fr','pl','cs'].includes(S.lang)?',':'.')+' h';   // Zeitmarken des Zukunftspfads
-const predPts = [30,60,150,180].map(m=>{ const c=L.circleMarker([0,0],{radius:5,color:'#0a1019',weight:2,fillColor:'#ffc277',fillOpacity:1}).addTo(map1); c._m=m; c._h=m/60; c.bindTooltip(hLabel(c._h),{permanent:true,direction:'right',offset:[8,0],className:'ptip'}); return c; });
+const predPts = [30,60,120,180].map(m=>{ const c=L.circleMarker([0,0],{radius:5,color:'#0a1019',weight:2,fillColor:'#ffc277',fillOpacity:1}).addTo(map1); c._m=m; c._h=m/60; c.bindTooltip(hLabel(c._h),{permanent:true,direction:'right',offset:[8,0],className:'ptip'}); return c; });
 const baseMk1 = L.marker([0,0],{icon:baseIcon(),keyboard:false,zIndexOffset:500}).addTo(map1);
 const orbMk1  = L.marker([0,0],{icon:orbIcon(),keyboard:false,zIndexOffset:900}).addTo(map1);
 // Freunde (Menü „Weitere Ballons“): Namen gehören zur LoRa-ID und bleiben gespeichert
@@ -976,7 +983,14 @@ const o2Track = L.polyline([],{color:'#ff7ad9',weight:4,opacity:.9,lineCap:'roun
 const fcMk1   = L.marker([0,0],{icon:baseIcon('#ff7ad9'),keyboard:false,zIndexOffset:450});
 fcMk1.bindTooltip(frLabel(frBase()),{permanent:true,direction:'right',offset:[22,0],className:'ptip friend'});
 const fcRoute = L.polyline([],{color:'#ff7ad9',weight:3.5,opacity:.9,dashArray:'2 8',lineCap:'round'});
-function updateFriendLabels(){ o2Mk1.setTooltipContent(frLabel(frOrbit())); fcMk1.setTooltipContent(frLabel(frBase())); renderPop(); }
+// Eigene Geräte: Namen sind einstellbar und stehen an den Symbolen
+const OWN={orbit:{id:'71D2',name:''},base:{id:'F1D2',name:''}};
+try{ const st=JSON.parse(localStorage.getItem('bt-own')||'{}'); if(st.orbit) OWN.orbit.name=String(st.orbit).slice(0,18); if(st.base) OWN.base.name=String(st.base).slice(0,18); }catch(e){}
+function saveOwn(){ try{ localStorage.setItem('bt-own',JSON.stringify({orbit:OWN.orbit.name,base:OWN.base.name})); }catch(e){} }
+const ownLabel=k=> k==='base' ? 'Base-'+(OWN.base.name||OWN.base.id) : (OWN.orbit.name||('Orbit-'+OWN.orbit.id));
+orbMk1.bindTooltip(ownLabel('orbit'),{permanent:true,direction:'left',offset:[-22,0],className:'ptip own-o'});
+baseMk1.bindTooltip(ownLabel('base'),{permanent:true,direction:'left',offset:[-24,0],className:'ptip own-b'});
+function updateFriendLabels(){ o2Mk1.setTooltipContent(frLabel(frOrbit())); fcMk1.setTooltipContent(frLabel(frBase())); orbMk1.setTooltipContent(ownLabel('orbit')); baseMk1.setTooltipContent(ownLabel('base')); renderPop(); }
 function applyFriendVis(){
   const fo=frOrbit(), fb=frBase();
   if(fo.vis && S.o2.active){ o2Track.addTo(map1); o2Mk1.addTo(map1); } else { o2Track.remove(); o2Mk1.remove(); if(S.sel==='orbit2') S.sel=null; }
@@ -984,8 +998,12 @@ function applyFriendVis(){
   if(fb.vis){ fcRoute.addTo(map1); fcMk1.addTo(map1); } else { fcRoute.remove(); fcMk1.remove(); }
   updateFriendLabels(); lastFit=0; S.forceFit=true;
 }
+function ownRow(k){
+  const o=OWN[k], ico=k==='base'?carSVG('#4cc9ff').replace('class="car"','width="22" height="22"'):balloonSVG('#ff9f1c').replace('width="44" height="54"','width="16" height="20"');
+  return `<div class="wbrow own"><span class="wbico own">${ico}</span><div class="wbname">${k==='base'?'<span class="pre">Base-</span>':''}<input class="wbin" data-own="${k}" maxlength="18" placeholder="${k==='base'?o.id:'Orbit-'+o.id}" value="${esc(o.name)}" aria-label="${tr('wb_name')}"></div><small class="wbid">${o.id}</small></div>`;
+}
 function renderFriends(){
-  $('wb-list').innerHTML=FR.map(f=>{
+  $('wb-list').innerHTML=`<div class="wbsec">${tr('wb_mine')}</div>`+ownRow('orbit')+ownRow('base')+`<div class="wbsec">${tr('wb_menu')}</div>`+FR.map(f=>{
     const ico=f.type==='base'?carSVG('#ff7ad9').replace('class="car"','width="22" height="22"'):balloonSVG('#ff7ad9').replace('width="44" height="54"','width="16" height="20"');
     return `<div class="wbrow"><label class="wbchk"><input type="checkbox" data-id="${f.id}" ${f.vis?'checked':''} aria-label="${esc(frLabel(f))}"><span class="wbico">${ico}</span></label>
       <div class="wbname">${f.type==='base'?'<span class="pre">Base-</span>':''}<input class="wbin" data-id="${f.id}" maxlength="18" placeholder="${f.type==='base'?f.id:'Orbit-'+f.id}" value="${esc(f.name)}" aria-label="${tr('wb_name')}"></div><small class="wbid">${f.id}</small></div>`;
@@ -1046,7 +1064,7 @@ function renderPop(){
   const el=$('pop'), o=S.orbit, b=S.base, q=S.o2;
   if(S.sel==='orbit'){
     const gs=Math.hypot(o.ve,o.vn)*3.6, hd=brg(o.ve,o.vn), de=o.e-b.e, dn=o.n-b.n, bb=brg(de,dn);
-    el.innerHTML = popHead('Orbit','var(--orb)')
+    el.innerHTML = popHead(esc(ownLabel('orbit')),'var(--orb)')
       + kv2(tr('alt_nn'),Math.round(o.alt)+' m')
       + kv2(tr('vario'),`<em style="font-style:normal;color:${vcol(o.vario)}">${fmtV(o.vario)} m/s</em>`)
       + kv2(tr('spd_crs'),`${Math.round(gs)} km/h, ${pad3(hd)}°`)
@@ -1187,14 +1205,18 @@ const windPlugin={id:'windBarbs',afterDatasetsDraw(ch){
   let step=1000; for(const s of [50,100,200,250,500,1000]){ if(Math.abs(y.getPixelForValue(s)-y.getPixelForValue(0))>=34){ step=s; break; } }
   ctx.save();
   ctx.font='11px Barlow, system-ui, sans-serif'; ctx.fillStyle='#9aabc4'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
-  ctx.fillText(tr('wind')+(MET.wind==='barb'?' (kt)':''),cx,a.top-4);
+  ctx.fillText(tr('wind')+(MET.wind==='barb'?' ('+({kt:'kt',kmh:'km/h',ms:'m/s'})[MET.unit]+')':''),cx,a.top-4);
   for(let v=Math.ceil(y.min/step)*step; v<=y.max; v+=step){
     const nn=MET.y==='nn'?v:v+GREF; let best=null,bd=Infinity;
     for(const p of pr){ const d=Math.abs(p.z-nn); if(d<bd){bd=d;best=p;} }
     if(!best||bd>35) continue;
     const py=y.getPixelForValue(v), ms=Math.hypot(best.u,best.v), dir=windFrom(best.u,best.v);
     if(py<a.top+4||py>a.bottom-4) continue;
-    if(MET.wind==='barb') drawBarb(ctx,cx,py,dir,ms*1.94384,'#cfe0f5');
+    if(MET.wind==='barb'){
+      drawBarb(ctx,cx,py,dir,ms*1.94384,'#cfe0f5');
+      const num=MET.unit==='ms'?ms.toFixed(1):MET.unit==='kmh'?String(Math.round(ms*3.6)):String(Math.round(ms*1.94384));
+      ctx.save(); ctx.textAlign='left'; ctx.textBaseline='middle'; ctx.font='600 12px Barlow, system-ui, sans-serif'; ctx.fillStyle='#cfe0f5'; ctx.fillText(num,cx+31,py+1); ctx.restore();
+    }
     else { ctx.fillStyle='#cfe0f5'; ctx.textBaseline='middle'; ctx.font='600 12px Barlow, system-ui, sans-serif'; ctx.fillText(pad3(dir)+'°',cx,py-6);
            ctx.font='11px Barlow, system-ui, sans-serif'; ctx.fillStyle='#9aabc4'; ctx.fillText(fmtWind(ms),cx,py+7); }
   }
@@ -1248,7 +1270,7 @@ function initMetChart(){
       {label:'Orbit',data:[],pointRadius:8,hoverRadius:9,backgroundColor:'#ff9f1c',borderColor:'#0a1019',borderWidth:3,order:1}
     ]},
     options:{animation:false,responsive:true,maintainAspectRatio:false,parsing:false,
-      interaction:{mode:'nearest',intersect:true},layout:{padding:{top:16,right:58,left:0,bottom:0}},
+      interaction:{mode:'nearest',intersect:true},layout:{padding:{top:16,right:94,left:0,bottom:0}},
       scales:{x:{type:'linear',grid:{color:grid},border,title:{display:true,text:''}},
               y:{type:'linear',grid:{color:grid},border,title:{display:true,text:''}}},
       plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(10,16,25,.95)',borderColor:'#28395a',borderWidth:1,padding:9,
@@ -1335,7 +1357,7 @@ function updMeteo(force){
   if(gm){ sc.x.min=-2.5; sc.x.max=2.5; sc.x.ticks.stepSize=0.5; sc.x.title.text=tr('ax_grad'); }
   else { let lo=Infinity,hi=-Infinity; for(const m of S.met){ lo=Math.min(lo,m.T); hi=Math.max(hi,m.T); } if(!isFinite(lo)){lo=0;hi=15;}
     sc.x.min=Math.floor(lo-0.5); sc.x.max=Math.ceil(hi+0.5); sc.x.ticks.stepSize=undefined; sc.x.title.text=tr('ax_temp'); }
-  metChart.options.layout = {padding:{top:16,right:MET.wind==='off'?6:58,left:0,bottom:0}};
+  metChart.options.layout = {padding:{top:16,right:MET.wind==='off'?6:(MET.wind==='barb'?94:58),left:0,bottom:0}};
   metChart.update('none');
 }
 function bindMeteo(){
@@ -1414,8 +1436,9 @@ function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('on'); c
 $('wb-btn').addEventListener('click',e=>{ e.stopPropagation(); const p=$('wb-panel'); p.hidden=!p.hidden; $('wb-btn').setAttribute('aria-expanded',p.hidden?'false':'true'); });
 document.addEventListener('click',e=>{ const p=$('wb-panel'); if(!p.hidden && !$('wb').contains(e.target)){ p.hidden=true; $('wb-btn').setAttribute('aria-expanded','false'); } });
 $('wb-list').addEventListener('change',e=>{ const t=e.target; if(t.type!=='checkbox') return; const f=FR.find(x=>x.id===t.dataset.id); if(f){ f.vis=t.checked; saveFriends(); applyFriendVis(); } });
-$('wb-list').addEventListener('input',e=>{ const t=e.target; if(!t.classList.contains('wbin')) return; const f=FR.find(x=>x.id===t.dataset.id); if(f){ f.name=t.value.replace(/[<>]/g,'').trim(); saveFriends(); updateFriendLabels(); } });
-$('wb-reset').addEventListener('click',()=>{ FR.forEach(f=>{ f.name=''; }); saveFriends(); renderFriends(); updateFriendLabels(); });
+$('wb-list').addEventListener('input',e=>{ const t=e.target; if(!t.classList.contains('wbin')) return;
+  if(t.dataset.own){ OWN[t.dataset.own].name=t.value.replace(/[<>]/g,'').trim(); saveOwn(); updateFriendLabels(); return; } const f=FR.find(x=>x.id===t.dataset.id); if(f){ f.name=t.value.replace(/[<>]/g,'').trim(); saveFriends(); updateFriendLabels(); } });
+$('wb-reset').addEventListener('click',()=>{ FR.forEach(f=>{ f.name=''; }); OWN.orbit.name=''; OWN.base.name=''; saveOwn(); saveFriends(); renderFriends(); updateFriendLabels(); });
 function syncUnitSeg(){ document.querySelectorAll('#seg-unit button').forEach(b=>b.classList.toggle('on',b.dataset.v===MET.unit)); }
 $('rd-wind').addEventListener('click',()=>{ const o=['kt','kmh','ms']; MET.unit=o[(o.indexOf(MET.unit)+1)%o.length]; syncUnitSeg(); updFlight(); updMeteo(true); });
 $('btn-o2').addEventListener('click',()=>{ if(!S.o2.active) activateO2(); $('sim').classList.remove('open'); });
@@ -1428,7 +1451,7 @@ $('btn-clear').addEventListener('click',async()=>{   // alles verwerfen und neu 
 });
 
 /* ---------------- Datenzähler und Service Worker ---------------- */
-const BUILD = '2026-10-06.4';   // bei jeder Auslieferung erhöhen; steht in den Einstellungen
+const BUILD = '2026-10-06.5';   // bei jeder Auslieferung erhöhen; steht in den Einstellungen
 function updData(){
   $('ver').textContent=tr('ver')+' '+BUILD;
   const mb=v=>(v/1048576).toFixed(1).replace('.',',')+' MB', all=DATA.tileHit+DATA.tileNet;
