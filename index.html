@@ -735,7 +735,7 @@ function metCompute(){
 /* ---------------- Straßen-Routing für die Chaser (OSRM) ---------------- */
 const toENU = (lat,lon) => [(lon-O.lon)*KLON, (lat-O.lat)*KLAT];
 const mkRouter = () => ({pts:[],cum:[],total:0,s:0,i:0,tgt:null,pending:false,lastReq:0,mode:'wait'});   // wait | osrm | direct
-const ROUTE = mkRouter(), ROUTE2 = mkRouter();
+const ROUTE = mkRouter(), ROUTE2 = mkRouter(); ROUTE2.mode='direct';   // Freunde-Chaser: keine eigene Routenführung
 function setRoute(R,pts){
   const clean=[pts[0]];
   for(let k=1;k<pts.length;k++){ const q=clean[clean.length-1]; if(Math.hypot(pts[k][0]-q[0],pts[k][1]-q[1])>0.5) clean.push(pts[k]); }
@@ -751,7 +751,7 @@ function routePos(R,s){
 async function fetchRoute(R,car,orb){
   if(R.pending) return;
   R.pending=true; R.lastReq=Date.now();
-  const te=orb.e+orb.ve*600, tn=orb.n+orb.vn*600;   // Ziel: Ballon-Position in 10 min
+  const te=orb.e+orb.ve*1800, tn=orb.n+orb.vn*1800;   // Ziel: Ballon-Position in 0,5 h
   R.tgt=[te,tn];
   const a=ll(car.e,car.n), c=ll(te,tn);
   const url=`https://router.project-osrm.org/route/v1/driving/${a[1].toFixed(6)},${a[0].toFixed(6)};${c[1].toFixed(6)},${c[0].toFixed(6)}?overview=full&geometries=geojson`;
@@ -772,21 +772,19 @@ async function fetchRoute(R,car,orb){
 function maybeRoute(R,car,orb){
   const now=Date.now();
   if(R.pending||S.paused) return;
-  const te=orb.e+orb.ve*600, tn=orb.n+orb.vn*600;
+  const te=orb.e+orb.ve*1800, tn=orb.n+orb.vn*1800;
   const none=R.pts.length<2, done=!none && R.s>=R.total-20;
-  const moved=R.tgt ? Math.hypot(te-R.tgt[0],tn-R.tgt[1])>500 : true;
+  const moved=R.tgt ? Math.hypot(te-R.tgt[0],tn-R.tgt[1])>1000 : true;
   if(R.mode==='direct' && now-R.lastReq<60000) return;
   if(!none && !moved) return;
-  if(now-R.lastReq < (none?5000:(done?4000:20000))) return;
+  if(now-R.lastReq < (none?5000:(done?4000:45000))) return;
   fetchRoute(R,car,orb);
 }
 function driveCar(R,car,orb,dt){   // folgt der Straßenroute; ohne Netz Luftlinie
   if(R.mode==='osrm' && R.pts.length>1){
     if(R.s<R.total){ const sp=14; R.s=Math.min(R.total,R.s+sp*dt); const q=routePos(R,R.s); car.e=q[0]; car.n=q[1]; car.hdg=q[2]; car.spd=sp; } else car.spd=0;
   } else if(R.mode==='direct'){
-    const sp=Math.hypot(orb.ve,orb.vn)||1, ux=orb.ve/sp, un=orb.vn/sp, a=rad(35);
-    const rx=ux*Math.cos(a)+un*Math.sin(a), rn=un*Math.cos(a)-ux*Math.sin(a);
-    const dx=orb.e+rx*1100-car.e, dn=orb.n+rn*1100-car.n, d=Math.hypot(dx,dn);
+    const dx=orb.e+orb.ve*1800-car.e, dn=orb.n+orb.vn*1800-car.n, d=Math.hypot(dx,dn);   // Luftlinie zur Ballonposition in 0,5 h
     if(d>30){ const bs=Math.min(16,2+d/25); car.e+=dx/d*bs*dt; car.n+=dn/d*bs*dt; car.hdg=brg(dx,dn); car.spd=bs; } else car.spd=0;
   } else car.spd=0;
 }
@@ -982,12 +980,11 @@ o2Mk1.bindTooltip(frLabel(frOrbit()),{permanent:true,direction:'right',offset:[2
 const o2Track = L.polyline([],{color:'#ff7ad9',weight:4,opacity:.9,lineCap:'round'});
 const fcMk1   = L.marker([0,0],{icon:baseIcon('#ff7ad9'),keyboard:false,zIndexOffset:450});
 fcMk1.bindTooltip(frLabel(frBase()),{permanent:true,direction:'right',offset:[22,0],className:'ptip friend'});
-const fcRoute = L.polyline([],{color:'#ff7ad9',weight:3.5,opacity:.9,dashArray:'2 8',lineCap:'round'});
 // Eigene Geräte: Namen sind einstellbar und stehen an den Symbolen
 const OWN={orbit:{id:'71D2',name:''},base:{id:'F1D2',name:''}};
 try{ const st=JSON.parse(localStorage.getItem('bt-own')||'{}'); if(st.orbit) OWN.orbit.name=String(st.orbit).slice(0,18); if(st.base) OWN.base.name=String(st.base).slice(0,18); }catch(e){}
 function saveOwn(){ try{ localStorage.setItem('bt-own',JSON.stringify({orbit:OWN.orbit.name,base:OWN.base.name})); }catch(e){} }
-const ownLabel=k=> k==='base' ? 'Base-'+(OWN.base.name||OWN.base.id) : (OWN.orbit.name||('Orbit-'+OWN.orbit.id));
+const ownLabel=k=> k==='base' ? (OWN.base.name?'Base-'+OWN.base.name:'Base') : (OWN.orbit.name||('Orbit-'+OWN.orbit.id));
 orbMk1.bindTooltip(ownLabel('orbit'),{permanent:true,direction:'left',offset:[-22,0],className:'ptip own-o'});
 baseMk1.bindTooltip(ownLabel('base'),{permanent:true,direction:'left',offset:[-24,0],className:'ptip own-b'});
 function updateFriendLabels(){ o2Mk1.setTooltipContent(frLabel(frOrbit())); fcMk1.setTooltipContent(frLabel(frBase())); orbMk1.setTooltipContent(ownLabel('orbit')); baseMk1.setTooltipContent(ownLabel('base')); renderPop(); }
@@ -995,12 +992,12 @@ function applyFriendVis(){
   const fo=frOrbit(), fb=frBase();
   if(fo.vis && S.o2.active){ o2Track.addTo(map1); o2Mk1.addTo(map1); } else { o2Track.remove(); o2Mk1.remove(); if(S.sel==='orbit2') S.sel=null; }
   S.fc.on=fb.vis;
-  if(fb.vis){ fcRoute.addTo(map1); fcMk1.addTo(map1); } else { fcRoute.remove(); fcMk1.remove(); }
+  if(fb.vis){ fcMk1.addTo(map1); } else { fcMk1.remove(); }
   updateFriendLabels(); lastFit=0; S.forceFit=true;
 }
 function ownRow(k){
   const o=OWN[k], ico=k==='base'?carSVG('#4cc9ff').replace('class="car"','width="22" height="22"'):balloonSVG('#ff9f1c').replace('width="44" height="54"','width="16" height="20"');
-  return `<div class="wbrow own"><span class="wbico own">${ico}</span><div class="wbname">${k==='base'?'<span class="pre">Base-</span>':''}<input class="wbin" data-own="${k}" maxlength="18" placeholder="${k==='base'?o.id:'Orbit-'+o.id}" value="${esc(o.name)}" aria-label="${tr('wb_name')}"></div><small class="wbid">${o.id}</small></div>`;
+  return `<div class="wbrow own"><span class="wbico own">${ico}</span><div class="wbname">${k==='base'?'<span class="pre">Base-</span>':''}<input class="wbin" data-own="${k}" maxlength="18" placeholder="${k==='base'?'–':'Orbit-'+o.id}" value="${esc(o.name)}" aria-label="${tr('wb_name')}"></div><small class="wbid">${o.id}</small></div>`;
 }
 function renderFriends(){
   $('wb-list').innerHTML=`<div class="wbsec">${tr('wb_mine')}</div>`+ownRow('orbit')+ownRow('base')+`<div class="wbsec">${tr('wb_menu')}</div>`+FR.map(f=>{
@@ -1095,7 +1092,6 @@ function updChaser(){
   if(S.fc.on){
     const f=S.fc; fcMk1.setLatLng(ll(f.e,f.n));
     const fe=fcMk1.getElement(); if(fe&&fe.firstElementChild) fe.firstElementChild.style.transform=`rotate(${f.hdg}deg)`;
-    if(ROUTE2.pts.length>1) fcRoute.setLatLngs([ll(f.e,f.n),...ROUTE2.pts.slice(ROUTE2.i+1).map(q=>ll(q[0],q[1]))]);
   }
   renderPop();
   const now=Date.now();
@@ -1167,7 +1163,6 @@ function updOrbit(){
 }
 function render(){
   maybeRoute(ROUTE,S.base,S.orbit);
-  if(S.fc.on && S.o2.active) maybeRoute(ROUTE2,S.fc,S.o2);
   S.thr=S.traffic?S.targets.map(threat):[];   // ohne Verkehrsquelle keine Warnungen
   const mx=S.thr.reduce((m,x)=>Math.max(m,x.lvl),0);
   $('nav-badge').classList.toggle('on',mx===2);
@@ -1437,7 +1432,7 @@ $('wb-btn').addEventListener('click',e=>{ e.stopPropagation(); const p=$('wb-pan
 document.addEventListener('click',e=>{ const p=$('wb-panel'); if(!p.hidden && !$('wb').contains(e.target)){ p.hidden=true; $('wb-btn').setAttribute('aria-expanded','false'); } });
 $('wb-list').addEventListener('change',e=>{ const t=e.target; if(t.type!=='checkbox') return; const f=FR.find(x=>x.id===t.dataset.id); if(f){ f.vis=t.checked; saveFriends(); applyFriendVis(); } });
 $('wb-list').addEventListener('input',e=>{ const t=e.target; if(!t.classList.contains('wbin')) return;
-  if(t.dataset.own){ OWN[t.dataset.own].name=t.value.replace(/[<>]/g,'').trim(); saveOwn(); updateFriendLabels(); return; } const f=FR.find(x=>x.id===t.dataset.id); if(f){ f.name=t.value.replace(/[<>]/g,'').trim(); saveFriends(); updateFriendLabels(); } });
+  if(t.dataset.own){ let v=t.value.replace(/[<>]/g,'').trim(); if(t.dataset.own==='base' && /^base$/i.test(v)) v=''; OWN[t.dataset.own].name=v; saveOwn(); updateFriendLabels(); return; } const f=FR.find(x=>x.id===t.dataset.id); if(f){ f.name=t.value.replace(/[<>]/g,'').trim(); saveFriends(); updateFriendLabels(); } });
 $('wb-reset').addEventListener('click',()=>{ FR.forEach(f=>{ f.name=''; }); OWN.orbit.name=''; OWN.base.name=''; saveOwn(); saveFriends(); renderFriends(); updateFriendLabels(); });
 function syncUnitSeg(){ document.querySelectorAll('#seg-unit button').forEach(b=>b.classList.toggle('on',b.dataset.v===MET.unit)); }
 $('rd-wind').addEventListener('click',()=>{ const o=['kt','kmh','ms']; MET.unit=o[(o.indexOf(MET.unit)+1)%o.length]; syncUnitSeg(); updFlight(); updMeteo(true); });
@@ -1451,7 +1446,7 @@ $('btn-clear').addEventListener('click',async()=>{   // alles verwerfen und neu 
 });
 
 /* ---------------- Datenzähler und Service Worker ---------------- */
-const BUILD = '2026-10-06.5';   // bei jeder Auslieferung erhöhen; steht in den Einstellungen
+const BUILD = '2026-10-06.6';   // bei jeder Auslieferung erhöhen; steht in den Einstellungen
 function updData(){
   $('ver').textContent=tr('ver')+' '+BUILD;
   const mb=v=>(v/1048576).toFixed(1).replace('.',',')+' MB', all=DATA.tileHit+DATA.tileNet;
