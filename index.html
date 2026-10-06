@@ -198,6 +198,23 @@ main{position:relative;flex:1;min-height:0}
 .acts{display:flex;gap:8px;flex-wrap:wrap}
 .dbox{margin:2px 0 12px;padding:9px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
 @media (prefers-reduced-motion:reduce){.sheet,#toast{transition:none}.pulse::before,.tg.alarm .tg-i::after,.nav .badge.on,#b-alert.on,#o-status.lv2{animation:none}}
+
+/* Menü Weitere Ballons, Windeinheit, Hinweis */
+.wbbtn{display:flex;align-items:center;gap:8px;padding:8px 12px;min-height:42px;font-size:14px;font-weight:500;cursor:pointer}
+.wbpanel{position:absolute;right:0;top:48px;width:min(300px,calc(100vw - 16px));padding:8px 10px 10px}
+.wbrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid #1b2a43}
+.wbchk{display:flex;align-items:center;gap:6px;min-height:36px;cursor:pointer}
+.wbchk input{width:20px;height:20px;accent-color:var(--fr)}
+.wbico{display:grid;place-items:center;width:24px}
+.wbname{display:flex;align-items:center;gap:2px;min-width:0}
+.wbname .pre{font-family:var(--num);font-weight:600;font-size:16px;color:var(--mut)}
+.wbin{flex:1;min-width:0;min-height:34px;padding:0 8px;border-radius:8px;border:1px solid var(--line);background:var(--pan2);color:var(--tx);font:inherit;font-size:15px}
+.wbid{font-family:var(--num);color:var(--mut);font-size:12px}
+.wbfoot{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:8px}
+.rdbtn{cursor:pointer;border-radius:8px}
+.rdbtn b small{border-bottom:1px dotted var(--mut)}
+.notice{margin-top:12px;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg)}
+.notice b{font-size:13px}
 </style>
 </head>
 
@@ -231,7 +248,13 @@ main{position:relative;flex:1;min-height:0}
     <section id="s-chaser" class="screen active">
       <div id="map1" class="map"></div>
       <div class="ov card pop" id="pop" hidden></div>
-      <button id="fc-toggle" class="ov card sw" role="switch" aria-checked="false" style="right:8px;top:8px"><span class="tr"></span><span data-i="fc">Freunde-Chaser einblenden</span></button>
+      <div class="ov" id="wb" style="right:8px;top:8px">
+        <button id="wb-btn" class="card wbbtn" aria-expanded="false" aria-haspopup="true"><span data-i="wb_menu">Weitere Ballons</span><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+        <div id="wb-panel" class="card wbpanel" hidden>
+          <div id="wb-list"></div>
+          <div class="wbfoot"><button id="wb-reset" class="sm" data-i="wb_reset">Namen zurücksetzen</button><span class="lbl" data-i="wb_hint">Namen gehören zur LoRa-ID und bleiben gespeichert.</span></div>
+        </div>
+      </div>
       <div class="ov followbar" id="followbar">
         <button class="pbtn" data-f="orbit" data-i="f_orbit">Orbit folgen</button>
         <button class="pbtn on" data-f="both" data-i="f_both">Beide zeigen</button>
@@ -245,7 +268,7 @@ main{position:relative;flex:1;min-height:0}
         <div class="fl-top">
           <div class="rd1"><span class="lbl" data-i="vario">Vario</span><b id="b-var">+0.0<small>m/s</small></b></div>
           <div class="rd1"><span class="lbl" id="lb-alt" data-i="alt_nn">Höhe NN</span><b id="b-alt">–</b></div>
-          <div class="rd1"><span class="lbl" data-i="wind">Wind</span><b id="b-wind">–</b></div>
+          <div class="rd1 rdbtn" id="rd-wind" role="button" tabindex="0" data-it="wind_toggle_t" title="Antippen: Windeinheit wechseln"><span class="lbl" data-i="wind">Wind</span><b id="b-wind">–</b></div>
           <button class="sm" id="btn-sheet" data-i="details">Details</button>
         </div>
         <div class="fl-chart card2">
@@ -384,6 +407,7 @@ main{position:relative;flex:1;min-height:0}
       <button class="act" id="btn-clear" data-i="b_clear">Zwischenspeicher leeren</button>
       <button class="act" id="btn-reset" data-i="b_reset">Neustart</button>
     </div>
+    <div class="notice"><b data-i="notice_t">Hinweis</b><div class="txt" data-i="notice_x"></div></div>
   </div>
 </div>
 
@@ -419,7 +443,13 @@ const TX = {
  f_orbit:["Orbit folgen","Follow Orbit","Suivre Orbit","Śledź Orbit","Sledovat Orbit","追蹤 Orbit"],
  f_both:["Beide zeigen","Show both","Voir les deux","Pokaż oba","Zobrazit oba","顯示兩者"],
  f_base:["Base folgen","Follow Base","Suivre Base","Śledź Base","Sledovat Base","追蹤 Base"],
- fc:["Freunde-Chaser einblenden","Show friend's chaser","Afficher le chaser d’un ami","Pokaż chasera znajomego","Zobrazit chasera přítele","顯示朋友的追蹤車"],
+ wb_menu:["Weitere Ballons","More balloons","Autres ballons","Więcej balonów","Další balony","其他熱氣球"],
+ wb_reset:["Namen zurücksetzen","Reset names","Réinitialiser les noms","Zresetuj nazwy","Obnovit názvy","重設名稱"],
+ wb_hint:["Namen gehören zur LoRa-ID und bleiben gespeichert.","Names belong to the LoRa ID and stay saved.","Les noms sont liés à l’ID LoRa et restent enregistrés.","Nazwy są powiązane z ID LoRa i pozostają zapisane.","Názvy patří k ID LoRa a zůstávají uloženy.","名稱綁定 LoRa ID 並會保存。"],
+ wb_name:["Name","Name","Nom","Nazwa","Název","名稱"],
+ wind_toggle_t:["Antippen: Windeinheit wechseln","Tap to change the wind unit","Touchez pour changer l’unité du vent","Dotknij, aby zmienić jednostkę wiatru","Klepnutím změníte jednotku větru","點一下切換風速單位"],
+ notice_t:["Hinweis","Notice","Avis","Uwaga","Upozornění","注意"],
+ notice_x:["Bo Twins ist ein Hilfsmittel zum Verfolgen und Auswerten von Ballonfahrten. Es ist kein zugelassenes Navigations-, Kollisionswarn- oder Flugsicherungssystem und ersetzt weder Sicht und Flugvorbereitung noch vorgeschriebene Ausrüstung. Mit Bo Twins allein ist dein Ballon für andere Flieger nicht sichtbar, und du siehst keinen Fremdverkehr.","Bo Twins is an aid for tracking and analysing balloon flights. It is not an approved navigation, collision-warning or air-traffic system and does not replace visual lookout, flight preparation or required equipment. With Bo Twins alone your balloon is not visible to other aircraft, and you do not see other traffic.","Bo Twins est un outil de suivi et d’analyse des vols en ballon. Ce n’est pas un système de navigation, d’anticollision ou de contrôle aérien homologué et il ne remplace ni la vigilance visuelle, ni la préparation du vol, ni l’équipement obligatoire. Avec Bo Twins seul, votre ballon n’est pas visible pour les autres aéronefs et vous ne voyez pas le trafic.","Bo Twins to pomoc do śledzenia i analizy lotów balonowych. Nie jest to zatwierdzony system nawigacyjny, ostrzegania przed kolizją ani kontroli ruchu lotniczego i nie zastępuje obserwacji wzrokowej, przygotowania lotu ani wymaganego wyposażenia. Sam Bo Twins nie czyni Twojego balonu widocznym dla innych statków powietrznych, a Ty nie widzisz innego ruchu.","Bo Twins je pomůcka pro sledování a vyhodnocení balonových letů. Není to schválený navigační systém, systém varování před srážkou ani systém řízení letového provozu a nenahrazuje vizuální pozorování, přípravu letu ani předepsané vybavení. Samotný Bo Twins váš balon pro ostatní letadla nezviditelní a vy nevidíte žádný jiný provoz.","Bo Twins 是追蹤與分析熱氣球飛行的輔助工具，不是經核准的導航、防撞警示或空中交通系統，也無法取代目視觀察、飛行準備或規定的設備。僅靠 Bo Twins，其他航空器看不到你的熱氣球，你也看不到其他交通。"],
  launch:["Ballonstartplatz Bitterfeld","Balloon launch site Bitterfeld","Site de décollage de montgolfières, Bitterfeld","Miejsce startu balonów, Bitterfeld","Startovací místo balonů Bitterfeld","熱氣球起飛場 Bitterfeld"],
  vario:["Vario","Vario","Vario","Wario","Vario","升降率"],
  alt_nn:["Höhe NN","Altitude MSL","Altitude (mer)","Wysokość n.p.m.","Výška n.m.","海拔高度"],
@@ -925,22 +955,43 @@ const bRoute  = L.polyline([],{color:'#4cc9ff',weight:3.5,opacity:.9,dashArray:'
 const bTrail  = L.polyline([],{color:'#4cc9ff',weight:2,opacity:.45}).addTo(map1);
 const oTrack  = L.polyline([],{color:'#ff9f1c',weight:5,opacity:.95,lineCap:'round'}).addTo(map1);
 const oPred   = L.polyline([],{color:'#ffc277',weight:4,opacity:.95,dashArray:'3 11',lineCap:'round'}).addTo(map1);
-const predPts = [5,10,20].map(m=>{ const c=L.circleMarker([0,0],{radius:5,color:'#0a1019',weight:2,fillColor:'#ffc277',fillOpacity:1}).addTo(map1); c.bindTooltip('+'+m+' min',{permanent:true,direction:'right',offset:[8,0],className:'ptip'}); c._m=m; return c; });
+const hLabel = h => '+'+String(h).replace('.',['de','fr','pl','cs'].includes(S.lang)?',':'.')+' h';   // Zeitmarken des Zukunftspfads
+const predPts = [30,60,150,180].map(m=>{ const c=L.circleMarker([0,0],{radius:5,color:'#0a1019',weight:2,fillColor:'#ffc277',fillOpacity:1}).addTo(map1); c._m=m; c._h=m/60; c.bindTooltip(hLabel(c._h),{permanent:true,direction:'right',offset:[8,0],className:'ptip'}); return c; });
 const baseMk1 = L.marker([0,0],{icon:baseIcon(),keyboard:false,zIndexOffset:500}).addTo(map1);
 const orbMk1  = L.marker([0,0],{icon:orbIcon(),keyboard:false,zIndexOffset:900}).addTo(map1);
-// Freunde: erscheinen erst, wenn Orbit 2 startet bzw. der Schalter aktiv ist
+// Freunde (Menü „Weitere Ballons“): Namen gehören zur LoRa-ID und bleiben gespeichert
+const FR_DEFAULT=[{id:'3C7A',type:'orbit'},{id:'BC7A',type:'base'}];   // Demo: ein befreundeter Orbit und seine Base
+function loadFriends(){
+  let st={}; try{ st=JSON.parse(localStorage.getItem('bt-friends')||'{}'); }catch(e){}
+  return FR_DEFAULT.map(f=>({id:f.id,type:f.type,name:(st[f.id]&&st[f.id].n)||'',vis:(st[f.id]&&typeof st[f.id].v==='boolean')?st[f.id].v:(f.type==='orbit')}));
+}
+let FR=loadFriends();
+function saveFriends(){ try{ const o={}; FR.forEach(f=>{ o[f.id]={n:f.name,v:f.vis}; }); localStorage.setItem('bt-friends',JSON.stringify(o)); }catch(e){} }
+const frOrbit=()=>FR.find(f=>f.type==='orbit'), frBase=()=>FR.find(f=>f.type==='base');
+const frLabel=f=> f.type==='base' ? 'Base-'+(f.name||f.id) : (f.name||('Orbit-'+f.id));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const o2Mk1   = L.marker([0,0],{icon:orbIcon('#ff7ad9'),keyboard:false,zIndexOffset:850});
-o2Mk1.bindTooltip('Orbit 2',{permanent:true,direction:'right',offset:[22,0],className:'ptip friend'});
+o2Mk1.bindTooltip(frLabel(frOrbit()),{permanent:true,direction:'right',offset:[22,0],className:'ptip friend'});
 const o2Track = L.polyline([],{color:'#ff7ad9',weight:4,opacity:.9,lineCap:'round'});
 const fcMk1   = L.marker([0,0],{icon:baseIcon('#ff7ad9'),keyboard:false,zIndexOffset:450});
-fcMk1.bindTooltip('Chaser 2',{permanent:true,direction:'right',offset:[22,0],className:'ptip friend'});
+fcMk1.bindTooltip(frLabel(frBase()),{permanent:true,direction:'right',offset:[22,0],className:'ptip friend'});
 const fcRoute = L.polyline([],{color:'#ff7ad9',weight:3.5,opacity:.9,dashArray:'2 8',lineCap:'round'});
-function onO2Start(t){ o2Track.addTo(map1); o2Mk1.addTo(map1); addTargetMarker(t); toast(tr('toast_o2')); }
-function setFc(on){
-  S.fc.on=on; $('fc-toggle').setAttribute('aria-checked',on?'true':'false');
-  if(on){ fcRoute.addTo(map1); fcMk1.addTo(map1); } else { fcRoute.remove(); fcMk1.remove(); }
-  lastFit=0; S.forceFit=true;
+function updateFriendLabels(){ o2Mk1.setTooltipContent(frLabel(frOrbit())); fcMk1.setTooltipContent(frLabel(frBase())); renderPop(); }
+function applyFriendVis(){
+  const fo=frOrbit(), fb=frBase();
+  if(fo.vis && S.o2.active){ o2Track.addTo(map1); o2Mk1.addTo(map1); } else { o2Track.remove(); o2Mk1.remove(); if(S.sel==='orbit2') S.sel=null; }
+  S.fc.on=fb.vis;
+  if(fb.vis){ fcRoute.addTo(map1); fcMk1.addTo(map1); } else { fcRoute.remove(); fcMk1.remove(); }
+  updateFriendLabels(); lastFit=0; S.forceFit=true;
 }
+function renderFriends(){
+  $('wb-list').innerHTML=FR.map(f=>{
+    const ico=f.type==='base'?carSVG('#ff7ad9').replace('class="car"','width="22" height="22"'):balloonSVG('#ff7ad9').replace('width="44" height="54"','width="16" height="20"');
+    return `<div class="wbrow"><label class="wbchk"><input type="checkbox" data-id="${f.id}" ${f.vis?'checked':''} aria-label="${esc(frLabel(f))}"><span class="wbico">${ico}</span></label>
+      <div class="wbname">${f.type==='base'?'<span class="pre">Base-</span>':''}<input class="wbin" data-id="${f.id}" maxlength="18" placeholder="${f.type==='base'?f.id:'Orbit-'+f.id}" value="${esc(f.name)}" aria-label="${tr('wb_name')}"></div><small class="wbid">${f.id}</small></div>`;
+  }).join('');
+}
+function onO2Start(t){ addTargetMarker(t); applyFriendVis(); toast(tr('toast_o2')); }
 startMark().addTo(map1);
 map1.setView(ll(S.orbit.e,S.orbit.n),15);
 
@@ -1004,7 +1055,7 @@ function renderPop(){
     el.hidden=false;
   } else if(S.sel==='orbit2' && q.active){
     const gs=Math.hypot(q.ve,q.vn)*3.6, hd=brg(q.ve,q.vn), de=q.e-o.e, dn=q.n-o.n, bo=brg(de,dn);
-    el.innerHTML = popHead('Orbit 2','var(--fr)')
+    el.innerHTML = popHead(esc(frLabel(frOrbit())),'var(--fr)')
       + kv2(tr('alt_nn'),Math.round(q.alt)+' m')
       + kv2(tr('vario'),`<em style="font-style:normal;color:${vcol(q.vario)}">${fmtV(q.vario)} m/s</em>`)
       + kv2(tr('spd_crs'),`${Math.round(gs)} km/h, ${pad3(hd)}°`)
@@ -1020,7 +1071,7 @@ function updChaser(){
   const be=baseMk1.getElement(); if(be&&be.firstElementChild) be.firstElementChild.style.transform=`rotate(${b.hdg}deg)`;
   oTrack.setLatLngs(S.track.map(p=>ll(p[0],p[1]))); bTrail.setLatLngs(S.btrack.map(p=>ll(p[0],p[1])));
   if(ROUTE.pts.length>1) bRoute.setLatLngs([ll(b.e,b.n),...ROUTE.pts.slice(ROUTE.i+1).map(q=>ll(q[0],q[1]))]);
-  const T=1800; oPred.setLatLngs([oc,ll(o.e+o.ve*T,o.n+o.vn*T)]);
+  const T=10800; oPred.setLatLngs([oc,ll(o.e+o.ve*T,o.n+o.vn*T)]);
   predPts.forEach(p=>p.setLatLng(ll(o.e+o.ve*p._m*60,o.n+o.vn*p._m*60)));
   if(S.o2.active){ const q=S.o2; o2Mk1.setLatLng(ll(q.e,q.n)); o2Track.setLatLngs(q.track.map(p=>ll(p[0],p[1]))); }
   if(S.fc.on){
@@ -1295,7 +1346,7 @@ function bindMeteo(){
   bindSeg($('seg-sig'),v=>{ MET.sigma=+v; updMeteo(true); });
   bindSeg($('seg-thr'),v=>{ MET.thr=+v; buildLegend(); updMeteo(true); });
   bindSeg($('seg-wd'),v=>{ MET.wind=v; updMeteo(true); });
-  bindSeg($('seg-unit'),v=>{ MET.unit=v; updMeteo(true); updFlight(); });
+  bindSeg($('seg-unit'),v=>{ MET.unit=v; syncUnitSeg(); updMeteo(true); updFlight(); });
   $('met-off').addEventListener('input',e=>{ MET.distOffset=+e.target.value; $('met-off-v').textContent='+'+MET.distOffset+' km'; });
   $('met-ff').addEventListener('click',()=>{ for(let i=0;i<1800;i++) step(1); updMeteo(true); });
   $('btn-sheet').addEventListener('click',()=>{ $('sheet').classList.add('open'); updMeteo(true); });
@@ -1360,7 +1411,13 @@ window.addEventListener('resize',()=>{ if(S.screen==='flight') updMeteo(true); m
 
 let toastTimer=0;
 function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('on'),3500); }
-$('fc-toggle').addEventListener('click',()=>setFc(!S.fc.on));
+$('wb-btn').addEventListener('click',e=>{ e.stopPropagation(); const p=$('wb-panel'); p.hidden=!p.hidden; $('wb-btn').setAttribute('aria-expanded',p.hidden?'false':'true'); });
+document.addEventListener('click',e=>{ const p=$('wb-panel'); if(!p.hidden && !$('wb').contains(e.target)){ p.hidden=true; $('wb-btn').setAttribute('aria-expanded','false'); } });
+$('wb-list').addEventListener('change',e=>{ const t=e.target; if(t.type!=='checkbox') return; const f=FR.find(x=>x.id===t.dataset.id); if(f){ f.vis=t.checked; saveFriends(); applyFriendVis(); } });
+$('wb-list').addEventListener('input',e=>{ const t=e.target; if(!t.classList.contains('wbin')) return; const f=FR.find(x=>x.id===t.dataset.id); if(f){ f.name=t.value.replace(/[<>]/g,'').trim(); saveFriends(); updateFriendLabels(); } });
+$('wb-reset').addEventListener('click',()=>{ FR.forEach(f=>{ f.name=''; }); saveFriends(); renderFriends(); updateFriendLabels(); });
+function syncUnitSeg(){ document.querySelectorAll('#seg-unit button').forEach(b=>b.classList.toggle('on',b.dataset.v===MET.unit)); }
+$('rd-wind').addEventListener('click',()=>{ const o=['kt','kmh','ms']; MET.unit=o[(o.indexOf(MET.unit)+1)%o.length]; syncUnitSeg(); updFlight(); updMeteo(true); });
 $('btn-o2').addEventListener('click',()=>{ if(!S.o2.active) activateO2(); $('sim').classList.remove('open'); });
 $('btn-clear').addEventListener('click',async()=>{   // alles verwerfen und neu laden: erzwingt die neueste Version
   try{
@@ -1371,7 +1428,7 @@ $('btn-clear').addEventListener('click',async()=>{   // alles verwerfen und neu 
 });
 
 /* ---------------- Datenzähler und Service Worker ---------------- */
-const BUILD = '2026-10-05.3';   // bei jeder Auslieferung erhöhen; steht in den Einstellungen
+const BUILD = '2026-10-06.4';   // bei jeder Auslieferung erhöhen; steht in den Einstellungen
 function updData(){
   $('ver').textContent=tr('ver')+' '+BUILD;
   const mb=v=>(v/1048576).toFixed(1).replace('.',',')+' MB', all=DATA.tileHit+DATA.tileNet;
@@ -1398,6 +1455,7 @@ function setLang(l){
   applyLang(); buildLegend();
   $('btn-pause').textContent=tr(S.paused?'b_resume':'b_pause');
   startMks.forEach(m=>m.setTooltipContent(tr('launch')));
+  predPts.forEach(p=>p.setTooltipContent(hLabel(p._h))); renderFriends();
   if($('net-note').style.display==='block') $('net-note').textContent=tr('net_err',{n:tileErr});
   renderPop(); updData(); updMeteo(true); render();
 }
@@ -1408,6 +1466,7 @@ function setLang(l){
   applyLang();
 })();
 
+renderFriends(); applyFriendVis();
 setInterval(updData,1000); updData();
 bindMeteo();
 showScreen('chaser');
