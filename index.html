@@ -250,6 +250,19 @@ main{position:relative;flex:1;min-height:0}
 .lopt.on::after{content:"\2713";margin-left:auto;color:#ffc83d}
 
 .fl-ref{font-size:11px;line-height:1.3;color:var(--mut);opacity:.8;padding:3px 8px 0;min-height:14px}
+
+/* Stopp-Knopf, Fahrtenliste, Dialog */
+.stopbtn{display:block;margin:0 0 6px auto;padding:8px 14px;min-height:42px;font-size:14px;font-weight:600;cursor:pointer;border-color:#ff6b6b;color:#ffb3b3}
+.flrow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
+.fltx{font-size:13px;color:var(--tx);flex:1}
+.flbtn{display:flex;gap:6px;flex:none}
+.dlg{position:fixed;inset:0;z-index:5000;background:rgba(3,7,14,.72);display:flex;align-items:center;justify-content:center;padding:20px}
+.dlg[hidden]{display:none}
+.dlg-b{max-width:340px;width:100%;padding:18px}
+.dlg-t{font-size:18px;font-weight:600;margin-bottom:8px}
+.dlg-x{font-size:14px;color:var(--mut);white-space:pre-line;margin-bottom:14px;line-height:1.45}
+.dlg-btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.sm.pri{background:#ffc83d;color:#0a1019;border-color:#ffc83d;font-weight:600}
 </style>
 </head>
 
@@ -284,6 +297,7 @@ main{position:relative;flex:1;min-height:0}
       <div id="map1" class="map"></div>
       <div class="ov card pop" id="pop" hidden></div>
       <div class="ov" id="ofm" style="right:8px;top:58px">
+        <button id="stop-btn" class="card stopbtn" hidden data-i="stop_btn">Stopp</button>
         <button id="ofm-btn" class="card ofmbtn" aria-pressed="false" data-i="ofm_btn">Luftfahrtkarte</button>
         <div id="ofm-hint" class="ofm-hint" hidden data-i="ofm_hint"></div>
       </div>
@@ -444,6 +458,7 @@ main{position:relative;flex:1;min-height:0}
     <div style="border-top:1px solid var(--line);margin:4px 0 12px"></div>
     <div class="r"><span data-i="s_rate">Simulationstempo</span><div class="seg" data-key="speed"><button data-v="1">1×</button><button data-v="5">5×</button><button data-v="10" class="on">10×</button><button data-v="30">30×</button></div></div>
     <div class="r"><span data-i="s_pilot">Pilot Orbit</span><div class="seg" data-key="mode"><button data-v="auto" class="on" data-i="p_auto">Auto</button><button data-v="climb" data-i="p_climb">Steigen</button><button data-v="hold" data-i="p_hold">Halten</button><button data-v="sink" data-i="p_sink">Sinken</button></div></div>
+    <div class="r"><span data-i="s_wx">Demo-Wetter</span><div class="seg" data-key="wx"><button data-v="live" class="on" data-i="wx_live">Aktuell</button><button data-v="sim" data-i="wx_sim">Simuliert</button></div></div>
     <div class="r"><span data-i="s_air">Luftraum-Seite (Demo)</span><div class="seg" data-key="traffic"><button data-v="0" class="on" data-i="air_off">Aus</button><button data-v="1" data-i="air_on">Ein</button></div></div>
     <div class="lbl" style="margin:-4px 0 12px;line-height:1.35" data-i="s_air_note"></div>
     <div class="acts">
@@ -458,9 +473,15 @@ main{position:relative;flex:1;min-height:0}
       <div class="stbtns"><button class="sm" id="st-set" data-i="st_set">Start setzen</button><button class="sm" id="st-map" data-i="st_map">Per Karte setzen</button><button class="sm" id="st-reset" data-i="st_reset">Standard (Bitterfeld)</button></div>
       <div class="lbl" id="st-info"></div>
     </div>
+    <div class="stsec">
+      <div class="wbsec" data-i="fl_title">Fahrten</div>
+      <div id="fl-list"></div>
+      <div class="stbtns"><button class="sm" id="fl-all" data-i="fl_all" hidden>Alle löschen</button></div>
+    </div>
     <div class="notice"><b data-i="notice_t">Hinweis</b><div class="txt" data-i="notice_x"></div></div>
   </div>
 </div>
+<div class="dlg" id="dlg" hidden><div class="dlg-b card2"><div class="dlg-t" id="dlg-t"></div><div class="dlg-x" id="dlg-x"></div><div class="dlg-btns" id="dlg-b"></div></div></div>
 
 <script>
 
@@ -522,6 +543,32 @@ const TX = {
  mo_osm:["Ortsname: © OpenStreetMap-Mitwirkende (Nominatim)","Place name: © OpenStreetMap contributors (Nominatim)","Nom du lieu : © contributeurs d’OpenStreetMap (Nominatim)","Nazwa miejsca: © współtwórcy OpenStreetMap (Nominatim)","Název místa: © přispěvatelé OpenStreetMap (Nominatim)","地名：© OpenStreetMap 貢獻者（Nominatim）","Nombre del lugar: © colaboradores de OpenStreetMap (Nominatim)"],
  mo_assume:["Keine Wetterdaten verfügbar. Annahme: Standardgradient von der gemessenen Bodentemperatur, Wind 0.","No weather data available. Assumption: standard gradient from the measured ground temperature, wind 0.","Aucune donnée météo disponible. Hypothèse : gradient standard à partir de la température mesurée au sol, vent nul.","Brak danych pogodowych. Założenie: standardowy gradient od zmierzonej temperatury przy ziemi, wiatr 0.","Žádná data o počasí. Předpoklad: standardní gradient od naměřené teploty při zemi, vítr 0.","沒有天氣資料。假設：以量測到的地面溫度採標準溫度梯度，風速為 0。","No hay datos meteorológicos. Supuesto: gradiente estándar a partir de la temperatura medida en el suelo, viento 0."],
  lg_assume:["Annahme (Standardgradient)","Assumption (standard gradient)","Hypothèse (gradient standard)","Założenie (gradient standardowy)","Předpoklad (standardní gradient)","假設（標準梯度）","Supuesto (gradiente estándar)"],
+ s_wx:["Demo-Wetter","Demo weather","Météo de la démo","Pogoda w demo","Počasí v demu","示範天氣","Tiempo de la demo"],
+ wx_live:["Aktuell","Live","Actuelle","Aktualna","Aktuální","即時","Actual"],
+ wx_sim:["Simuliert","Simulated","Simulée","Symulowana","Simulované","模擬","Simulado"],
+ wx_reload:["Demo-Wetter geändert, die App lädt neu","Demo weather changed, reloading","Météo de la démo modifiée, rechargement","Zmieniono pogodę w demo, ładowanie","Počasí v demu změněno, načítám znovu","示範天氣已變更，重新載入","Tiempo de la demo cambiado, recargando"],
+ stop_btn:["Stopp","Stop","Arrêt","Stop","Stop","停止","Parar"],
+ stop_t:["Fahrt beenden?","End trip?","Terminer la sortie ?","Zakończyć lot?","Ukončit jízdu?","結束這趟飛行？","¿Terminar el viaje?"],
+ stop_x:["Die Aufzeichnung wird gespeichert. Der Pfad bleibt sichtbar, bis du das nächste Mal „Start setzen“ drückst.","The recording is saved. The path stays visible until you press “Set start” again.","L’enregistrement est sauvegardé. Le tracé reste visible jusqu’au prochain « Définir le départ ».","Nagranie zostanie zapisane. Trasa pozostaje widoczna do następnego „Ustaw start”.","Záznam se uloží. Trasa zůstane viditelná, dokud znovu nestisknete „Nastavit start“.","錄製內容會儲存。路徑會保持顯示，直到你下次按「設定起飛點」。","La grabación se guarda. La ruta sigue visible hasta que vuelvas a pulsar «Fijar inicio»."],
+ stop_yes:["Fahrt beenden","End trip","Terminer la sortie","Zakończ lot","Ukončit jízdu","結束飛行","Terminar viaje"],
+ stop_no:["Abbrechen","Cancel","Annuler","Anuluj","Zrušit","取消","Cancelar"],
+ land_t:["Ist die Fahrt vorbei?","Is the trip over?","La sortie est-elle terminée ?","Czy lot się skończył?","Je jízda u konce?","飛行結束了嗎？","¿Ha terminado el viaje?"],
+ land_x:["Ballon und Base stehen seit {m} Minuten am Boden.","Balloon and Base have been on the ground for {m} minutes.","Le ballon et la Base sont au sol depuis {m} minutes.","Balon i Base są na ziemi od {m} minut.","Balon a Base jsou na zemi už {m} minut.","氣球與 Base 已在地面停留 {m} 分鐘。","El globo y la Base llevan {m} minutos en el suelo."],
+ land_yes:["Ja, Fahrt beenden","Yes, end trip","Oui, terminer","Tak, zakończ","Ano, ukončit","是，結束飛行","Sí, terminar"],
+ land_no:["Nein, weiter","No, continue","Non, continuer","Nie, dalej","Ne, pokračovat","否，繼續","No, seguir"],
+ sum_t:["Fahrt beendet","Trip ended","Sortie terminée","Lot zakończony","Jízda ukončena","飛行已結束","Viaje terminado"],
+ sum_dur:["Dauer","Duration","Durée","Czas","Doba","時間","Duración"],
+ sum_dist:["Strecke","Distance","Distance","Dystans","Vzdálenost","距離","Distancia"],
+ sum_max:["Höchster Punkt","Highest point","Point le plus haut","Najwyższy punkt","Nejvyšší bod","最高點","Punto más alto"],
+ sum_pts:["Punkte","Points","Points","Punkty","Body","點數","Puntos"],
+ fl_title:["Fahrten","Trips","Sorties","Loty","Jízdy","飛行紀錄","Viajes"],
+ fl_none:["Noch keine Fahrten gespeichert.","No trips saved yet.","Aucune sortie enregistrée.","Brak zapisanych lotów.","Zatím nejsou uloženy žádné jízdy.","尚未儲存任何飛行紀錄。","Aún no hay viajes guardados."],
+ fl_all:["Alle löschen","Delete all","Tout supprimer","Usuń wszystkie","Smazat vše","全部刪除","Borrar todo"],
+ fl_del_t:["Fahrt löschen?","Delete trip?","Supprimer la sortie ?","Usunąć lot?","Smazat jízdu?","刪除這趟飛行？","¿Borrar el viaje?"],
+ fl_del_x:["Die gespeicherte Fahrt wird vom Handy entfernt.","The saved trip will be removed from this phone.","La sortie enregistrée sera supprimée de ce téléphone.","Zapisany lot zostanie usunięty z tego telefonu.","Uložená jízda bude z tohoto telefonu odstraněna.","已儲存的飛行會從這支手機移除。","El viaje guardado se eliminará de este teléfono."],
+ fl_del_yes:["Löschen","Delete","Supprimer","Usuń","Smazat","刪除","Borrar"],
+ fl_empty:["Keine Fahrt aufgezeichnet, der Ballon ist nicht gestartet.","No trip recorded, the balloon has not launched.","Aucune sortie enregistrée, le ballon n’a pas décollé.","Nie nagrano lotu, balon nie wystartował.","Žádná jízda nebyla zaznamenána, balon nevzlétl.","沒有記錄到飛行，氣球尚未起飛。","No se grabó ningún viaje, el globo no despegó."],
+ fl_close:["Schließen","Close","Fermer","Zamknij","Zavřít","關閉","Cerrar"],
  wb_mine:["Meine Geräte","My devices","Mes appareils","Moje urządzenia","Má zařízení","我的裝置","Mis dispositivos"],
  wb_menu:["Weitere Ballons","More balloons","Autres ballons","Więcej balonów","Další balony","其他熱氣球","Más globos"],
  wb_reset:["Namen zurücksetzen","Reset names","Réinitialiser les noms","Zresetuj nazwy","Obnovit názvy","重設名稱","Restablecer nombres"],
@@ -710,14 +757,29 @@ const fmtDh = d => (d>=0?'+':'−')+Math.abs(Math.round(d))+' m';
 const vcol = v => v>0.3 ? 'var(--up)' : v<-0.3 ? 'var(--dn)' : 'var(--tx)';
 const ground = (e,n) => 78 + 5*Math.sin(e/1800) + 3*Math.cos(n/1300) + 2*Math.sin((e+n)/700);   // flaches Land, rund 80 m NN
 const GREF = ground(0,0);   // Bezugshöhe Startplatz
-function wind(alt){ // Wind dreht mit der Höhe: Prognose-Linie und Track krümmen sich beim Steigen/Sinken
+const DEMO_WX = { mode:(function(){ try{ return localStorage.getItem('bt-demowx')==='sim'?'sim':'live'; }catch(e){ return 'live'; } })(), ready:false, hours:null, elev:0, t0Ms:0, want:false };
+DEMO_WX.want = DEMO_WX.mode==='live' && navigator.onLine!==false;      // aktuelles Wetter nur mit Netz
+function wxProf(rows,h,elev){                                         // senkrecht zwischen den Druckflächen interpolieren
+  const z=h+elev, n=rows.length;
+  if(z<=rows[0].z) return {T:rows[0].T,u:rows[0].u,v:rows[0].v};
+  if(z>=rows[n-1].z){ const r=rows[n-1]; return {T:r.T-0.0065*(z-r.z),u:r.u,v:r.v}; }
+  let i=0; while(i<n-2 && rows[i+1].z<z) i++; const a=rows[i], b=rows[i+1], f=(z-a.z)/(b.z-a.z);
+  return {T:a.T+(b.T-a.T)*f,u:a.u+(b.u-a.u)*f,v:a.v+(b.v-a.v)*f};
+}
+function wxAt(h,t){                                                   // Wetter in Höhe h über Grund zur Simulationszeit t, zwischen zwei Vorhersagestunden interpoliert
+  const D=DEMO_WX, hs=D.hours, ms=D.t0Ms+t*1000; let k=0; while(k<hs.length-1 && hs[k+1].valid<=ms) k++;
+  const a=hs[k], b=hs[Math.min(k+1,hs.length-1)], f=(a===b||ms<=a.valid)?0:Math.min(1,(ms-a.valid)/(b.valid-a.valid));
+  const A=wxProf(a.rows,h,D.elev), B=wxProf(b.rows,h,D.elev);
+  return {T:A.T+(B.T-A.T)*f,u:A.u+(B.u-A.u)*f,v:A.v+(B.v-A.v)*f};
+}
+function wind(alt){ if(DEMO_WX.ready){ const w=wxAt(alt-GREF,S.t); return [w.u,w.v]; } // Wind dreht mit der Höhe: Prognose-Linie und Track krümmen sich beim Steigen/Sinken
   const c = rad(65 + (alt-300)*0.045), s = 3.8 + alt*0.0035;
   return [Math.sin(c)*s, Math.cos(c)*s];
 }
 
 /* ---------------- Zustand ---------------- */
 const S = {
-  screen:'chaser', follow:'both', speed:10, mode:'auto', map:'dark', frame:'auto', paused:false,
+  screen:'chaser', follow:'both', speed:10, mode:'auto', map:'dark', frame:'auto', paused:false, wxWait:DEMO_WX.want,
   range:5,
   t:0, pkts:0,
   orbit:{e:0,n:0,alt:81,vario:0,ve:0,vn:0},
@@ -741,7 +803,7 @@ const CAT = {inv:{c:'#5aa9ff',n:'Inversion'},stab:{c:'#4fd1a5',n:'Stabil'},neut:
 const catOf = g => g<0 ? 'inv' : g<0.5 ? 'stab' : g<MET.thr ? 'neut' : 'labil';   // g = Temperaturabnahme in K/100 m
 function gauss(){ let u=0,v=0; while(!u) u=Math.random(); while(!v) v=Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
 // Wahre Schichtung (Simulation): Mischungsschicht wächst mit der Tageserwärmung, Inversion an ihrer Obergrenze
-function atmT(h,ta){
+function atmT(h,ta){ if(DEMO_WX.ready) return wxAt(h,ta-ATM_T0).T;
   const hf=1-Math.exp(-ta/4000), T0=8+5*(1-Math.exp(-ta/6000)), zi=140+620*(1-Math.exp(-ta/7000));
   let T=T0, z=0;
   const seg=(top,l)=>{ const d=Math.min(h,top)-z; if(d>0){ T+=l*d; z+=d; } };
@@ -882,8 +944,9 @@ function stepBalloon(o,dt,tt,mode){
   else if(mode==='hold') vt = 0.15*Math.sin(tt/7);
   else if(mode==='sink') vt = -2.6 + 0.4*Math.sin(tt/6);
   else vt = 1.7*Math.sin(tt/150) + 0.9*Math.sin(tt/41+1) + 0.35*Math.sin(tt/9);
-  if(agl<120) vt = Math.max(vt,2.0);      // Bodenabstand halten
+  if(agl<120 && mode!=='sink') vt = Math.max(vt,2.0);      // Bodenabstand halten, außer beim Sinken (Landung)
   if(o.alt>DEMO_CEIL_M) vt = Math.min(vt,-2);    // Obergrenze der Demo
+  if(mode==='sink' && agl<=1.5 && vt<0){ o.vario=0; o.ve=0; o.vn=0; o.alt=ground(o.e,o.n)+1; return; }   // gelandet: der Ballon bleibt stehen
   o.vario += (vt-o.vario)*(1-Math.exp(-dt/6));
   o.alt += o.vario*dt;
   const [we,wn] = wind(o.alt), k = 1-Math.exp(-dt/20);
@@ -922,11 +985,19 @@ function step(dt){
   const kk = Math.floor(S.t/2);
   if(kk!==lastSample){ lastSample=kk; S.pkts++; sample(); }
 }
-function sample(){
+// Pfad bleibt vollständig sichtbar: erst ab 6000 Punkten werden ältere auf etwa 25 m Abstand ausgedünnt, die letzten 900 bleiben unverändert
+function thinTrack(a){
+  if(a.length<6000) return;
+  const keep=900, old=a.slice(0,a.length-keep), out=[old[0]];
+  for(let i=1;i<old.length;i++){ const p=out[out.length-1], q=old[i]; if(Math.hypot(q[0]-p[0],q[1]-p[1])>=25) out.push(q); }
+  a.splice(0,a.length-keep,...out);
+}
+function sample(){ sample0(); recStep(); }
+function sample0(){
   const o=S.orbit, b=S.base, g=ground(o.e,o.n);
-  S.track.push([o.e,o.n]);  if(S.track.length>1200) S.track.shift();
-  S.btrack.push([b.e,b.n]); if(S.btrack.length>500) S.btrack.shift();
-  if(S.o2.active){ S.o2.track.push([S.o2.e,S.o2.n]); if(S.o2.track.length>1200) S.o2.track.shift(); }
+  S.track.push([o.e,o.n]);  thinTrack(S.track);
+  S.btrack.push([b.e,b.n]); thinTrack(S.btrack);
+  if(S.o2.active){ S.o2.track.push([S.o2.e,S.o2.n]); thinTrack(S.o2.track); }
   S.hist.push({t:S.t,alt:o.alt,agl:o.alt-g,g,v:o.vario}); if(S.hist.length>720) S.hist.shift();
   S.met.push(metSample(S.t,o.alt,g,Math.hypot(o.e-b.e,o.n-b.n)/1000+MET.distOffset,'live',o.ve,o.vn)); if(S.met.length>3000){ const k0=S.met.findIndex(q=>q.src==='live'); S.met.splice(k0>=0?k0:0,1); }
 }
@@ -1008,7 +1079,7 @@ function threat(t){
 
 /* ---------------- Start am Ballonstartplatz ---------------- */
 sample();
-seedMet();
+if(!DEMO_WX.want) seedMet();   // mit aktuellem Wetter wartet der Start auf die Daten
 mkTargets();
 
 /* ---------------- Karten ---------------- */
@@ -1167,7 +1238,7 @@ function updChaser(){
   const o=S.orbit,b=S.base, oc=ll(o.e,o.n), bc=ll(b.e,b.n);
   orbMk1.setLatLng(oc); baseMk1.setLatLng(bc);
   const be=baseMk1.getElement(); if(be&&be.firstElementChild) be.firstElementChild.style.transform=`rotate(${b.hdg}deg)`;
-  oTrack.setLatLngs(S.track.map(p=>ll(p[0],p[1]))); bTrail.setLatLngs(S.btrack.map(p=>ll(p[0],p[1])));
+  if(S.track.length!==lastTL||S.btrack.length!==lastBL){ lastTL=S.track.length; lastBL=S.btrack.length; oTrack.setLatLngs(S.track.map(p=>ll(p[0],p[1]))); bTrail.setLatLngs(S.btrack.map(p=>ll(p[0],p[1]))); }
   if(ROUTE.pts.length>1) bRoute.setLatLngs([ll(b.e,b.n),...ROUTE.pts.slice(ROUTE.i+1).map(q=>ll(q[0],q[1]))]);
   const T=10800; oPred.setLatLngs([oc,ll(o.e+o.ve*T,o.n+o.vn*T)]);
   predPts.forEach(p=>p.setLatLng(ll(o.e+o.ve*p._m*60,o.n+o.vn*p._m*60)));
@@ -1423,7 +1494,8 @@ function updMeteo(force){
   D[0].data=pts; D[0].backgroundColor=cols; D[0].pointRadius=rad2;
   const pp=R.prof.filter(p=>gm?p.g!=null:true);
   D[2].data=pp.map(p=>({x:gm?p.g:p.T,y:ys(p.z),p})); metLineCol=pp.map(p=>p.cat?CAT[p.cat].c:'#9aabc4');
-  const yLoNN=MET.y==='nn'?Math.floor((GREF-15)/10)*10:GREF-10, yHiNN=Math.max(GREF+500,Math.ceil((Math.max(o.alt,R.zTop)+60)/100)*100);
+  const yLoNN=MET.y==='nn'?Math.floor((GREF-15)/10)*10:GREF-10, zOwn=S.met.reduce((a,q)=>((q.src==='live'||q.src==='prior')&&q.alt>a)?q.alt:a,0),   // Achse folgt den eigenen Messungen, nicht dem Modell bis 9 km
+        yHiNN=Math.max(Math.ceil((GREF+1500)/100)*100,Math.ceil((Math.max(o.alt,zOwn)+60)/100)*100);
   if(!gm && R.prof.length){   // hervorgehobene Adiabate: θ der untersten Messschicht
     const b0=R.prof[0], th0=thetaOf(b0.T,b0.z), line=[];
     for(let z=b0.z; z<yHiNN; z+=100) line.push({x:tOfTheta(th0,z),y:ys(z)});
@@ -1433,7 +1505,7 @@ function updMeteo(force){
   const sc=metChart.options.scales;
   sc.y.min=ys(yLoNN); sc.y.max=ys(yHiNN); sc.y.title.text=tr(MET.y==='nn'?'ax_alt_nn':'ax_alt_agl');
   if(gm){ sc.x.min=-2.5; sc.x.max=2.5; sc.x.ticks.stepSize=0.5; sc.x.title.text=tr('ax_grad'); }
-  else { let lo=Infinity,hi=-Infinity; for(const m of S.met){ lo=Math.min(lo,m.T); hi=Math.max(hi,m.T); } if(!isFinite(lo)){lo=0;hi=15;}
+  else { let lo=Infinity,hi=-Infinity; for(const m of S.met){ if(m.alt>yHiNN) continue; lo=Math.min(lo,m.T); hi=Math.max(hi,m.T); }   // Temperaturbereich nur aus dem sichtbaren Höhenbereich if(!isFinite(lo)){lo=0;hi=15;}
     sc.x.min=Math.floor(lo-0.5); sc.x.max=Math.ceil(hi+0.5); sc.x.ticks.stepSize=undefined; sc.x.title.text=tr('ax_temp'); }
   metChart.options.layout = {padding:{top:16,right:MET.wind==='off'?6:(MET.wind==='barb'?94:58),left:0,bottom:0}};
   metChart.update('none');
@@ -1462,7 +1534,7 @@ buildLegend(); initMetChart();
 
 /* ---------------- Steuerung ---------------- */
 let acc=0;
-setInterval(()=>{ if(!S.paused){ acc+=0.2*S.speed; while(acc>=1){ step(1); acc-=1; } } render(); },200);
+setInterval(()=>{ if(!S.paused && !S.wxWait){ acc+=0.2*S.speed; while(acc>=1){ step(1); acc-=1; } } render(); },200);
 
 function applyTraffic(){
   $('nav-orbit').style.display=S.traffic?'':'none';
@@ -1505,10 +1577,12 @@ function bindSeg(el,onPick){ el.querySelectorAll('button').forEach(b=>b.addEvent
 function syncMapSeg(){ document.querySelectorAll('#sim [data-key="map"] button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.map)); }
 document.querySelectorAll('#sim .seg').forEach(el=>bindSeg(el,v=>{
   const k=el.dataset.key;
+  if(k==='wx'){ try{ localStorage.setItem('bt-demowx',v==='sim'?'sim':'live'); }catch(e){} toast(tr('wx_reload')); setTimeout(()=>location.reload(),900); return; }
   if(k==='speed') S.speed=+v; else if(k==='traffic'){ S.traffic=(v==='1'); applyTraffic(); } else S[k]=v;
   if(k==='map') applyTiles();
   if(k==='frame'){ document.body.className='frame-'+v; setTimeout(()=>{ map1.invalidateSize(); map3.invalidateSize(); setRange(S.range); render(); if(metChart) metChart.resize(); },60); }
 }));
+document.querySelectorAll('#sim [data-key="wx"] button').forEach(b=>b.classList.toggle('on',b.dataset.v===DEMO_WX.mode));
 $('btn-sim').addEventListener('click',()=>$('sim').classList.toggle('open'));
 $('btn-pause').addEventListener('click',()=>{ S.paused=!S.paused; $('btn-pause').dataset.i=S.paused?'b_resume':'b_pause'; $('btn-pause').textContent=tr(S.paused?'b_resume':'b_pause'); });
 $('btn-hunter').addEventListener('click',()=>{ const h=S.targets.find(t=>t.hunter); respawn(h,5500); S.traffic=true; $('sim').classList.remove('open'); document.querySelectorAll('#sim [data-key="traffic"] button').forEach(b=>b.classList.toggle('on',b.dataset.v==='1')); applyTraffic(); showScreen('orbit'); });
@@ -1547,14 +1621,100 @@ $('btn-clear').addEventListener('click',async()=>{   // alles verwerfen und neu 
 });
 
 /* ---------------- Datenzähler und Service Worker ---------------- */
-const BUILD = '2026-10-07.9';
+const BUILD = '2026-10-07.10';
+
+// ---- Fahrt: Aufzeichnung auf dem Handy (IndexedDB), Stopp-Knopf und automatische Nachfrage nach der Landung
+window.FLIGHT=null;                                          // aktuelle Fahrt
+const FL={askAfterS:1800, airAgl:50, groundAgl:30, still:1.0, keep:20};   // 30 min am Boden, Abheben ab 50 m, Stillstand unter 1 m/s, letzte 20 Fahrten
+let lastTL=-1,lastBL=-1;                                     // Pfad nur neu zeichnen, wenn er sich geändert hat
+function idb(){ return new Promise((res,rej)=>{ if(window.__idb) return res(window.__idb); if(!window.indexedDB) return rej(new Error('kein IndexedDB'));
+  const r=indexedDB.open('bt-flights',1);
+  r.onupgradeneeded=()=>{ r.result.createObjectStore('meta',{keyPath:'id'}); r.result.createObjectStore('data',{keyPath:'id'}); };
+  r.onsuccess=()=>{ window.__idb=r.result; res(r.result); }; r.onerror=()=>rej(r.error); }); }
+function idbTx(store,mode,fn){ return idb().then(db=>new Promise((res,rej)=>{ const t=db.transaction(store,mode); const rq=fn(t.objectStore(store)); t.oncomplete=()=>res(rq&&rq.result); t.onerror=()=>rej(t.error); })); }
+const idbPut=(s,o)=>idbTx(s,'readwrite',st=>st.put(o)), idbGet=(s,id)=>idbTx(s,'readonly',st=>st.get(id)), idbAll=s=>idbTx(s,'readonly',st=>st.getAll()), idbDel=(s,id)=>idbTx(s,'readwrite',st=>st.delete(id));
+
+function newFlight(){ return {id:'f'+Date.now(),t0Ms:Date.now(),state:'ready',airborne:false,orbit:[],base:[],groundS:0,asking:false,lastT:0,reason:''}; }
+function flKm(a){ let d=0; for(let i=1;i<a.length;i++){ const dl=(a[i][1]-a[i-1][1])*111.32, dn=(a[i][2]-a[i-1][2])*111.32*Math.cos(a[i][1]*Math.PI/180); d+=Math.hypot(dl,dn); } return d; }
+function flSummary(F){ const o=F.orbit; return {id:F.id,t0:o.length?o[0][0]:Math.round(F.t0Ms/1000),t1:o.length?o[o.length-1][0]:Math.round(F.t0Ms/1000),n:o.length,km:+flKm(o).toFixed(2),maxAlt:Math.round(o.reduce((a,p)=>Math.max(a,p[3]),0)),reason:F.reason,active:F.state!=='ended'}; }
+async function flFlush(F){ if(!F||!F.airborne||!F.orbit.length) return; try{ await idbPut('data',{id:F.id,orbit:F.orbit,base:F.base}); await idbPut('meta',flSummary(F)); }catch(e){} }
+async function flTrim(){ try{ const m=(await idbAll('meta')).sort((a,b)=>b.t0-a.t0); for(const x of m.slice(FL.keep)){ await idbDel('meta',x.id); await idbDel('data',x.id); } }catch(e){} }
+
+function updStopBtn(){ const F=window.FLIGHT, b=$('stop-btn'); if(b) b.hidden=!(F&&(F.state==='ready'||F.state==='flying')); }
+function recStep(){                                          // wird bei jedem empfangenen Paket aufgerufen
+  const F=window.FLIGHT; if(!F||F.state==='ended'||S.wxWait) return;
+  const o=S.orbit, b=S.base, g=ground(o.e,o.n), agl=o.alt-g, [la,lo]=ll(o.e,o.n), [bla,blo]=ll(b.e,b.n), m=S.met[S.met.length-1]||{};
+  const sp=Math.hypot(o.ve,o.vn), ts=Math.round((F.t0Ms+S.t*1000)/1000), dt=Math.max(0,S.t-F.lastT); F.lastT=S.t;
+  F.orbit.push([ts,+la.toFixed(6),+lo.toFixed(6),+o.alt.toFixed(1),+o.vario.toFixed(2),+sp.toFixed(1),Math.round(brg(o.ve,o.vn)),+(m.T||0).toFixed(2),+(m.p||0).toFixed(1),Math.round(m.rh||0),+S.link.batt.toFixed(2),Math.round(S.link.rssi)]);
+  F.base.push([ts,+bla.toFixed(6),+blo.toFixed(6)]);          // GPS-Spur der Base
+  if(agl>FL.airAgl && !F.airborne){ F.airborne=true; if(F.state==='ready') F.state='flying'; try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist(); }catch(e){} }
+  if(F.airborne && F.state==='flying'){
+    const still=sp<FL.still && agl<FL.groundAgl && Math.abs(b.spd||0)<FL.still;     // Ballon und Base stehen am Boden
+    if(still){ F.groundS+=dt; if(F.groundS>=FL.askAfterS && !F.asking) askEnd(); } else F.groundS=0;
+  }
+  updStopBtn();
+}
+function dlg(title,text,btns){
+  $('dlg-t').textContent=title; $('dlg-x').textContent=text||''; const b=$('dlg-b'); b.innerHTML='';
+  btns.forEach(x=>{ const e=document.createElement('button'); e.className='sm'+(x.pri?' pri':''); e.textContent=x.t; e.addEventListener('click',()=>{ $('dlg').hidden=true; if(x.f) x.f(); }); b.appendChild(e); });
+  $('dlg').hidden=false;
+}
+function askEnd(){ const F=window.FLIGHT; F.asking=true;
+  dlg(tr('land_t'),tr('land_x',{m:Math.round(FL.askAfterS/60)}),[{t:tr('land_yes'),pri:true,f:()=>stopFlight('auto')},{t:tr('land_no'),f:()=>{ F.asking=false; F.groundS=0; }}]); }
+const fmtDur=s=>{ const h=Math.floor(s/3600), m=Math.floor(s%3600/60); return h+':'+String(m).padStart(2,'0')+' h'; };
+async function stopFlight(reason){
+  const F=window.FLIGHT; if(!F||F.state==='ended') return;
+  F.state='ended'; F.reason=reason; F.asking=false; updStopBtn();
+  if(!F.airborne){ toast(tr('fl_empty')); return; }
+  await flFlush(F); await flTrim(); renderFlights();
+  const s=flSummary(F);
+  dlg(tr('sum_t'),tr('sum_dur')+': '+fmtDur(s.t1-s.t0)+'\n'+tr('sum_dist')+': '+s.km.toFixed(1)+' km\n'+tr('sum_max')+': '+s.maxAlt+' m\n'+tr('sum_pts')+': '+s.n,
+    [{t:'GPX',f:()=>exportFlight(F.id,'gpx')},{t:'CSV',f:()=>exportFlight(F.id,'csv')},{t:tr('fl_close'),pri:true}]);
+}
+// ---- Export
+const isoT=s=>new Date(s*1000).toISOString().replace('.000Z','Z');
+function gpxOf(meta,d){
+  const trk=(name,pts,full)=>'<trk><name>'+name+'</name><trkseg>'+pts.map(p=>'<trkpt lat="'+p[1]+'" lon="'+p[2]+'">'+(full?'<ele>'+p[3]+'</ele>':'')+'<time>'+isoT(p[0])+'</time>'+(full?'<extensions><bt:vario>'+p[4]+'</bt:vario><bt:speed>'+p[5]+'</bt:speed><bt:course>'+p[6]+'</bt:course><bt:temp>'+p[7]+'</bt:temp><bt:pressure>'+p[8]+'</bt:pressure><bt:rh>'+p[9]+'</bt:rh><bt:battery>'+p[10]+'</bt:battery><bt:rssi>'+p[11]+'</bt:rssi></extensions>':'')+'</trkpt>').join('')+'</trkseg></trk>';
+  return '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Bo Twins" xmlns="http://www.topografix.com/GPX/1/1" xmlns:bt="urn:botwins:1">\n<metadata><name>Bo Twins '+isoT(meta.t0)+'</name><time>'+isoT(meta.t0)+'</time></metadata>\n'+trk('Orbit',d.orbit,true)+'\n'+(d.base.length?trk('Base',d.base,false)+'\n':'')+'</gpx>\n';
+}
+function csvOf(meta,d){
+  const h='device,time_utc,lat,lon,alt_m,vario_ms,speed_ms,course_deg,temp_c,press_hpa,rh_pct,batt_v,rssi_dbm';
+  return [h].concat(d.orbit.map(p=>'Orbit,'+isoT(p[0])+','+p.slice(1).join(','))).concat(d.base.map(p=>'Base,'+isoT(p[0])+','+p[1]+','+p[2]+',,,,,,,,,')).join('\n')+'\n';
+}
+function download(name,text,mime){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([text],{type:mime})); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1500); }
+async function exportFlight(id,kind){
+  const [meta,d]=await Promise.all([idbGet('meta',id),idbGet('data',id)]); if(!meta||!d) return;
+  const z=n=>String(n).padStart(2,'0'), t=new Date(meta.t0*1000), name='botwins_'+t.getFullYear()+'-'+z(t.getMonth()+1)+'-'+z(t.getDate())+'_'+z(t.getHours())+z(t.getMinutes());
+  if(kind==='gpx') download(name+'.gpx',gpxOf(meta,d),'application/gpx+xml'); else download(name+'.csv',csvOf(meta,d),'text/csv');
+}
+// ---- Liste „Fahrten“ in den Einstellungen
+async function renderFlights(){
+  const box=$('fl-list'); if(!box) return; let m=[]; try{ m=(await idbAll('meta')).sort((a,b)=>b.t0-a.t0); }catch(e){}
+  box.innerHTML=''; $('fl-all').hidden=!m.length;
+  if(!m.length){ const e=document.createElement('div'); e.className='lbl'; e.textContent=tr('fl_none'); box.appendChild(e); return; }
+  m.forEach(x=>{ const row=document.createElement('div'); row.className='flrow';
+    const tx=document.createElement('div'); tx.className='fltx'; tx.textContent=new Date(x.t0*1000).toLocaleString([],{dateStyle:'short',timeStyle:'short'})+' · '+fmtDur(x.t1-x.t0)+' · '+x.km.toFixed(1)+' km · '+x.maxAlt+' m';
+    const bt=document.createElement('div'); bt.className='flbtn';
+    [['GPX',()=>exportFlight(x.id,'gpx')],['CSV',()=>exportFlight(x.id,'csv')],['✕',()=>dlg(tr('fl_del_t'),tr('fl_del_x'),[{t:tr('fl_del_yes'),pri:true,f:async()=>{ await idbDel('meta',x.id); await idbDel('data',x.id); renderFlights(); }},{t:tr('stop_no')}])]].forEach(([l,f])=>{ const b=document.createElement('button'); b.className='sm'; b.textContent=l; b.addEventListener('click',f); bt.appendChild(b); });
+    row.appendChild(tx); row.appendChild(bt); box.appendChild(row); });
+}
+$('stop-btn').addEventListener('click',()=>dlg(tr('stop_t'),tr('stop_x'),[{t:tr('stop_yes'),pri:true,f:()=>stopFlight('stop')},{t:tr('stop_no')}]));
+$('fl-all').addEventListener('click',()=>dlg(tr('fl_del_t'),tr('fl_del_x'),[{t:tr('fl_del_yes'),pri:true,f:async()=>{ try{ for(const x of await idbAll('meta')){ await idbDel('meta',x.id); await idbDel('data',x.id); } }catch(e){} renderFlights(); }},{t:tr('stop_no')}]));
+$('btn-sim').addEventListener('click',renderFlights);
+// Beim Start: unterbrochene Fahrten abschließen (App wurde geschlossen), neue Fahrt beginnen
+(async()=>{ try{ for(const x of await idbAll('meta')) if(x.active){ x.active=false; x.reason='interrupted'; await idbPut('meta',x); } }catch(e){} renderFlights(); })();
+window.FLIGHT=newFlight(); updStopBtn();
+setInterval(()=>{ const F=window.FLIGHT; if(F&&F.airborne&&F.state!=='ended') flFlush(F); },30000);
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') flFlush(window.FLIGHT); });
+addEventListener('pagehide',()=>flFlush(window.FLIGHT));
+
 
 // ---- Startprofil aus Modelldaten (MET-13): Open-Meteo, Temperatur und Wind auf Druckflächen für den Startplatz
 const MODEL = { levels:[1000,975,950,925,900,850,800,700,600,500,400,300], maxAgeH:6, stepM:25 };   // bis 300 hPa (rund 9000 m), damit auch Flüge bis 8000 m eine Windannahme haben
 function modelUrl(lat,lon){
   const h=['temperature_2m','wind_speed_10m','wind_direction_10m'];
   MODEL.levels.forEach(L=>['temperature','wind_speed','wind_direction','geopotential_height'].forEach(v=>h.push(v+'_'+L+'hPa')));
-  return 'https://api.open-meteo.com/v1/forecast?latitude='+lat.toFixed(4)+'&longitude='+lon.toFixed(4)+'&hourly='+h.join(',')+'&wind_speed_unit=ms&timezone=UTC&forecast_days=1';
+  return 'https://api.open-meteo.com/v1/forecast?latitude='+lat.toFixed(4)+'&longitude='+lon.toFixed(4)+'&hourly='+h.join(',')+'&wind_speed_unit=ms&timezone=UTC&forecast_days=2';
 }
 // Wind aus Richtung dir (Grad) mit Geschwindigkeit spd: Bewegung der Luft nach Osten (u) und Norden (v)
 const windUV=(spd,dir)=>[-spd*Math.sin(dir*Math.PI/180), -spd*Math.cos(dir*Math.PI/180)];
@@ -1562,12 +1722,14 @@ function modelParse(j,nowMs){
   try{
     const H=j.hourly, elev=+j.elevation||0, tt=H.time.map(t=>Date.parse(t+'Z'));
     let k=0; tt.forEach((t,i)=>{ if(Math.abs(t-nowMs)<Math.abs(tt[k]-nowMs)) k=i; });
-    const rows=[]; const g=(n)=>H[n]&&H[n][k];
-    if(g('temperature_2m')!=null && g('wind_speed_10m')!=null){ const [u,v]=windUV(g('wind_speed_10m'),g('wind_direction_10m')); rows.push({z:elev+10,T:g('temperature_2m'),u,v}); }
-    MODEL.levels.forEach(L=>{ const z=g('geopotential_height_'+L+'hPa'), T=g('temperature_'+L+'hPa'), s=g('wind_speed_'+L+'hPa'), d=g('wind_direction_'+L+'hPa');
-      if(z!=null&&T!=null&&s!=null&&d!=null&&z>elev+40){ const [u,v]=windUV(s,d); rows.push({z,T,u,v}); } });   // Flächen unter dem Boden weglassen
-    rows.sort((a,b)=>a.z-b.z);
-    return rows.length>=3 ? {valid:tt[k],elev,rows,lat:+j.latitude,lon:+j.longitude} : null;
+    const rowsAt=i=>{ const rows=[], g=n=>H[n]&&H[n][i], R=(x,d)=>Math.round(x*d)/d;
+      if(g('temperature_2m')!=null && g('wind_speed_10m')!=null){ const [u,v]=windUV(g('wind_speed_10m'),g('wind_direction_10m')); rows.push({z:R(elev+10,1),T:R(g('temperature_2m'),10),u:R(u,100),v:R(v,100)}); }
+      MODEL.levels.forEach(L=>{ const z=g('geopotential_height_'+L+'hPa'), T=g('temperature_'+L+'hPa'), s=g('wind_speed_'+L+'hPa'), d=g('wind_direction_'+L+'hPa');
+        if(z!=null&&T!=null&&s!=null&&d!=null&&z>elev+40){ const [u,v]=windUV(s,d); rows.push({z:R(z,1),T:R(T,10),u:R(u,100),v:R(v,100)}); } });   // Flächen unter dem Boden weglassen
+      rows.sort((a,b)=>a.z-b.z); return rows; };
+    const rows=rowsAt(k); if(rows.length<3) return null;
+    const hours=[]; for(let i=k;i<Math.min(tt.length,k+13);i++){ const r=rowsAt(i); if(r.length>=3) hours.push({valid:tt[i],rows:r}); }   // die nächsten 12 Stunden für die Demo
+    return {valid:tt[k],elev,rows,hours,lat:+j.latitude,lon:+j.longitude};
   }catch(e){ return null; }
 }
 function modelPoints(m,nowMs){
@@ -1611,11 +1773,18 @@ function buildAssume(){
   const pts=[]; for(let z=0;z<=8000;z+=MODEL.stepM){ const alt=GREF+z; pts.push({t:S.t,alt,g:GREF,d:0,tauM:MODEL_TAU_MIN,sigM:MODEL_SIGMA_KM,src:'assume',T:lv.T-0.0065*z,p:pAt(alt),rh:60,w:1,wt:1,wd:1,ve:0,vn:0,wo:z>WIND_MIN_AGL,w0:MODEL_W0}); }
   S.met=pts.concat(S.met); window.ASSUMED=true; buildLegend(); updMeteo(true);
 }
+// Demo mit aktuellem Wetter: Start wartet bis zu 5 s auf die Modelldaten, sonst läuft die simulierte Atmosphäre
+function endWxWait(){ S.wxWait=false; DEMO_WX.want=false; seedMet(); }
+function activateDemoWx(m){
+  DEMO_WX.hours=m.hours; DEMO_WX.elev=m.elev; DEMO_WX.t0Ms=Date.now(); DEMO_WX.ready=true;
+  S.met=S.met.filter(q=>q.src!=='live'&&q.src!=='prior'); sample(); seedMet(); S.wxWait=false;     // erste Messpunkte neu aus dem Modell
+}
+setTimeout(()=>{ if(S.wxWait) endWxWait(); },5000);
 async function loadModelProfile(){
   const KEY='bt-model', now=Date.now(); let cached=null, m=null;
   try{ cached=JSON.parse(localStorage.getItem(KEY)||'null'); }catch(e){}
   const fresh=c=>c&&c.parsed&&c.parsed.rows&&(now-c.fetched)<MODEL.maxAgeH*3600e3;
-  if(fresh(cached) && distKm(cached.parsed.lat,cached.parsed.lon)<=15) m=cached.parsed;           // gleicher Ort, jünger als 6 Stunden: kein neuer Abruf
+  if(fresh(cached) && cached.parsed.hours && distKm(cached.parsed.lat,cached.parsed.lon)<=15) m=cached.parsed;           // gleicher Ort, jünger als 6 Stunden: kein neuer Abruf
   else if(navigator.onLine!==false){
     try{
       const ctl=new AbortController(), to=setTimeout(()=>ctl.abort(),8000);
@@ -1627,7 +1796,8 @@ async function loadModelProfile(){
   }
   if(!m && fresh(cached)) m=cached.parsed;                                                       // Rückfall: Daten von einem anderen Ort
   if(m){ m.dkm=distKm(m.lat,m.lon); if(!(m.dkm<=MODEL_MAX_KM)) m=null; }                          // weiter als 500 km: nicht verfügbar
-  if(!m){ MODELREF=null; window.NOMODEL=true; $('model-line').textContent=tr('mo_assume'); updProfRef(); return; }
+  if(!m){ if(S.wxWait) endWxWait(); MODELREF=null; window.NOMODEL=true; $('model-line').textContent=tr('mo_assume'); updProfRef(); return; }
+  if(S.wxWait){ if(DEMO_WX.want && m.hours && m.dkm<=50) activateDemoWx(m); else endWxWait(); }
   const pts=modelPoints(m,now); S.met=pts.concat(S.met);
   MODELREF=Object.assign({},m,{t0:pts[0].t}); window.NOMODEL=false;
   const hh=new Date(m.valid).toISOString().slice(11,16);
