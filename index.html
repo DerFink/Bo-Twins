@@ -230,6 +230,13 @@ main{position:relative;flex:1;min-height:0}
 .ofm-hint{margin-top:6px;max-width:210px;margin-left:auto;font-size:12px;line-height:1.35;color:var(--mut);background:rgba(10,16,25,.92);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
 .leaflet-tile.tiles-ofm{background:rgba(238,238,232,.92)}   /* heller Untergrund, damit die Luftfahrtkarte auf der dunklen Karte lesbar bleibt */
 .rdbtn b small::after{content:" \21C4";color:var(--mut)}
+
+/* Sprachauswahl mit Flaggen */
+.simpanel .r.lang{flex-direction:column;align-items:stretch;gap:6px}
+.langgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lbtn{display:flex;align-items:center;gap:8px;min-height:44px;padding:6px 10px;border-radius:12px;border:1px solid var(--line);background:var(--pan2);color:var(--tx);font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.lbtn.on{border-color:#ffc83d;box-shadow:0 0 0 1px #ffc83d inset;font-weight:600}
+.lbtn .flag{flex:none;border-radius:3px;outline:1px solid rgba(255,255,255,.28);outline-offset:0}
 </style>
 </head>
 
@@ -410,7 +417,7 @@ main{position:relative;flex:1;min-height:0}
   <!-- Einstellungen -->
   <div class="simpanel" id="sim">
     <div class="sh-h"><b data-i="settings">Einstellungen</b></div>
-    <div class="r"><span data-i="s_lang">Sprache</span><select id="lang-sel" class="selbox" aria-label="Language"></select></div>
+    <div class="r lang"><span data-i="s_lang">Sprache</span><div id="lang-sel" class="langgrid" role="radiogroup" aria-label="Language"></div></div>
     <div class="r"><span data-i="s_map">Karte</span><div class="seg" data-key="map"><button data-v="dark" class="on" data-i="m_dark">Dunkel</button><button data-v="light" data-i="m_light">Hell (Sonne)</button></div></div>
     <div class="dbox">
       <div class="lbl" data-i="s_data">Datenverbrauch seit App-Start</div>
@@ -451,7 +458,7 @@ main{position:relative;flex:1;min-height:0}
    ===================================================================== */
 const $ = id => document.getElementById(id);
 /* ---------------- Sprachen: Deutsch, Englisch, Französisch, Polnisch, Tschechisch, Chinesisch (Taiwan) ---------------- */
-const LANGS = [['de','Deutsch'],['en','English'],['fr','Français'],['pl','Polski'],['cs','Čeština'],['zh-TW','繁體中文（台灣）']];
+const LANGS = [['de','Deutsch'],['en','English'],['fr','Français'],['pl','Polski'],['cs','Čeština'],['zh-TW','繁體中文']];
 const LI = {de:0,en:1,fr:2,pl:3,cs:4,'zh-TW':5};
 const TX = {
  // Kopfzeile, Navigation, Allgemeines
@@ -662,7 +669,7 @@ function applyLang(){
   document.querySelectorAll('[data-i]').forEach(e=>{ e.textContent=tr(e.dataset.i); });
   document.querySelectorAll('[data-it]').forEach(e=>{ e.title=tr(e.dataset.it); });
   document.querySelectorAll('[data-ia]').forEach(e=>{ e.setAttribute('aria-label',tr(e.dataset.ia)); });
-  const sel=$('lang-sel'); if(sel) sel.value=S.lang;
+  document.querySelectorAll('#lang-sel .lbtn').forEach(b=>{ const on=b.dataset.c===S.lang; b.classList.toggle('on',on); b.setAttribute('aria-checked',on?'true':'false'); });
 }
 
 const O = (()=>{ try{ const s=JSON.parse(localStorage.getItem('bt-start')||'null'); if(s && isFinite(s.lat) && isFinite(s.lon)) return {lat:s.lat,lon:s.lon}; }catch(e){} return {lat:51.62458, lon:12.29456}; })();   // Ballonstartplatz Bitterfeld, Richard-Schütze-Str. 1 (Quelle: Ballonsport im Bitterfelder VfL e.V.)
@@ -1646,10 +1653,23 @@ function setLang(l){
   if($('net-note').style.display==='block') $('net-note').textContent=tr('net_err',{n:tileErr});
   renderPop(); updData(); updMeteo(true); render();
 }
+// Flaggen als kleine SVG-Grafiken (auf jedem Gerät gleich, unabhängig von Schriftarten): Deutschland, Großbritannien, Frankreich, Polen, Tschechien, Taiwan (vereinfacht)
+const FLAGS={
+ 'de':'<rect width="60" height="13.4" fill="#000"/><rect y="13.4" width="60" height="13.3" fill="#D00"/><rect y="26.7" width="60" height="13.3" fill="#FFCE00"/>',
+ 'en':'<rect width="60" height="40" fill="#012169"/><path d="M0 0L60 40M60 0L0 40" stroke="#fff" stroke-width="8"/><path d="M0 0L60 40M60 0L0 40" stroke="#C8102E" stroke-width="3"/><path d="M30 0V40M0 20H60" stroke="#fff" stroke-width="12"/><path d="M30 0V40M0 20H60" stroke="#C8102E" stroke-width="7"/>',
+ 'fr':'<rect width="20" height="40" fill="#0055A4"/><rect x="20" width="20" height="40" fill="#fff"/><rect x="40" width="20" height="40" fill="#EF4135"/>',
+ 'pl':'<rect width="60" height="20" fill="#fff"/><rect y="20" width="60" height="20" fill="#DC143C"/>',
+ 'cs':'<rect width="60" height="20" fill="#fff"/><rect y="20" width="60" height="20" fill="#D7141A"/><path d="M0 0L30 20L0 40Z" fill="#11457E"/>',
+ 'zh-TW':'<rect width="60" height="40" fill="#FE0000"/><rect width="30" height="20" fill="#000095"/><circle cx="15" cy="10" r="6.2" fill="#fff"/><circle cx="15" cy="10" r="4.7" fill="#000095"/><circle cx="15" cy="10" r="3.7" fill="#fff"/>'
+};
+const flagSVG=c=>'<svg class="flag" viewBox="0 0 60 40" width="30" height="20" aria-hidden="true" focusable="false">'+(FLAGS[c]||'')+'</svg>';
 (function initLang(){
   const sel=$('lang-sel');
-  LANGS.forEach(([c,n])=>{ const op=document.createElement('option'); op.value=c; op.textContent=n; sel.appendChild(op); });
-  sel.addEventListener('change',()=>setLang(sel.value));
+  LANGS.forEach(([c,n])=>{
+    const b=document.createElement('button'); b.type='button'; b.className='lbtn'; b.dataset.c=c; b.setAttribute('role','radio'); b.setAttribute('lang',c);
+    b.innerHTML=flagSVG(c)+'<span></span>'; b.lastChild.textContent=n;
+    b.addEventListener('click',()=>setLang(c)); sel.appendChild(b);
+  });
   applyLang();
 })();
 
