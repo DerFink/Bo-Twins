@@ -64,47 +64,53 @@ main{position:relative;flex:1;min-height:0}
 .ptip::before{display:none}
 
 /* Vertikalprofil */
-#prof{left:8px;top:8px;bottom:8px;width:142px;padding:0;overflow:hidden}
+#prof{left:0;top:0;width:96px;height:62%;padding:0;overflow:hidden;border-left:0;border-top:0;border-radius:0 0 14px 0;cursor:pointer}
+#prof.big{width:150px;height:auto;bottom:0;border-radius:0}
 #prof canvas{display:block;width:100%;height:100%}
 
 /* Instrumente */
-#inst{right:8px;top:8px;width:150px;padding:8px 10px 7px}
-#i-agl{font-size:40px;font-weight:700;line-height:.95}
-#i-agl small{font-size:17px;font-weight:600;color:var(--mut);margin-left:3px}
-#i-nn{font-size:14px;color:var(--mut);margin:1px 0 5px}
+#inst{right:0;top:0;width:104px;padding:5px 7px 6px 8px;border-right:0;border-top:0;border-radius:0 0 0 14px}
+#i-agl{font-size:30px;font-weight:700;line-height:1;white-space:nowrap}
+#i-agl small{font-size:13px;font-weight:600;color:var(--mut);margin-left:2px}
+#i-nn{font-size:12.5px;color:var(--mut);margin:0 0 3px;white-space:nowrap}
+#inst .lbl{font-size:11px}
+#inst .kv{gap:4px;padding:.5px 0}
+#inst .kv span{font-size:11px}
+#inst .kv b{font-size:14px}
+#inst{overflow:hidden}
 .kv{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:1.5px 0}
 .kv span{font-size:12px;color:var(--mut);white-space:nowrap}
 .kv b{font-family:var(--num);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
-#i-vario{font-size:21px}
+#inst #i-vario{font-size:17px}
 
-#hint{left:158px;right:8px;bottom:74px;padding:8px 10px;font-size:13px;line-height:1.3;text-align:center}
+#hint{left:8px;right:8px;bottom:74px;padding:8px 10px;font-size:13px;line-height:1.3;text-align:center}
 #follow{right:8px;bottom:26px;min-height:40px;padding:0 13px;border-radius:12px;border:1px solid var(--orb);background:var(--orb);color:#1a1000;font-weight:600;font-size:14px}
 #result{left:50%;top:50%;transform:translate(-50%,-50%);width:min(300px,calc(100% - 24px));padding:14px 14px 12px;z-index:700}
 #result h2{margin:0 0 8px;font-family:var(--num);font-size:24px;letter-spacing:.02em}
 .pri{width:100%;min-height:44px;margin-top:10px;border-radius:12px;border:1px solid var(--orb);background:var(--orb);color:#1a1000;font-weight:600;font-size:15px}
 
 /* Bedienfeld: Sandsäcke, Sandmulde, Ventil */
-.panel{touch-action:manipulation;flex:none;display:grid;grid-template-columns:1.25fr 1fr 74px;gap:8px;padding:8px 8px max(8px,env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--bg);user-select:none;-webkit-user-select:none}
-.box{position:relative;border:1px solid var(--line);border-radius:14px;background:var(--pan);padding:7px 8px 8px;display:flex;flex-direction:column;min-width:0;min-height:150px}
-.box h3{margin:0;font-size:12px;font-weight:500;color:var(--mut);display:flex;justify-content:space-between;gap:6px;white-space:nowrap}
-.box h3 b{font-family:var(--num);font-size:16px;font-weight:600;color:var(--tx);font-variant-numeric:tabular-nums}
-#rack{flex:1;margin-top:6px;border:1px dashed var(--line);border-radius:10px;background:none;padding:6px;display:flex;flex-wrap:wrap;align-content:flex-end;gap:3px;min-height:74px;text-align:left}
+.panel{touch-action:manipulation;flex:none;display:grid;grid-template-columns:1.3fr 1fr 56px;gap:6px;padding:6px 6px max(6px,env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--bg);user-select:none;-webkit-user-select:none}
+.box{position:relative;border:1px solid var(--line);border-radius:12px;background:var(--pan);padding:4px 6px 6px;display:flex;flex-direction:column;min-width:0}
+.box h3{margin:0;font-size:11.5px;font-weight:500;color:var(--mut);display:flex;justify-content:space-between;align-items:baseline;gap:4px;white-space:nowrap}
+.box h3 b{font-family:var(--num);font-size:15px;font-weight:600;color:var(--tx);font-variant-numeric:tabular-nums}
+#rack{flex:1;margin-top:3px;border:1px dashed var(--line);border-radius:8px;background:none;padding:5px 4px 4px;display:flex;flex-wrap:wrap;align-content:flex-end;gap:4px 2px;min-height:40px;text-align:left}
 #rack:active{border-color:var(--orb)}
 #rack:disabled{opacity:.45}
-.sack{width:13px;height:17px;border-radius:5px 5px 6px 6px;background:linear-gradient(160deg,var(--sand),var(--sand2));position:relative;flex:none}
-.sack::before{content:"";position:absolute;left:3px;right:3px;top:-3px;height:4px;border-radius:2px 2px 0 0;background:var(--sand2)}
-.more{font-family:var(--num);font-size:15px;color:var(--mut);align-self:center;padding-left:3px}
-.act{margin-top:6px;font-size:12px;color:var(--mut);text-align:center}
-#trough{position:relative;flex:1;margin-top:6px;border:2px solid #5d6f8f;border-top:0;border-radius:0 0 12px 12px;overflow:hidden;min-height:48px;background:#0d1626}
+.sack{width:10px;height:12px;border-radius:4px 4px 5px 5px;background:linear-gradient(160deg,var(--sand),var(--sand2));position:relative;flex:none}
+.sack::before{content:"";position:absolute;left:3px;right:3px;top:-2px;height:3px;border-radius:2px 2px 0 0;background:var(--sand2)}
+.more{font-family:var(--num);font-size:13px;color:var(--mut);align-self:center;padding-left:3px}
+
+#trough{position:relative;flex:1;margin-top:3px;border:2px solid #5d6f8f;border-top:0;border-radius:0 0 10px 10px;overflow:hidden;min-height:30px;background:#0d1626}
 #sandfill{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(180deg,var(--sand),var(--sand2));transition:height .25s}
-#trough b{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;white-space:nowrap;font-family:var(--num);font-size:22px;font-weight:700;text-shadow:0 1px 3px #000,0 0 8px #000}
-#scoop{white-space:nowrap;padding:0 4px;margin-top:6px;min-height:44px;border-radius:12px;border:1px solid var(--sand2);background:#3a2f18;font-weight:600;font-size:12.5px;touch-action:none}
+#trough b{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;white-space:nowrap;font-family:var(--num);font-size:17px;font-weight:700;text-shadow:0 1px 3px #000,0 0 8px #000}
+#scoop{white-space:nowrap;padding:0 2px;margin-top:4px;min-height:34px;border-radius:10px;border:1px solid var(--sand2);background:#3a2f18;font-weight:600;font-size:12px;touch-action:none}
 #scoop:active{background:#5a4a25}
 #scoop:disabled{opacity:.45}
-#valve{flex:1;position:relative;margin:6px auto 0;width:44px;min-height:96px;touch-action:none;cursor:grab}
+#valve{flex:1;position:relative;margin:3px auto 0;width:42px;min-height:62px;touch-action:none;cursor:grab}
 #valve::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:4px;margin-left:-2px;border-radius:2px;background:#2c3f60}
 #vline{position:absolute;left:50%;top:0;width:2px;margin-left:-1px;height:0;background:var(--tx)}
-#vknob{position:absolute;left:50%;top:0;width:40px;height:30px;margin-left:-20px;border-radius:10px;border:2px solid var(--dn);background:#3a1614;display:grid;place-items:center;font-family:var(--num);font-size:14px;font-weight:600}
+#vknob{position:absolute;left:50%;top:0;width:38px;height:24px;margin-left:-19px;border-radius:8px;border:2px solid var(--dn);background:#3a1614;display:grid;place-items:center;font-family:var(--num);font-size:13px;font-weight:600}
 #valve.rel #vknob,#valve.rel #vline{transition:top .18s,height .18s}
 .flash{position:absolute;right:8px;top:26px;font-family:var(--num);font-size:18px;font-weight:700;color:var(--up);pointer-events:none;animation:fl 1s ease-out forwards}
 @keyframes fl{to{transform:translateY(-26px);opacity:0}}
@@ -123,27 +129,26 @@ main{position:relative;flex:1;min-height:0}
 #cfg-calc{margin-top:6px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--pan)}
 #cfg-calc.bad{border-color:var(--dn)}
 
+#startwin{position:absolute;inset:0;z-index:800;display:grid;place-items:center;padding:12px;background:rgba(4,7,12,.62)}
+#startwin .card{width:min(360px,100%);max-height:100%;overflow:auto;padding:14px 14px 12px;background:#0d1626}
+#startwin h2{margin:0 0 8px;font-family:var(--num);font-size:26px;letter-spacing:.02em}
+.brief{margin:0;display:grid;grid-template-columns:auto 1fr;gap:7px 12px;font-size:14px;line-height:1.3}
+.brief dt{color:var(--mut);font-size:12.5px;padding-top:1px}
+.brief dd{margin:0}
+#startwin .note{margin-top:10px}
+.sec{width:100%;min-height:40px;margin-top:8px;border-radius:12px;border:1px solid var(--line);background:var(--pan2);font-weight:600;font-size:14px}
 #toast{position:absolute;left:50%;top:64px;transform:translate(-50%,-12px);z-index:2600;padding:9px 14px;border-radius:12px;background:#10243d;border:1px solid var(--line);font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;max-width:calc(100% - 24px);text-align:center}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 
 /* Handy quer: Bedienfeld rechts neben der Karte */
 @media (orientation:landscape) and (max-height:560px){
   .stage{flex-direction:row}
-  .panel{width:330px;border-top:0;border-left:1px solid var(--line);padding:8px;align-content:stretch}
-  .box{min-height:0}
-  #inst{padding:6px 10px 5px}
-  #i-agl{font-size:30px}
-  #i-nn{margin-bottom:2px}
-  .kv{padding:0}
-  .kv b{font-size:15px}
-  #i-vario{font-size:17px}
-  #i-unit{display:none}
-  #trough b{font-size:18px}
-  #scoop{font-size:12px}
-  #hint{left:158px;right:166px;top:8px;bottom:auto}
+  .panel{width:290px;border-top:0;border-left:1px solid var(--line);align-content:stretch}
+  #prof{height:auto;bottom:0;border-radius:0}
+  #hint{left:104px;right:112px;top:8px;bottom:auto}
+  #scoop{font-size:11px}
 }
 @media (max-width:400px){.brand span{display:none}}
-@media (max-width:360px){ #prof{width:128px} #inst{width:136px} #hint{left:144px} }
 @media (prefers-reduced-motion:reduce){.sheet,#toast,#sandfill{transition:none}.flash{animation-duration:.01s}}
 </style>
 </head>
@@ -158,7 +163,7 @@ main{position:relative;flex:1;min-height:0}
     </div>
     <div class="hrow">
       <div class="seg" id="seg-speed" role="group" data-ia="speed" aria-label="Zeitraffer">
-        <button data-v="1">1×</button><button data-v="5" class="on">5×</button><button data-v="10">10×</button><button data-v="30">30×</button>
+        <button data-v="1" class="on">1×</button><button data-v="5">5×</button><button data-v="10">10×</button><button data-v="30">30×</button>
       </div>
       <button id="btn-set" class="iconbtn" data-ia="settings" aria-label="Einstellungen">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>
@@ -170,20 +175,20 @@ main{position:relative;flex:1;min-height:0}
     <main>
       <div id="map" class="map"></div>
 
-      <div class="ov card" id="prof"><canvas id="prof-cv" role="img" data-ia="prof" aria-label="Vertikalprofil"></canvas></div>
+      <div class="ov card" id="prof"><canvas id="prof-cv" role="img" data-ia="prof_hint" aria-label="Vertikalprofil"></canvas></div>
 
       <div class="ov card" id="inst">
-        <div class="lbl" data-i="agl">Höhe über Grund</div>
+        <div class="lbl" data-i="agl">über Grund</div>
         <div class="num" id="i-agl">0<small>m</small></div>
         <div class="num" id="i-nn">NN –</div>
-        <div class="kv"><span data-i="vario">Steigen m/s</span><b id="i-vario">0,0</b></div>
-        <div class="lbl" id="i-unit" style="margin-top:4px;text-align:right">°, km/h</div>
+        <div class="kv"><span>m/s</span><b id="i-vario">0,0</b></div>
         <div class="kv"><span data-i="track">Fahrt</span><b id="i-track">–</b></div>
-        <div class="kv"><span data-i="wind">Wind aus</span><b id="i-wind">–</b></div>
         <div class="kv"><span data-i="time">Zeit</span><b id="i-time">0:00:00</b></div>
-        <div class="kv"><span data-i="dist">Strecke</span><b id="i-dist">0 m</b></div>
+        <div class="kv"><span data-i="dist">Weg</span><b id="i-dist">0 m</b></div>
         <div class="kv"><span data-i="sand">Sand</span><b id="n-total">–</b></div>
-        <div class="kv" id="row-gas" hidden><span data-i="gas">Gas</span><b id="i-gas">–</b></div>
+        <div class="kv"><span data-i="fill">Gas</span><b id="i-fill">100 %</b></div>
+        <div class="kv gasaid" hidden><span>m³</span><b id="i-gas">–</b></div>
+        <div class="kv gasaid" hidden><span>ΔT K</span><b id="i-gast">–</b></div>
       </div>
 
       <div class="ov card" id="hint" data-i="hint_start">Der Ballon steht im Gleichgewicht. Wirf Ballast ab, um zu starten.</div>
@@ -197,6 +202,7 @@ main{position:relative;flex:1;min-height:0}
         <div class="kv"><span data-i="r_line">Luftlinie vom Start</span><b id="r-line">–</b></div>
         <div class="kv"><span data-i="r_max">Größte Höhe</span><b id="r-max">–</b></div>
         <div class="kv"><span data-i="r_sand">Sand übrig</span><b id="r-sand">–</b></div>
+        <div class="kv"><span data-i="r_gas">Traggas übrig</span><b id="r-gas">–</b></div>
         <button class="pri" id="again" data-i="again">Neue Fahrt</button>
       </div>
     </main>
@@ -205,7 +211,6 @@ main{position:relative;flex:1;min-height:0}
       <div class="box" id="box-sacks">
         <h3><span data-i="sacks">Sandsäcke</span><b id="n-sacks">–</b></h3>
         <button id="rack" data-ia="drop_sack" aria-label="Sandsack abwerfen"></button>
-        <div class="act" data-i="sack_act">Antippen: 1 Sack (15 kg) ab</div>
       </div>
       <div class="box" id="box-trough">
         <h3><span data-i="trough">Sandmulde</span></h3>
@@ -215,7 +220,6 @@ main{position:relative;flex:1;min-height:0}
       <div class="box" id="box-valve">
         <h3><span data-i="valve">Ventil</span></h3>
         <div id="valve" role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0" data-ia="valve_a" aria-label="Ventilleine ziehen"><div id="vline"></div><div id="vknob">0</div></div>
-        <div class="act" data-i="valve_act">ziehen</div>
       </div>
     </div>
   </div>
@@ -226,7 +230,9 @@ main{position:relative;flex:1;min-height:0}
 
     <h4 data-i="s_balloon">Ballon</h4>
     <div class="row"><label for="c-vol" data-i="c_vol">Hüllenvolumen (m³)</label><input id="c-vol" type="number" inputmode="decimal" min="200" max="10000" step="10"></div>
-    <div class="row"><label for="c-rust" data-i="c_rust">Rüstmasse: Hülle, Korb (kg)</label><input id="c-rust" type="number" inputmode="decimal" min="50" max="3000" step="5"></div>
+    <div class="row"><label for="c-rust" data-i="c_rust">Rüstmasse: Korb und Ballon (kg)</label><input id="c-rust" type="number" inputmode="decimal" min="50" max="3000" step="5"></div>
+    <div class="row"><label for="c-env" data-i="c_env">davon Hülle (kg)</label><input id="c-env" type="number" inputmode="decimal" min="10" max="2000" step="5"></div>
+    <div class="row"><label for="c-equip" data-i="c_equip">Ausrüstung (kg)</label><input id="c-equip" type="number" inputmode="decimal" min="0" max="500" step="1"></div>
     <div class="row"><label for="c-pax" data-i="c_pax">Personen</label><input id="c-pax" type="number" inputmode="numeric" min="1" max="20" step="1"></div>
     <div class="row"><label for="c-paxkg" data-i="c_paxkg">Masse je Person (kg)</label><input id="c-paxkg" type="number" inputmode="decimal" min="30" max="200" step="1"></div>
     <div id="cfg-calc" class="lbl"></div>
@@ -243,13 +249,31 @@ main{position:relative;flex:1;min-height:0}
     <h4 data-i="s_view">Anzeige</h4>
     <div class="row"><span data-i="v_map">Karte</span><div class="seg" id="seg-map"><button data-v="dark" data-i="dark">Dunkel</button><button data-v="light" data-i="light">Hell</button></div></div>
     <div class="row"><span data-i="v_unit">Windgeschwindigkeit</span><div class="seg" id="seg-unit"><button data-v="kmh">km/h</button><button data-v="kt">kt</button><button data-v="ms">m/s</button></div></div>
-    <div class="row"><span data-i="v_gas">Gasfüllung und Gastemperatur anzeigen (Hilfe)</span><div class="seg" id="seg-gas"><button data-v="0" data-i="off">Aus</button><button data-v="1" data-i="on">An</button></div></div>
+    <div class="row"><span data-i="v_gas">Gasvolumen und Gastemperatur anzeigen (Hilfe)</span><div class="seg" id="seg-gas"><button data-v="0" data-i="off">Aus</button><button data-v="1" data-i="on">An</button></div></div>
+    <div class="row"><span data-i="v_snd">Ton</span><div class="seg" id="seg-snd"><button data-v="0" data-i="off">Aus</button><button data-v="1" data-i="on">An</button></div></div>
     <div class="row"><span data-i="v_lang">Sprache</span><div class="seg" id="seg-lang"><button data-v="de">Deutsch</button><button data-v="en">English</button></div></div>
 
     <h4 data-i="s_about">Hinweise</h4>
     <p class="note" data-i="about1">Dies ist ein Spiel. Es ist weder Flugplanung noch Navigation noch ein Warnsystem.</p>
     <p class="note" data-i="about2">Wetter in dieser Fassung: simulierte Atmosphäre mit Winddrehung und Inversion. Karte: © OpenStreetMap-Mitwirkende.</p>
     <p class="note"><span data-i="ver">Version</span> <span id="ver"></span> · <button class="sm" id="reload" data-i="reload">Neueste Version laden</button></p>
+  </div>
+
+  <!-- Startfenster: kurze Zusammenfassung vor jeder Fahrt -->
+  <div id="startwin" role="dialog" aria-modal="true" aria-labelledby="sw-h" hidden>
+    <div class="card">
+      <h2 id="sw-h" data-i="sw_title">Neue Fahrt</h2>
+      <dl class="brief">
+        <dt data-i="sw_target">Ziel</dt><dd id="sw-target"></dd>
+        <dt data-i="sw_start">Start</dt><dd id="sw-start"></dd>
+        <dt data-i="sw_wx">Wetter</dt><dd id="sw-wx"></dd>
+        <dt data-i="sw_bal">Ballon</dt><dd id="sw-bal"></dd>
+        <dt data-i="sw_sand">Sand</dt><dd id="sw-sand"></dd>
+      </dl>
+      <p class="note" id="sw-note"></p>
+      <button class="pri" id="sw-go" data-i="sw_go">Fahrt beginnen</button>
+      <button class="sec" id="sw-set" data-i="sw_set">Ballon, Startort und Anzeige ändern</button>
+    </div>
   </div>
 
   <div id="toast" role="status" aria-live="polite"></div>
@@ -275,16 +299,18 @@ const kH2  = T => 0.168  * Math.pow(T / 273.15, 0.78), muH2  = T => 8.40e-6  * M
 
 const DEFAULT_CFG = {
   vol: 1000,       // Hüllenvolumen in m³ (STE-09)
-  rust: 300,       // Rüstmasse in kg (STE-09)
+  rust: 200,       // Rüstmasse in kg: Korb und Ballon, Hülle eingeschlossen (Vorgabe Nutzer, STE-09)
+  equip: 30,       // Ausrüstung in kg (Vorgabe Nutzer)
+  envKg: 135,      // Masse der Hülle in kg, Teil der Rüstmasse; bestimmt ihre Wärmekapazität (Vorgabe Nutzer)
   pax: 4,          // Personen (STE-10)
   paxKg: 80,       // Masse je Person in kg (STE-10)
   sackKg: 15,      // Masse je Sandsack (STE-13)
   scoopKg: 0.1,    // Masse je Schaufel (STE-14)
   cw: 0.45,        // Widerstandsbeiwert der Hülle, Kugel (Annahme, OP-16)
-  envShare: 0.5,   // Anteil der Rüstmasse, der auf Hülle und Netz entfällt (Annahme)
   envC: 1400,      // J/(kg·K), Wärmekapazität des Hüllenstoffs (Annahme)
   envEps: 0.85,    // Emissionsgrad der Hülle im Infraroten (Annahme)
-  valveMax: 3      // m³/s Gasabfluss bei voll gezogenem Ventil (Annahme, OP-16)
+  valveD: 1.0,     // m, Durchmesser des Parachute-Ventils im Scheitel der Hülle (Vorgabe Nutzer)
+  valveCd: 1.0     // Ausflusszahl des voll geöffneten Ventils (Annahme, OP-16)
 };
 
 /* Simulierte Atmosphäre (OP-18, vorläufig fest): Bodenwerte, Temperaturschichten mit Inversion, Wind dreht mit der Höhe.
@@ -317,12 +343,14 @@ function atmAt(tab, h){
   return {T: a.T + (b.T - a.T) * f, p: a.p + (b.p - a.p) * f, u: a.u + (b.u - a.u) * f, v: a.v + (b.v - a.v) * f};
 }
 
+const fixedKg = cfg => cfg.rust + cfg.equip + cfg.pax * cfg.paxKg;   // alles außer Sand und Gas
+
 /* Beladung beim Start (STE-11 bis STE-14, OP-15): Hülle voll, gerade so viel Sand, dass der Ballon steht. */
 function loadout(cfg, tab){
   const a = atmAt(tab, 0);
   const n = a.p * cfg.vol / (R_GAS * a.T);              // mol Traggas in der vollen Hülle
   const lift = n * (M_AIR - M_H2);                      // kg: verdrängte Luft minus Gas
-  const trim = lift - cfg.rust - cfg.pax * cfg.paxKg;   // kg Trimmballast
+  const trim = lift - fixedKg(cfg);                     // kg Trimmballast
   const sU = Math.round(cfg.sackKg * 10);               // Sack in 100-g-Einheiten
   if (trim < 0) return {ok: false, n, lift, trim, sacks: 0, mU: 0};
   let full = Math.floor(trim / cfg.sackKg + 1e-9);
@@ -370,7 +398,7 @@ function heatExchange(B, cfg, a, V, dt){
   const qGas = hI * A * (B.Tf - B.Tg);                 // W, Hülle an Gas
   const qEnv = (hE + hR) * A * (a.T - B.Tf) - qGas;    // W, Umgebung an Hülle abzüglich der Abgabe ans Gas
   B.Tg += qGas * dt / (B.gas * CP_H2);
-  B.Tf += qEnv * dt / (cfg.envShare * cfg.rust * cfg.envC);
+  B.Tf += qEnv * dt / (Math.max(10, Math.min(cfg.envKg, cfg.rust)) * cfg.envC);
   B.hI = hI; B.hE = hE; B.hR = hR;
 }
 
@@ -378,12 +406,19 @@ function heatExchange(B, cfg, a, V, dt){
 function stepBalloon(B, cfg, tab, dt, valve){
   if (B.landed || !B.ok) return;
   const a = atmAt(tab, B.h);
-  if (valve > 0) B.gas = Math.max(0, B.gas - valve * cfg.valveMax * dt * a.p / (R_GAS * B.Tg));
+  if (valve > 0 && B.gas > 0){
+    // Parachute-Ventil im Scheitel: Das Gas strömt durch die Öffnung aus, getrieben vom Überdruck der Gassäule
+    // Δp = (ρ_Luft − ρ_Gas)·g·h, Ausströmgeschwindigkeit √(2·Δp/ρ_Gas); die offene Fläche wächst proportional zum Zug
+    const rhoG = a.p * M_H2 / (R_GAS * B.Tg), rhoA = a.p * M_AIR / (R_GAS * a.T);
+    const hGas = Math.cbrt(6 * Math.min(B.gas * R_GAS * B.Tg / a.p, cfg.vol) / Math.PI);        // Höhe der Gassäule, als Kugel genähert
+    const q = cfg.valveCd * valve * Math.PI * cfg.valveD * cfg.valveD / 4 * Math.sqrt(2 * Math.max(0, rhoA - rhoG) * G0 * hGas / rhoG);   // m³/s
+    B.gas = Math.max(0, B.gas - q * dt * a.p / (R_GAS * B.Tg));
+  }
   let V = B.gas * R_GAS * B.Tg / a.p;
   B.full = V >= cfg.vol;
   if (B.full){ B.gas = a.p * cfg.vol / (R_GAS * B.Tg); V = cfg.vol; }      // pralle Hülle: Überschuss entweicht (STE-05)
   const rho = a.p * M_AIR / (R_GAS * a.T);
-  const load = cfg.rust + cfg.pax * cfg.paxKg + sandKg(B, cfg);
+  const load = fixedKg(cfg) + sandKg(B, cfg);
   const free = rho * V - B.gas * M_H2 - load;                              // kg Auftriebsüberschuss
   B.free = free;
   if (B.h <= 0 && free <= 0.06){ B.w = 0; B.h = 0; B.Tg = B.Tf = a.T; return; }   // steht am Boden
@@ -410,38 +445,46 @@ function stepBalloon(B, cfg, tab, dt, valve){
 /* =====================================================================
    Oberfläche
    ===================================================================== */
-const BUILD = '2026-10-07.2';
+const BUILD = '2026-10-07.8';
 const $ = id => document.getElementById(id);
 const store = { get(k, d){ try{ const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
 
 /* ---------- Texte ---------- */
 const TX = {
  de: { brand:'Gasballon', speed:'Zeitraffer', settings:'Einstellungen', close:'Schließen', prof:'Vertikalprofil: Höhe, Temperatur, Wind',
-  agl:'Höhe über Grund', vario:'Steigen m/s', track:'Fahrt', wind:'Wind aus', time:'Zeit', dist:'Strecke', sand:'Sand', gas:'Gas',
-  hint_start:'Der Ballon steht im Gleichgewicht. Wirf Ballast ab, um zu starten.', hint_heavy:'Der Ballon ist zu schwer: Der Auftrieb reicht nicht für Rüstmasse und Personen. Bitte die Werte in den Einstellungen ändern.',
+  agl:'über Grund', track:'Fahrt', time:'Zeit', dist:'Weg', sand:'Sand', fill:'Gas', r_gas:'Traggas übrig', inv_s:'Inv.', prof_hint:'Vertikalprofil: antippen zum Vergrößern oder Verkleinern',
+  hint_start:'Der Ballon steht im Gleichgewicht. Tippe auf die Sandsäcke oder die Schaufel, um Ballast abzuwerfen.', hint_heavy:'Der Ballon ist zu schwer: Der Auftrieb reicht nicht für Rüstmasse, Ausrüstung und Personen. Bitte die Werte in den Einstellungen ändern.',
   follow:'Ballon folgen', landed:'Gelandet', r_sink:'Sinken beim Aufsetzen', r_time:'Fahrzeit', r_dist:'Strecke', r_line:'Luftlinie vom Start', r_max:'Größte Höhe', r_sand:'Sand übrig', again:'Neue Fahrt',
-  sacks:'Sandsäcke', sack_act:'Antippen: 1 Sack (15 kg) ab', drop_sack:'Sandsack abwerfen', trough:'Sandmulde', scoop:'Schaufel 100 g', valve:'Ventil', valve_act:'ziehen', valve_a:'Ventilleine ziehen',
-  s_balloon:'Ballon', c_vol:'Hüllenvolumen (m³)', c_rust:'Rüstmasse: Hülle, Korb (kg)', c_pax:'Personen', c_paxkg:'Masse je Person (kg)', cfg_apply:'Übernehmen und neu starten', cfg_reset:'Standardwerte',
-  calc:'Auftrieb {lift} kg · Trimmballast {trim} kg · {sacks} Säcke und {mulde} kg in der Sandmulde', calc_bad:'Auftrieb {lift} kg: zu wenig für Rüstmasse und Personen ({load} kg).',
+  sacks:'Sandsäcke', drop_sack:'Sandsack abwerfen', trough:'Sandmulde', scoop:'Schaufel 100 g', valve:'Ventil', valve_a:'Ventilleine ziehen',
+  s_balloon:'Ballon', c_vol:'Hüllenvolumen (m³)', c_rust:'Rüstmasse: Korb und Ballon (kg)', c_env:'davon Hülle (kg)', c_equip:'Ausrüstung (kg)', c_pax:'Personen', c_paxkg:'Masse je Person (kg)', cfg_apply:'Übernehmen und neu starten', cfg_reset:'Standardwerte',
+  calc:'Auftrieb {lift} kg · Trimmballast {trim} kg · {sacks} Säcke und {mulde} kg in der Sandmulde', calc_bad:'Auftrieb {lift} kg: zu wenig für Rüstmasse, Ausrüstung und Personen ({load} kg).',
   s_start:'Startort', st_map:'Auf der Karte wählen', st_gps:'Mein Standort (GPS)', st_bitt:'Bitterfeld', st_cur:'Aktuell: {name} ({lat}, {lon})', st_name_def:'Ballonstartplatz Bitterfeld', st_name_map:'Wunschort', st_name_gps:'Mein Standort',
   st_tap:'Tippe auf die Karte, um den Startort zu setzen.', st_wait:'Warte auf GPS', st_avg:'Mittle den Standort, noch {n} s', st_err:'Kein Standort verfügbar. Bitte den Startort auf der Karte wählen.', st_ok:'Startort gesetzt',
-  s_view:'Anzeige', v_map:'Karte', dark:'Dunkel', light:'Hell', v_unit:'Windgeschwindigkeit', v_gas:'Gasfüllung und Gastemperatur anzeigen (Hilfe)', off:'Aus', on:'An', v_lang:'Sprache',
+  s_view:'Anzeige', v_map:'Karte', dark:'Dunkel', light:'Hell', v_unit:'Windgeschwindigkeit', v_gas:'Gasvolumen und Gastemperatur anzeigen (Hilfe)', off:'Aus', on:'An', v_snd:'Ton', v_lang:'Sprache',
   s_about:'Hinweise', about1:'Dies ist ein Spiel. Es ist weder Flugplanung noch Navigation noch ein Warnsystem.', about2:'Wetter in dieser Fassung: simulierte Atmosphäre mit Winddrehung und Inversion. Karte: © OpenStreetMap-Mitwirkende.',
+  sw_title:'Neue Fahrt', sw_target:'Ziel', sw_start:'Start', sw_wx:'Wetter', sw_bal:'Ballon', sw_sand:'Sand', sw_go:'Fahrt beginnen', sw_set:'Ballon, Startort und Anzeige ändern',
+  sw_target_none:'In dieser Fassung gibt es noch kein Ziel: freie Fahrt.', sw_wx_val:'Simuliert. Bodenwind aus {dir} mit {spd}, {t} °C, {p} hPa. Inversion von {i0} bis {i1} m.', sw_wx_noinv:'Simuliert. Bodenwind aus {dir} mit {spd}, {t} °C, {p} hPa.',
+  sw_bal_val:'{vol} m³ Wasserstoff, {pax} Personen, Rüstmasse {rust} kg, Ausrüstung {eq} kg', sw_sand_val:'{trim} kg: {sacks} Säcke zu {sk} kg und {mulde} kg in der Sandmulde',
+  sw_note:'Der Ballon steht im Gleichgewicht. Die Zeit läuft zu Beginn 1×; zum Abheben Ballast abwerfen.',
   ver:'Version', reload:'Neueste Version laden', launch:'Start', inv:'Inversion', toast_newver:'Neue Version geladen', toast_valve:'Ventil gezogen: Zeit läuft 1×', kg:'kg', bag:'Sack', scoop_fl:'Schaufel' },
  en: { brand:'Gas balloon', speed:'Time lapse', settings:'Settings', close:'Close', prof:'Vertical profile: height, temperature, wind',
-  agl:'Height above ground', vario:'Climb m/s', track:'Track', wind:'Wind from', time:'Time', dist:'Distance', sand:'Sand', gas:'Gas',
-  hint_start:'The balloon is in equilibrium. Drop ballast to take off.', hint_heavy:'The balloon is too heavy: the lift does not carry the empty mass and the people. Please change the values in the settings.',
+  agl:'above ground', track:'Track', time:'Time', dist:'Dist.', sand:'Sand', fill:'Gas', r_gas:'Lifting gas left', inv_s:'Inv.', prof_hint:'Vertical profile: tap to enlarge or shrink',
+  hint_start:'The balloon is in equilibrium. Tap the sandbags or the scoop to drop ballast.', hint_heavy:'The balloon is too heavy: the lift does not carry the empty mass, the equipment and the people. Please change the values in the settings.',
   follow:'Follow balloon', landed:'Landed', r_sink:'Sink rate at touchdown', r_time:'Flight time', r_dist:'Distance', r_line:'Straight line from launch', r_max:'Maximum height', r_sand:'Sand left', again:'New flight',
-  sacks:'Sandbags', sack_act:'Tap: drop 1 bag (15 kg)', drop_sack:'Drop a sandbag', trough:'Sand trough', scoop:'Scoop 100 g', valve:'Valve', valve_act:'pull', valve_a:'Pull the valve line',
-  s_balloon:'Balloon', c_vol:'Envelope volume (m³)', c_rust:'Empty mass: envelope, basket (kg)', c_pax:'People', c_paxkg:'Mass per person (kg)', cfg_apply:'Apply and restart', cfg_reset:'Defaults',
-  calc:'Lift {lift} kg · trim ballast {trim} kg · {sacks} bags and {mulde} kg in the sand trough', calc_bad:'Lift {lift} kg: not enough for empty mass and people ({load} kg).',
+  sacks:'Sandbags', drop_sack:'Drop a sandbag', trough:'Sand trough', scoop:'Scoop 100 g', valve:'Valve', valve_a:'Pull the valve line',
+  s_balloon:'Balloon', c_vol:'Envelope volume (m³)', c_rust:'Empty mass: basket and balloon (kg)', c_env:'of which envelope (kg)', c_equip:'Equipment (kg)', c_pax:'People', c_paxkg:'Mass per person (kg)', cfg_apply:'Apply and restart', cfg_reset:'Defaults',
+  calc:'Lift {lift} kg · trim ballast {trim} kg · {sacks} bags and {mulde} kg in the sand trough', calc_bad:'Lift {lift} kg: not enough for empty mass, equipment and people ({load} kg).',
   s_start:'Launch site', st_map:'Choose on the map', st_gps:'My location (GPS)', st_bitt:'Bitterfeld', st_cur:'Current: {name} ({lat}, {lon})', st_name_def:'Bitterfeld balloon field', st_name_map:'Chosen place', st_name_gps:'My location',
   st_tap:'Tap the map to set the launch site.', st_wait:'Waiting for GPS', st_avg:'Averaging the position, {n} s left', st_err:'No location available. Please choose the launch site on the map.', st_ok:'Launch site set',
-  s_view:'Display', v_map:'Map', dark:'Dark', light:'Light', v_unit:'Wind speed', v_gas:'Show gas fill and gas temperature (aid)', off:'Off', on:'On', v_lang:'Language',
+  s_view:'Display', v_map:'Map', dark:'Dark', light:'Light', v_unit:'Wind speed', v_gas:'Show gas volume and gas temperature (aid)', off:'Off', on:'On', v_snd:'Sound', v_lang:'Language',
   s_about:'Notes', about1:'This is a game. It is not flight planning, navigation or a warning system.', about2:'Weather in this version: simulated atmosphere with wind shear and an inversion. Map: © OpenStreetMap contributors.',
+  sw_title:'New flight', sw_target:'Target', sw_start:'Launch', sw_wx:'Weather', sw_bal:'Balloon', sw_sand:'Sand', sw_go:'Begin flight', sw_set:'Change balloon, launch site and display',
+  sw_target_none:'This version has no target yet: free flight.', sw_wx_val:'Simulated. Surface wind from {dir} at {spd}, {t} °C, {p} hPa. Inversion from {i0} to {i1} m.', sw_wx_noinv:'Simulated. Surface wind from {dir} at {spd}, {t} °C, {p} hPa.',
+  sw_bal_val:'{vol} m³ hydrogen, {pax} people, empty mass {rust} kg, equipment {eq} kg', sw_sand_val:'{trim} kg: {sacks} bags of {sk} kg and {mulde} kg in the sand trough',
+  sw_note:'The balloon is in equilibrium. Time starts at 1×; drop ballast to take off.',
   ver:'Version', reload:'Load latest version', launch:'Launch', inv:'Inversion', toast_newver:'New version loaded', toast_valve:'Valve pulled: time runs at 1×', kg:'kg', bag:'bag', scoop_fl:'scoop' }
 };
-const UI = Object.assign({lang: (navigator.language || 'en').slice(0, 2) === 'de' ? 'de' : 'en', map: 'dark', unit: 'kmh', gas: 0, speed: 5}, store.get('gb-ui', {}));
+const UI = Object.assign({lang: (navigator.language || 'en').slice(0, 2) === 'de' ? 'de' : 'en', map: 'dark', unit: 'kmh', gas: 0, sound: 1}, store.get('gb-ui', {}), {speed: 1});   // jede Fahrt beginnt mit 1×
 const saveUI = () => store.set('gb-ui', UI);
 function tr(k, p){ let s = (TX[UI.lang] || TX.en)[k] ?? TX.de[k] ?? k; if (p) for (const q in p) s = s.replace('{' + q + '}', p[q]); return s; }
 function applyLang(){
@@ -460,10 +503,80 @@ const dirTo = (u, v) => (Math.atan2(u, v) * 180 / Math.PI + 360) % 360;
 const deg3 = d => String(Math.round(d) % 360).padStart(3, '0') + '°';
 let toastTimer; function toast(m){ const t = $('toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 3200); }
 
+/* ---------- Ton: im Gerät erzeugt (Web Audio), keine Tondateien ---------- */
+const LAND_SOFT = 1.0, LAND_HARD = 3.0;   // m/s Sinken beim Aufsetzen: bis LAND_SOFT sanft, ab LAND_HARD sehr hart (vorläufig, OP-05)
+const SND = (() => {
+  let ctx = null, master = null, buf = null, hiss = null;
+  function ensure(){
+    if (!UI.sound) return null;
+    if (!ctx){
+      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+      try{ ctx = new AC(); }catch(e){ return null; }
+      master = ctx.createGain(); master.gain.value = 0.7; master.connect(ctx.destination);
+      buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate); const d = buf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+  // Rauschen durch ein Filter, das von f0 nach f1 gleitet
+  function noise(o){
+    const c = ensure(); if (!c) return; const t = c.currentTime + (o.at || 0);
+    const src = c.createBufferSource(); src.buffer = buf; src.loop = true;
+    const f = c.createBiquadFilter(); f.type = o.type || 'lowpass'; f.Q.value = o.q || 0.7; f.frequency.setValueAtTime(o.f0, t); f.frequency.exponentialRampToValueAtTime(o.f1 || o.f0, t + o.dur);
+    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(o.peak, t + (o.attack || 0.01)); g.gain.exponentialRampToValueAtTime(0.0001, t + o.dur);
+    src.connect(f); f.connect(g); g.connect(master); src.start(t, Math.random()); src.stop(t + o.dur + 0.05);
+  }
+  function tone(o){
+    const c = ensure(); if (!c) return; const t = c.currentTime + (o.at || 0);
+    const os = c.createOscillator(); os.type = o.type || 'sine'; os.frequency.setValueAtTime(o.f0, t); os.frequency.exponentialRampToValueAtTime(o.f1 || o.f0, t + o.dur);
+    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(o.peak, t + (o.attack || 0.008)); g.gain.exponentialRampToValueAtTime(0.0001, t + o.dur);
+    os.connect(g); g.connect(master); os.start(t); os.stop(t + o.dur + 0.05);
+  }
+  return {
+    sack(){   // Sack rutscht über den Korbrand: dumpfes Wuchten, dann kurzes Nachrauschen
+      tone({f0: 130, f1: 55, dur: 0.22, peak: 0.55});
+      noise({f0: 1100, f1: 260, dur: 0.38, peak: 0.28, attack: 0.04});
+      noise({type: 'bandpass', f0: 2600, f1: 1800, q: 0.8, dur: 0.30, peak: 0.07, attack: 0.05, at: 0.10});
+    },
+    scoop(){  // Schaufel fährt in den Sand, Sand rieselt
+      noise({type: 'bandpass', f0: 2200, f1: 3600, q: 0.9, dur: 0.16, peak: 0.20, attack: 0.03});
+      noise({type: 'highpass', f0: 4200, f1: 6000, q: 0.5, dur: 0.30, peak: 0.07, attack: 0.06, at: 0.09});
+    },
+    valve(v){ // Zischen, Lautstärke und Klangfarbe folgen der Öffnung
+      if (!UI.sound) v = 0;
+      if (!hiss){
+        if (v <= 0) return; const c = ensure(); if (!c) return;
+        const src = c.createBufferSource(); src.buffer = buf; src.loop = true;
+        const f = c.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 0.6; f.frequency.value = 1500;
+        const g = c.createGain(); g.gain.value = 0; src.connect(f); f.connect(g); g.connect(master); src.start();
+        hiss = {f, g};
+      } else if (v > 0) ensure();
+      const t = ctx.currentTime;
+      hiss.g.gain.setTargetAtTime(v > 0 ? 0.04 + 0.42 * v * v : 0, t, v > 0 ? 0.04 : 0.09);
+      hiss.f.frequency.setTargetAtTime(1300 + 3400 * v, t, 0.05);
+    },
+    land(v){
+      if (v >= LAND_HARD){          // sehr harte Landung: schwerer Schlag und Krachen
+        tone({f0: 95, f1: 32, dur: 0.6, peak: 0.95});
+        noise({f0: 1600, f1: 140, dur: 0.5, peak: 0.7});
+        noise({type: 'bandpass', f0: 900, f1: 500, q: 1.2, dur: 0.28, peak: 0.4, at: 0.13});
+        noise({type: 'bandpass', f0: 700, f1: 380, q: 1.2, dur: 0.22, peak: 0.25, at: 0.30});
+      } else if (v <= LAND_SOFT){   // sanfte Landung: leises Aufsetzen und drei aufsteigende Töne
+        tone({f0: 110, f1: 70, dur: 0.18, peak: 0.28});
+        noise({f0: 500, f1: 220, dur: 0.2, peak: 0.10, attack: 0.03});
+        [[659.25, 0.18], [830.61, 0.33], [987.77, 0.48]].forEach(n => { tone({type: 'triangle', f0: n[0], dur: 0.7, peak: 0.20, at: n[1]}); tone({f0: n[0] * 2, dur: 0.5, peak: 0.05, at: n[1]}); });
+      } else {                      // gewöhnliche Landung: Aufsetzen
+        tone({f0: 105, f1: 48, dur: 0.3, peak: 0.6});
+        noise({f0: 800, f1: 200, dur: 0.25, peak: 0.3});
+      }
+    }
+  };
+})();
+
 /* ---------- Zustand ---------- */
 const BITTERFELD = {lat: 51.62458, lon: 12.29456, alt: 80, kind: 'def'};   // Ballonstartplatz Bitterfeld, wie in der Tracker-App
 let START = (() => { const s = store.get('gb-start', null); return s && isFinite(s.lat) && isFinite(s.lon) ? s : BITTERFELD; })();
-let CFG = Object.assign({}, DEFAULT_CFG, store.get('gb-cfg', {}));
+let CFG = Object.assign({}, DEFAULT_CFG, store.get('gb-cfg2', {}));   // gb-cfg2: seit Build .5 mit Ausrüstung und Hüllenmasse, ältere gespeicherte Werte gelten nicht mehr
 const ATM = buildAtm(SIM_WX);
 let B = newBalloon(CFG, ATM);
 let valve = 0, follow = true, pathPts = [], lastPathE = 0, lastPathN = 0;
@@ -485,13 +598,33 @@ $('follow').addEventListener('click', () => { follow = true; $('follow').hidden 
 
 /* ---------- Neue Fahrt ---------- */
 function resetRun(){
-  B = newBalloon(CFG, ATM); valve = 0;
+  B = newBalloon(CFG, ATM); valve = 0; SND.valve(0); shown = false;
   pathPts = [ll(0, 0)]; lastPathE = lastPathN = 0; pathLine.setLatLngs(pathPts);
   startMk.setLatLng(ll(0, 0)); balMk.setLatLng(ll(0, 0));
   follow = true; $('follow').hidden = true; $('result').hidden = true;
   map.setView(ll(0, 0), Math.max(map.getZoom(), 13));
-  renderSand(true); stShow();
+  setSpeed(1); renderSand(true); stShow(); showStart();
 }
+
+function setSpeed(v){ UI.speed = v; document.querySelectorAll('#seg-speed button').forEach(b => b.classList.toggle('on', +b.dataset.v === v)); }
+
+/* ---------- Startfenster ---------- */
+const fresh = () => B.t === 0 && !B.air && !B.landed;
+function showStart(){
+  const a = atmAt(ATM, 0), sp = Math.hypot(a.u, a.v);
+  let i0 = -1, i1 = -1;                                    // unterste Inversion suchen
+  for (let z = 0; z < 5000; z += 50){ const inv = atmAt(ATM, z + 50).T - atmAt(ATM, z).T > 0.025; if (inv && i0 < 0) i0 = z; if (!inv && i0 >= 0){ i1 = z; break; } }
+  $('sw-target').textContent = tr('sw_target_none');
+  $('sw-start').textContent = tr('st_name_' + (START.kind || 'map')) + ' (' + START.lat.toFixed(4) + ', ' + START.lon.toFixed(4) + ')';
+  $('sw-wx').textContent = tr(i0 >= 0 && i1 > i0 ? 'sw_wx_val' : 'sw_wx_noinv', {dir: deg3(dirFrom(a.u, a.v)), spd: spd(sp) + ' ' + UNITS[UI.unit][1], t: nf(a.T - 273.15), p: nf(Math.round(a.p / 100)), i0, i1});
+  $('sw-bal').textContent = tr('sw_bal_val', {vol: nf(CFG.vol), pax: CFG.pax, rust: nf(CFG.rust), eq: nf(CFG.equip)});
+  $('sw-sand').textContent = B.ok ? tr('sw_sand_val', {trim: nf(sandKg(B, CFG), 1), sacks: B.sacks, sk: nf(CFG.sackKg), mulde: nf(B.mU / 10, 1)}) : tr('hint_heavy');
+  $('sw-note').textContent = B.ok ? tr('sw_note') : '';
+  $('sw-go').disabled = !B.ok; $('sw-go').style.opacity = B.ok ? 1 : .45;
+  $('startwin').hidden = false;
+}
+$('sw-go').addEventListener('click', () => { $('startwin').hidden = true; SND.valve(0); });
+$('sw-set').addEventListener('click', () => { $('startwin').hidden = true; openSheet(true); });
 
 /* ---------- Sand ---------- */
 let rackKey = '';
@@ -504,15 +637,15 @@ function renderSand(force){
   rack.innerHTML = h; rack.disabled = B.sacks < 1 || B.landed || !B.ok;
   $('n-sacks').textContent = B.sacks;
   $('n-trough').textContent = nf(B.mU / 10, 1) + ' kg';
-  $('n-total').textContent = nf(sandKg(B, CFG), 1) + ' kg';
+  $('n-total').textContent = nf(sandKg(B, CFG), 1);
   $('sandfill').style.height = Math.min(100, B.mU / (CFG.sackKg * 20) * 100) + '%';
   $('scoop').disabled = B.mU < 1 || B.landed || !B.ok;
 }
 function flash(box, txt){ const f = document.createElement('span'); f.className = 'flash'; f.textContent = txt; $(box).appendChild(f); setTimeout(() => f.remove(), 1000); }
-$('rack').addEventListener('click', () => { if (dropSack(B, CFG)){ flash('box-sacks', '−' + nf(CFG.sackKg) + ' kg'); renderSand(); } });
+$('rack').addEventListener('click', () => { if (dropSack(B, CFG)){ SND.sack(); flash('box-sacks', '−' + nf(CFG.sackKg) + ' kg'); renderSand(); } });
 (function bindScoop(){
   const b = $('scoop'); let t1 = null, t2 = null;
-  const one = () => { if (dropScoop(B, CFG)){ flash('box-trough', '−100 g'); renderSand(); } };
+  const one = () => { if (dropScoop(B, CFG)){ SND.scoop(); flash('box-trough', '−100 g'); renderSand(); } };
   const stop = () => { clearTimeout(t1); clearInterval(t2); t1 = t2 = null; };
   b.addEventListener('pointerdown', e => { e.preventDefault(); if (b.disabled) return; one(); stop(); t1 = setTimeout(() => { t2 = setInterval(one, 140); }, 450); });   // halten: weiterschaufeln
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, stop));
@@ -522,12 +655,12 @@ $('rack').addEventListener('click', () => { if (dropSack(B, CFG)){ flash('box-sa
 
 /* ---------- Ventil: proportional ziehen, beliebig lange halten; beim Loslassen schließt es ---------- */
 (function bindValve(){
-  const el = $('valve'), knob = $('vknob'), line = $('vline'); let y0 = 0, active = false, told = false;
+  const el = $('valve'), knob = $('vknob'), line = $('vline'); let y0 = 0, active = false, told = false; const FULL = 150;   // px Fingerweg für voll geöffnet
   const range = () => Math.max(20, el.clientHeight - knob.offsetHeight);
   const show = () => { const y = valve * range(); knob.style.top = y + 'px'; line.style.height = y + 'px'; knob.textContent = Math.round(valve * 100); el.setAttribute('aria-valuenow', Math.round(valve * 100)); $('seg-speed').classList.toggle('held', valve > 0 && UI.speed > 1); };
-  const set = v => { valve = (B.landed || !B.ok) ? 0 : Math.min(1, Math.max(0, v)); show(); if (valve > 0 && UI.speed > 1 && !told){ told = true; toast(tr('toast_valve')); } };
-  el.addEventListener('pointerdown', e => { e.preventDefault(); active = true; el.classList.remove('rel'); el.setPointerCapture(e.pointerId); y0 = e.clientY - valve * range(); });
-  el.addEventListener('pointermove', e => { if (active) set((e.clientY - y0) / range()); });
+  const set = v => { valve = (B.landed || !B.ok) ? 0 : Math.min(1, Math.max(0, v)); show(); SND.valve(valve); if (valve > 0 && UI.speed > 1 && !told){ told = true; toast(tr('toast_valve')); } };
+  el.addEventListener('pointerdown', e => { e.preventDefault(); active = true; el.classList.remove('rel'); el.setPointerCapture(e.pointerId); y0 = e.clientY - valve * FULL; });
+  el.addEventListener('pointermove', e => { if (active) set((e.clientY - y0) / FULL); });
   const end = () => { if (!active) return; active = false; el.classList.add('rel'); set(0); };
   ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => el.addEventListener(ev, end));
   el.addEventListener('keydown', e => { if (e.key === 'ArrowDown'){ e.preventDefault(); set(valve + 0.1); } if (e.key === 'ArrowUp' || e.key === 'Escape'){ e.preventDefault(); set(e.key === 'Escape' ? 0 : valve - 0.1); } });
@@ -542,9 +675,9 @@ function drawProf(){
   if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)){ cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
   const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H);
   const top = Math.min(9000, Math.max(2000, Math.ceil((B.h + 300) / 1000) * 1000));
-  const pt = 22, pb = 20, y = z => H - pb - z / top * (H - pt - pb);
-  const xL = 30, xS = xL + 3, xT0 = xS + 8, xT1 = Math.max(xT0 + 22, W - 74), xW = W - 44;
-  const num = '600 12px "Barlow Condensed","Arial Narrow",sans-serif', small = '500 10.5px Barlow,"Segoe UI",sans-serif';
+  const pt = 22, pb = 18, y = z => H - pb - z / top * (H - pt - pb);
+  const xL = 27, xS = xL + 2, xT0 = xS + 7, xT1 = Math.max(xT0 + 18, W - 46), xA = W - 30, xN = W - 17;
+  const num = '600 11.5px "Barlow Condensed","Arial Narrow",sans-serif', small = '500 10px Barlow,"Segoe UI",sans-serif';
   // Schichtung in 50-m-Stücken: Inversion, sehr stabil, normal, labil
   const cls = g => g > 0.0005 ? 3 : g > -0.004 ? 2 : g > -0.0090 ? 1 : 0, col = ['#4cc9ff', '#5d6f8f', '#ffe14d', '#ff6e5f'];
   let Tmin = 1e9, Tmax = -1e9;
@@ -554,7 +687,7 @@ function drawProf(){
   for (let z = 0; z < top; z += 50){
     const g = (atmAt(ATM, z + 50).T - atmAt(ATM, z).T) / 50, k = cls(g);
     if (k === 3){ c.fillStyle = 'rgba(255,110,95,.18)'; c.fillRect(xS, y(z + 50), W - xS, y(z) - y(z + 50) + .5); bandTop = z + 50; }
-    else if (bandTop >= 0){ c.fillStyle = '#ff9d92'; c.font = small; c.textAlign = 'left'; c.textBaseline = 'alphabetic'; c.fillText(tr('inv'), xT0 + 1, y(bandTop) - 3); bandTop = -1; }
+    else if (bandTop >= 0){ c.fillStyle = '#ff9d92'; c.font = small; c.textAlign = 'left'; c.textBaseline = 'alphabetic'; c.fillText(tr(W < 120 ? 'inv_s' : 'inv'), xT0 + 1, y(bandTop) - 3); bandTop = -1; }
     c.fillStyle = col[k]; c.fillRect(xS, y(z + 50), 4, y(z) - y(z + 50) + .5);
   }
   // Höhenlinien
@@ -565,21 +698,23 @@ function drawProf(){
   c.strokeStyle = '#eef3fa'; c.lineWidth = 1.8; c.lineJoin = 'round'; c.beginPath();
   for (let z = 0; z <= top; z += 50){ const px = xT(atmAt(ATM, z).T), py = y(z); z ? c.lineTo(px, py) : c.moveTo(px, py); } c.stroke();
   c.font = small; c.fillStyle = '#9aabc4'; c.textBaseline = 'alphabetic';
-  c.textAlign = 'left'; c.fillText(Math.round(Tmin - 273.15) + '°', xT0 - 2, H - 5); c.textAlign = 'right'; c.fillText(Math.round(Tmax - 273.15) + ' °C', xT1 + 12, H - 5);
-  c.textAlign = 'right'; c.fillText('m', xL - 2, 13); c.textAlign = 'left'; c.fillText('T', xT0, 13); c.textAlign = 'center'; c.fillText(UNITS[UI.unit][1], xW + 10, 13);
+  c.textAlign = 'left'; c.fillText(Math.round(Tmin - 273.15) + '…' + Math.round(Tmax - 273.15) + ' °C', xS, H - 5);
+  c.textAlign = 'right'; c.fillText('m', xL - 2, 13); c.textAlign = 'left'; c.fillText('T', xT0, 13); c.textAlign = 'right'; c.fillText(UNITS[UI.unit][1], W - 4, 13);
   // Wind: Pfeil zeigt, wohin die Luft zieht (Karte: Norden oben), Zahl ist die Stärke
   let stepW = 250; for (const s of [100, 250, 500, 1000, 2000]){ if (y(0) - y(s) >= 27){ stepW = s; break; } }
   for (let z = (stepW >= 250 ? stepW / 2 : stepW); z < top; z += stepW){
-    const a = atmAt(ATM, z), sp = Math.hypot(a.u, a.v), ang = Math.atan2(a.u, a.v), len = 7 + Math.min(8, sp * .55);
-    c.save(); c.translate(xW - 8, y(z)); c.rotate(ang); c.strokeStyle = c.fillStyle = '#4cc9ff'; c.lineWidth = 2; c.lineCap = 'round';
-    c.beginPath(); c.moveTo(0, len); c.lineTo(0, -len + 3); c.stroke(); c.beginPath(); c.moveTo(0, -len - 2); c.lineTo(4.5, -len + 5); c.lineTo(-4.5, -len + 5); c.closePath(); c.fill(); c.restore();
-    c.font = num; c.fillStyle = '#eef3fa'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(spd(sp), xW + 12, y(z));
+    const a = atmAt(ATM, z), sp = Math.hypot(a.u, a.v), ang = Math.atan2(a.u, a.v), len = 6 + Math.min(6, sp * .45);
+    c.save(); c.translate(xA, y(z)); c.rotate(ang); c.strokeStyle = c.fillStyle = '#4cc9ff'; c.lineWidth = 2; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(0, len); c.lineTo(0, -len + 3); c.stroke(); c.beginPath(); c.moveTo(0, -len - 2); c.lineTo(4, -len + 4); c.lineTo(-4, -len + 4); c.closePath(); c.fill(); c.restore();
+    c.font = num; c.fillStyle = '#eef3fa'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(spd(sp), xN, y(z));
   }
   // Ballon
   const yb = y(Math.min(B.h, top));
   c.strokeStyle = '#ff9f1c'; c.lineWidth = 2; c.beginPath(); c.moveTo(xS + 5, yb); c.lineTo(W - 4, yb); c.stroke();
   c.fillStyle = '#ff9f1c'; c.beginPath(); c.arc(xT(atmAt(ATM, B.h).T), yb, 5, 0, 7); c.fill(); c.strokeStyle = '#0a1019'; c.lineWidth = 1.5; c.stroke();
 }
+
+$('prof').addEventListener('click', () => $('prof').classList.toggle('big'));
 
 /* ---------- Anzeige ---------- */
 function updInst(){
@@ -588,12 +723,11 @@ function updInst(){
   $('i-nn').textContent = START.alt != null && isFinite(START.alt) ? 'NN ' + nf(Math.round(B.h + START.alt)) + ' m' : 'NN –';
   const v = $('i-vario'); v.textContent = fmtV(B.w); v.style.color = B.w > 0.3 ? 'var(--up)' : B.w < -0.3 ? 'var(--dn)' : 'var(--tx)';
   const sp = Math.hypot(a.u, a.v), moving = B.h > 0 && !B.landed;
-  $('i-track').textContent = moving ? deg3(dirTo(a.u, a.v)) + ' · ' + spd(sp) : '–';
-  $('i-wind').textContent = deg3(dirFrom(a.u, a.v)) + ' · ' + spd(sp);
-  $('i-unit').textContent = '° · ' + UNITS[UI.unit][1];
+  $('i-track').textContent = moving ? deg3(dirTo(a.u, a.v)) + ' ' + spd(sp) : '–';
   $('i-time').textContent = fmtT(B.t); $('i-dist').textContent = fmtD(B.dist);
-  $('row-gas').hidden = !UI.gas;
-  if (UI.gas) $('i-gas').textContent = nf(Math.round(B.gas * R_GAS * B.Tg / a.p)) + ' m³ · ' + fmtV(B.Tg - a.T) + ' K';
+  $('i-fill').textContent = nf(B.gas0 > 0 ? B.gas / B.gas0 * 100 : 0) + ' %';
+  document.querySelectorAll('.gasaid').forEach(el => { el.hidden = !UI.gas; });
+  if (UI.gas){ $('i-gas').textContent = nf(Math.round(B.gas * R_GAS * B.Tg / a.p)); $('i-gast').textContent = fmtV(B.Tg - a.T); }
   const hint = $('hint');
   if (!B.ok){ hint.hidden = false; hint.textContent = tr('hint_heavy'); }
   else if (B.h <= 0 && !B.air && !B.landed){ hint.hidden = false; hint.textContent = tr('hint_start'); }
@@ -601,8 +735,8 @@ function updInst(){
 }
 function showResult(){
   $('r-sink').textContent = nf(B.vLand, 1) + ' m/s'; $('r-time').textContent = fmtT(B.t); $('r-dist').textContent = fmtD(B.dist);
-  $('r-line').textContent = fmtD(Math.hypot(B.e, B.n)); $('r-max').textContent = nf(Math.round(B.maxH)) + ' m'; $('r-sand').textContent = nf(sandKg(B, CFG), 1) + ' kg';
-  $('result').hidden = false; valve = 0; renderSand(true);
+  $('r-line').textContent = fmtD(Math.hypot(B.e, B.n)); $('r-max').textContent = nf(Math.round(B.maxH)) + ' m'; $('r-sand').textContent = nf(sandKg(B, CFG), 1) + ' kg'; $('r-gas').textContent = nf(B.gas / B.gas0 * 100) + ' %';
+  $('result').hidden = false; valve = 0; SND.valve(0); SND.land(B.vLand); renderSand(true);
 }
 $('again').addEventListener('click', resetRun);
 
@@ -623,34 +757,35 @@ function frame(ts){
 }
 
 /* ---------- Einstellungen ---------- */
-const openSheet = o => { $('sheet').classList.toggle('open', o); $('sheet').setAttribute('aria-hidden', o ? 'false' : 'true'); if (o){ cfgFill(); stShow(); } };
+const openSheet = o => { $('sheet').classList.toggle('open', o); $('sheet').setAttribute('aria-hidden', o ? 'false' : 'true'); if (o){ cfgFill(); stShow(); $('startwin').hidden = true; } else if (fresh() && !stPick) showStart(); };
 $('btn-set').addEventListener('click', () => openSheet(!$('sheet').classList.contains('open')));
 $('set-close').addEventListener('click', () => openSheet(false));
 function bindSeg(id, cur, onPick){ const el = $(id); const mark = v => el.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === String(v))); mark(cur); el.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { mark(b.dataset.v); onPick(b.dataset.v); })); }
-bindSeg('seg-speed', UI.speed, v => { UI.speed = +v; saveUI(); });
+bindSeg('seg-speed', UI.speed, v => { UI.speed = +v; });
 bindSeg('seg-map', UI.map, v => { UI.map = v; saveUI(); applyTiles(); });
 bindSeg('seg-unit', UI.unit, v => { UI.unit = v; saveUI(); });
 bindSeg('seg-gas', UI.gas, v => { UI.gas = +v; saveUI(); });
+bindSeg('seg-snd', UI.sound, v => { UI.sound = +v; saveUI(); if (UI.sound) SND.scoop(); else SND.valve(0); });
 bindSeg('seg-lang', UI.lang, v => { UI.lang = v; saveUI(); applyLang(); startMk.setTooltipContent(tr('launch')); renderSand(true); cfgCalc(); stShow(); });
 
-const CF = {vol: 'c-vol', rust: 'c-rust', pax: 'c-pax', paxKg: 'c-paxkg'};
+const CF = {vol: 'c-vol', rust: 'c-rust', envKg: 'c-env', equip: 'c-equip', pax: 'c-pax', paxKg: 'c-paxkg'};
 function cfgFill(){ for (const k in CF) $(CF[k]).value = CFG[k]; cfgCalc(); }
 function cfgRead(){ const c = Object.assign({}, CFG); for (const k in CF){ const el = $(CF[k]), v = parseFloat(String(el.value).replace(',', '.')); if (isFinite(v)) c[k] = Math.min(+el.max, Math.max(+el.min, k === 'pax' ? Math.round(v) : v)); } return c; }
 function cfgCalc(){
   const c = cfgRead(), Lo = loadout(c, ATM), box = $('cfg-calc'); box.classList.toggle('bad', !Lo.ok);
-  box.textContent = Lo.ok ? tr('calc', {lift: nf(Lo.lift, 1), trim: nf(Lo.trim, 1), sacks: Lo.sacks, mulde: nf(Lo.mU / 10, 1)}) : tr('calc_bad', {lift: nf(Lo.lift, 1), load: nf(c.rust + c.pax * c.paxKg)});
+  box.textContent = Lo.ok ? tr('calc', {lift: nf(Lo.lift, 1), trim: nf(Lo.trim, 1), sacks: Lo.sacks, mulde: nf(Lo.mU / 10, 1)}) : tr('calc_bad', {lift: nf(Lo.lift, 1), load: nf(fixedKg(c))});
 }
 for (const k in CF) $(CF[k]).addEventListener('input', cfgCalc);
-$('cfg-apply').addEventListener('click', () => { CFG = cfgRead(); store.set('gb-cfg', {vol: CFG.vol, rust: CFG.rust, pax: CFG.pax, paxKg: CFG.paxKg}); cfgFill(); resetRun(); openSheet(false); });
+$('cfg-apply').addEventListener('click', () => { CFG = cfgRead(); store.set('gb-cfg2', {vol: CFG.vol, rust: CFG.rust, envKg: CFG.envKg, equip: CFG.equip, pax: CFG.pax, paxKg: CFG.paxKg}); cfgFill(); openSheet(false); resetRun(); });
 $('cfg-reset').addEventListener('click', () => { for (const k in CF) $(CF[k]).value = DEFAULT_CFG[k]; cfgCalc(); });
 
 /* ---------- Startort (SPI-01): Karte, GPS oder Bitterfeld ---------- */
 function stShow(msg){ $('st-info').textContent = msg || tr('st_cur', {name: tr('st_name_' + (START.kind || 'map')), lat: START.lat.toFixed(5), lon: START.lon.toFixed(5)}); }
 function stSet(s){ START = s; store.set('gb-start', s); resetRun(); toast(tr('st_ok')); }
 let stPick = false, stWatch = null;
-$('st-map').addEventListener('click', () => { stPick = true; openSheet(false); toast(tr('st_tap')); });
+$('st-map').addEventListener('click', () => { stPick = true; openSheet(false); $('startwin').hidden = true; toast(tr('st_tap')); });
 map.on('click', e => { if (!stPick) return; stPick = false; stSet({lat: e.latlng.lat, lon: e.latlng.lng, alt: null, kind: 'map'}); });
-$('st-def').addEventListener('click', () => { stSet(BITTERFELD); openSheet(false); });
+$('st-def').addEventListener('click', () => { openSheet(false); stSet(BITTERFELD); });
 $('st-gps').addEventListener('click', () => {
   if (!navigator.geolocation){ stShow(tr('st_err')); return; }
   if (stWatch !== null){ navigator.geolocation.clearWatch(stWatch); stWatch = null; }
@@ -663,7 +798,7 @@ $('st-gps').addEventListener('click', () => {
     if (el >= 15 && pts.length >= 3){
       navigator.geolocation.clearWatch(stWatch); stWatch = null;
       const m = k => pts.reduce((a, c) => a + (c[k] || 0), 0) / pts.length, hasAlt = pts.every(c => c.altitude != null);
-      stSet({lat: m('latitude'), lon: m('longitude'), alt: hasAlt ? Math.round(m('altitude')) : null, kind: 'gps'}); openSheet(false);
+      openSheet(false); stSet({lat: m('latitude'), lon: m('longitude'), alt: hasAlt ? Math.round(m('altitude')) : null, kind: 'gps'});
     }
   }, () => { stShow(tr('st_err')); stWatch = null; }, {enableHighAccuracy: true, maximumAge: 0, timeout: 60000});
 });
