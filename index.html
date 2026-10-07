@@ -263,6 +263,16 @@ main{position:relative;flex:1;min-height:0}
 .dlg-x{font-size:14px;color:var(--mut);white-space:pre-line;margin-bottom:14px;line-height:1.45}
 .dlg-btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
 .sm.pri{background:#ffc83d;color:#0a1019;border-color:#ffc83d;font-weight:600}
+
+.kv2.sub{margin-top:-5px}
+.kv2.sub b{font-weight:500;font-size:13px;color:var(--mut)}
+
+.oldbar{display:flex;align-items:center;gap:10px;padding:8px 10px;font-size:13px;z-index:20}
+.oldbar span{flex:1;color:var(--tx)}
+.demo-wm{position:fixed;inset:0;z-index:1500;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(-18deg);color:rgba(190,205,225,.20);text-align:center;user-select:none}
+.demo-wm[hidden]{display:none}
+.demo-wm b{font-size:min(26vw,120px);line-height:1;letter-spacing:.04em}
+.demo-wm span{font-size:min(7vw,34px);font-weight:600}
 </style>
 </head>
 
@@ -308,6 +318,7 @@ main{position:relative;flex:1;min-height:0}
           <div class="wbfoot"><button id="wb-reset" class="sm" data-i="wb_reset">Namen zurücksetzen</button><span class="lbl" data-i="wb_hint">Namen gehören zur LoRa-ID und bleiben gespeichert.</span></div>
         </div>
       </div>
+      <div class="ov card oldbar" id="old-bar" hidden style="left:8px;right:8px;bottom:84px"><span id="old-bar-t"></span><button class="sm" id="old-hide" data-i="old_hide">Ausblenden</button></div>
       <div class="ov followbar" id="followbar">
         <button class="pbtn" data-f="orbit" data-i="f_orbit">Orbit folgen</button>
         <button class="pbtn on" data-f="both" data-i="f_both">Beide zeigen</button>
@@ -459,6 +470,7 @@ main{position:relative;flex:1;min-height:0}
     <div class="r"><span data-i="s_rate">Simulationstempo</span><div class="seg" data-key="speed"><button data-v="1">1×</button><button data-v="5">5×</button><button data-v="10" class="on">10×</button><button data-v="30">30×</button></div></div>
     <div class="r"><span data-i="s_pilot">Pilot Orbit</span><div class="seg" data-key="mode"><button data-v="auto" class="on" data-i="p_auto">Auto</button><button data-v="climb" data-i="p_climb">Steigen</button><button data-v="hold" data-i="p_hold">Halten</button><button data-v="sink" data-i="p_sink">Sinken</button></div></div>
     <div class="r"><span data-i="s_wx">Demo-Wetter</span><div class="seg" data-key="wx"><button data-v="live" class="on" data-i="wx_live">Aktuell</button><button data-v="sim" data-i="wx_sim">Simuliert</button></div></div>
+    <div class="r"><span data-i="s_dmk">Demo-Hinweis</span><div class="seg" data-key="dmk"><button data-v="0" class="on" data-i="air_off">Aus</button><button data-v="1" data-i="air_on">Ein</button></div></div>
     <div class="r"><span data-i="s_air">Luftraum-Seite (Demo)</span><div class="seg" data-key="traffic"><button data-v="0" class="on" data-i="air_off">Aus</button><button data-v="1" data-i="air_on">Ein</button></div></div>
     <div class="lbl" style="margin:-4px 0 12px;line-height:1.35" data-i="s_air_note"></div>
     <div class="acts">
@@ -482,6 +494,7 @@ main{position:relative;flex:1;min-height:0}
   </div>
 </div>
 <div class="dlg" id="dlg" hidden><div class="dlg-b card2"><div class="dlg-t" id="dlg-t"></div><div class="dlg-x" id="dlg-x"></div><div class="dlg-btns" id="dlg-b"></div></div></div>
+<div class="demo-wm" id="demo-wm" hidden aria-hidden="true"></div>
 
 <script>
 
@@ -569,6 +582,15 @@ const TX = {
  fl_del_yes:["Löschen","Delete","Supprimer","Usuń","Smazat","刪除","Borrar"],
  fl_empty:["Keine Fahrt aufgezeichnet, der Ballon ist nicht gestartet.","No trip recorded, the balloon has not launched.","Aucune sortie enregistrée, le ballon n’a pas décollé.","Nie nagrano lotu, balon nie wystartował.","Žádná jízda nebyla zaznamenána, balon nevzlétl.","沒有記錄到飛行，氣球尚未起飛。","No se grabó ningún viaje, el globo no despegó."],
  fl_close:["Schließen","Close","Fermer","Zamknij","Zavřít","關閉","Cerrar"],
+ alt_gnd:["Höhe über Grund","Height above ground","Hauteur sol","Wysokość nad gruntem","Výška nad zemí","離地高度","Altura sobre el suelo"],
+ nn_sfx:["NN","MSL","niv. mer","n.p.m.","n. m.","海拔","s.n.m."],
+ old_show:["Anzeigen","Show","Afficher","Pokaż","Zobrazit","顯示","Mostrar"],
+ old_hide:["Ausblenden","Hide","Masquer","Ukryj","Skrýt","隱藏","Ocultar"],
+ old_start:["Start","Start","Départ","Start","Start","起點","Inicio"],
+ old_end:["Ende","End","Arrivée","Koniec","Konec","終點","Fin"],
+ fl_busy:["Alte Fahrten sind während einer Fahrt nicht verfügbar.","Past trips are not available during a trip.","Les sorties passées ne sont pas disponibles pendant une sortie.","Dawne loty są niedostępne w trakcie lotu.","Starší jízdy nejsou během jízdy k dispozici.","飛行期間無法查看過去的飛行紀錄。","Los viajes anteriores no están disponibles durante un viaje."],
+ s_dmk:["Demo-Hinweis","Demo notice","Mention de démo","Oznaczenie demo","Označení dema","示範標示","Aviso de demo"],
+ dmk_text:["Demo. Keine realen Daten","Demo. No real data","Démo. Aucune donnée réelle","Demo. Brak rzeczywistych danych","Demo. Žádná reálná data","示範。非真實資料","Demo. Sin datos reales"],
  wb_mine:["Meine Geräte","My devices","Mes appareils","Moje urządzenia","Má zařízení","我的裝置","Mis dispositivos"],
  wb_menu:["Weitere Ballons","More balloons","Autres ballons","Więcej balonów","Další balony","其他熱氣球","Más globos"],
  wb_reset:["Namen zurücksetzen","Reset names","Réinitialiser les noms","Zresetuj nazwy","Obnovit názvy","重設名稱","Restablecer nombres"],
@@ -1208,6 +1230,7 @@ const fmtWind = ms => MET.unit==='ms' ? ms.toFixed(1)+' m/s' : MET.unit==='kmh' 
 const windFrom = (u,v) => (deg(Math.atan2(-u,-v))+360)%360;   // Richtung, aus der der Wind kommt
 const arrowSVG = d => `<svg width="14" height="14" viewBox="0 0 14 14" style="transform:rotate(${d}deg);vertical-align:-2px;margin-left:5px"><path d="M7 1l4 10-4-2-4 2z" fill="currentColor"/></svg>`;
 const kv2 = (l,v) => `<div class="kv2"><span>${l}</span><b>${v}</b></div>`;
+const kvSub = v => `<div class="kv2 sub"><span></span><b>${v}</b></div>`;   // zweite, graue Zeile direkt unter dem Wert
 const popHead = (name,c) => `<div class="pop-h"><i style="background:${c}"></i><b>${name}</b><button class="px" aria-label="${tr('close')}">×</button></div>`;
 
 // Info-Kasten: erscheint nur nach Antippen eines Ballons, die Verfolgung läuft unverändert weiter
@@ -1216,7 +1239,8 @@ function renderPop(){
   if(S.sel==='orbit'){
     const gs=Math.hypot(o.ve,o.vn)*3.6, hd=brg(o.ve,o.vn), de=o.e-b.e, dn=o.n-b.n, bb=brg(de,dn);
     el.innerHTML = popHead(esc(ownLabel('orbit')),'var(--orb)')
-      + kv2(tr('alt_nn'),Math.round(o.alt)+' m')
+      + kv2(tr('alt_gnd'),Math.round(o.alt-ground(o.e,o.n))+' m')
+      + kvSub(Math.round(o.alt)+' m '+tr('nn_sfx'))
       + kv2(tr('vario'),`<em style="font-style:normal;color:${vcol(o.vario)}">${fmtV(o.vario)} m/s</em>`)
       + kv2(tr('spd_crs'),`${Math.round(gs)} km/h, ${pad3(hd)}°`)
       + kv2(tr('dist_base'),`${fmtD(Math.hypot(de,dn))}${arrowSVG(bb)} ${pad3(bb)}°`)
@@ -1225,7 +1249,8 @@ function renderPop(){
   } else if(S.sel==='orbit2' && q.active){
     const gs=Math.hypot(q.ve,q.vn)*3.6, hd=brg(q.ve,q.vn), de=q.e-o.e, dn=q.n-o.n, bo=brg(de,dn);
     el.innerHTML = popHead(esc(frLabel(frOrbit())),'var(--fr)')
-      + kv2(tr('alt_nn'),Math.round(q.alt)+' m')
+      + kv2(tr('alt_gnd'),Math.round(q.alt-ground(q.e,q.n))+' m')
+      + kvSub(Math.round(q.alt)+' m '+tr('nn_sfx'))
       + kv2(tr('vario'),`<em style="font-style:normal;color:${vcol(q.vario)}">${fmtV(q.vario)} m/s</em>`)
       + kv2(tr('spd_crs'),`${Math.round(gs)} km/h, ${pad3(hd)}°`)
       + kv2(tr('dist_orbit'),`${fmtD(Math.hypot(de,dn))}${arrowSVG(bo)} ${pad3(bo)}°`)
@@ -1249,7 +1274,8 @@ function updChaser(){
   }
   renderPop();
   const now=Date.now();
-  if(S.follow==='orbit') map1.setView(oc,map1.getZoom(),{animate:false});
+  if(S.viewOld){ /* alter Pfad wird angesehen: die Karte bleibt stehen */ }
+  else if(S.follow==='orbit') map1.setView(oc,map1.getZoom(),{animate:false});
   else if(S.follow==='base') map1.setView(bc,map1.getZoom(),{animate:false});
   else if(S.follow==='both' && now-lastFit>1500){
     lastFit=now;
@@ -1577,11 +1603,15 @@ function bindSeg(el,onPick){ el.querySelectorAll('button').forEach(b=>b.addEvent
 function syncMapSeg(){ document.querySelectorAll('#sim [data-key="map"] button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.map)); }
 document.querySelectorAll('#sim .seg').forEach(el=>bindSeg(el,v=>{
   const k=el.dataset.key;
+  if(k==='dmk'){ DEMO_MARK=(v==='1'); try{ localStorage.setItem('bt-demomark',DEMO_MARK?'1':'0'); }catch(e){} applyDemoMark(DEMO_MARK); return; }
   if(k==='wx'){ try{ localStorage.setItem('bt-demowx',v==='sim'?'sim':'live'); }catch(e){} toast(tr('wx_reload')); setTimeout(()=>location.reload(),900); return; }
   if(k==='speed') S.speed=+v; else if(k==='traffic'){ S.traffic=(v==='1'); applyTraffic(); } else S[k]=v;
   if(k==='map') applyTiles();
   if(k==='frame'){ document.body.className='frame-'+v; setTimeout(()=>{ map1.invalidateSize(); map3.invalidateSize(); setRange(S.range); render(); if(metChart) metChart.resize(); },60); }
 }));
+try{ DEMO_MARK=localStorage.getItem('bt-demomark')==='1'; }catch(e){}
+applyDemoMark(DEMO_MARK);
+document.querySelectorAll('#sim [data-key="dmk"] button').forEach(b=>b.classList.toggle('on',(b.dataset.v==='1')===DEMO_MARK));
 document.querySelectorAll('#sim [data-key="wx"] button').forEach(b=>b.classList.toggle('on',b.dataset.v===DEMO_WX.mode));
 $('btn-sim').addEventListener('click',()=>$('sim').classList.toggle('open'));
 $('btn-pause').addEventListener('click',()=>{ S.paused=!S.paused; $('btn-pause').dataset.i=S.paused?'b_resume':'b_pause'; $('btn-pause').textContent=tr(S.paused?'b_resume':'b_pause'); });
@@ -1621,11 +1651,12 @@ $('btn-clear').addEventListener('click',async()=>{   // alles verwerfen und neu 
 });
 
 /* ---------------- Datenzähler und Service Worker ---------------- */
-const BUILD = '2026-10-07.10';
+const BUILD = '2026-10-07.12';
 
 // ---- Fahrt: Aufzeichnung auf dem Handy (IndexedDB), Stopp-Knopf und automatische Nachfrage nach der Landung
 window.FLIGHT=null;                                          // aktuelle Fahrt
-const FL={askAfterS:1800, airAgl:50, groundAgl:30, still:1.0, keep:20};   // 30 min am Boden, Abheben ab 50 m, Stillstand unter 1 m/s, letzte 20 Fahrten
+var DEMO_MARK;                                               // (var, weil der Wert schon früher gesetzt wird) Hinweis „Demo. Keine realen Daten“ (später im produktiven Modus automatisch, wenn das Demo geöffnet wird)
+const FL={askAfterS:900, airAgl:50, groundAgl:30, still:1.0, keep:20};   // 15 min am Boden, Abheben ab 50 m, Stillstand unter 1 m/s, letzte 20 Fahrten
 let lastTL=-1,lastBL=-1;                                     // Pfad nur neu zeichnen, wenn er sich geändert hat
 function idb(){ return new Promise((res,rej)=>{ if(window.__idb) return res(window.__idb); if(!window.indexedDB) return rej(new Error('kein IndexedDB'));
   const r=indexedDB.open('bt-flights',1);
@@ -1634,23 +1665,48 @@ function idb(){ return new Promise((res,rej)=>{ if(window.__idb) return res(wind
 function idbTx(store,mode,fn){ return idb().then(db=>new Promise((res,rej)=>{ const t=db.transaction(store,mode); const rq=fn(t.objectStore(store)); t.oncomplete=()=>res(rq&&rq.result); t.onerror=()=>rej(t.error); })); }
 const idbPut=(s,o)=>idbTx(s,'readwrite',st=>st.put(o)), idbGet=(s,id)=>idbTx(s,'readonly',st=>st.get(id)), idbAll=s=>idbTx(s,'readonly',st=>st.getAll()), idbDel=(s,id)=>idbTx(s,'readwrite',st=>st.delete(id));
 
-function newFlight(){ return {id:'f'+Date.now(),t0Ms:Date.now(),state:'ready',airborne:false,orbit:[],base:[],groundS:0,asking:false,lastT:0,reason:''}; }
+function newFlight(){ return {id:'f'+Date.now(),t0Ms:Date.now(),state:'ready',airborne:false,orbit:[],base:[],groundS:0,asking:false,landed:false,lastT:0,reason:''}; }
 function flKm(a){ let d=0; for(let i=1;i<a.length;i++){ const dl=(a[i][1]-a[i-1][1])*111.32, dn=(a[i][2]-a[i-1][2])*111.32*Math.cos(a[i][1]*Math.PI/180); d+=Math.hypot(dl,dn); } return d; }
 function flSummary(F){ const o=F.orbit; return {id:F.id,t0:o.length?o[0][0]:Math.round(F.t0Ms/1000),t1:o.length?o[o.length-1][0]:Math.round(F.t0Ms/1000),n:o.length,km:+flKm(o).toFixed(2),maxAlt:Math.round(o.reduce((a,p)=>Math.max(a,p[3]),0)),reason:F.reason,active:F.state!=='ended'}; }
 async function flFlush(F){ if(!F||!F.airborne||!F.orbit.length) return; try{ await idbPut('data',{id:F.id,orbit:F.orbit,base:F.base}); await idbPut('meta',flSummary(F)); }catch(e){} }
 async function flTrim(){ try{ const m=(await idbAll('meta')).sort((a,b)=>b.t0-a.t0); for(const x of m.slice(FL.keep)){ await idbDel('meta',x.id); await idbDel('data',x.id); } }catch(e){} }
 
-function updStopBtn(){ const F=window.FLIGHT, b=$('stop-btn'); if(b) b.hidden=!(F&&(F.state==='ready'||F.state==='flying')); }
+// Alte Fahrten ansehen (und später das Demo öffnen) gibt es nur, wenn keine Fahrt aufgezeichnet wird: vor dem Start oder nach beendeter Fahrt
+function applyDemoMark(on){
+  const el=$('demo-wm'); if(!el) return; el.hidden=!on;
+  const m=tr('dmk_text').match(/^(.*?[.。])\s*(.*)$/)||[0,tr('dmk_text'),''];
+  el.innerHTML='<b></b><span></span>'; el.firstChild.textContent=m[1]; el.lastChild.textContent=m[2];
+}
+function canBrowse(){ const F=window.FLIGHT; return !F || F.state!=='flying'; }
+let oldLayer=null;
+function hideOldTrip(){ if(oldLayer){ oldLayer.remove(); oldLayer=null; } if($('old-bar')) $('old-bar').hidden=true; S.viewOld=false; S.forceFit=true; }
+async function showOldTrip(id){
+  if(!canBrowse()) return;
+  let meta,d; try{ [meta,d]=await Promise.all([idbGet('meta',id),idbGet('data',id)]); }catch(e){ return; }
+  if(!meta||!d||!d.orbit||!d.orbit.length||!canBrowse()) return;
+  hideOldTrip();
+  const pts=d.orbit.map(p=>[p[1],p[2]]);
+  const line=L.polyline(pts,{color:'#c9b8ff',weight:3,opacity:.9,dashArray:'6 6'});
+  const a=L.circleMarker(pts[0],{radius:7,color:'#fff',weight:2,fillColor:'#3ddc97',fillOpacity:1}).bindTooltip(tr('old_start'));
+  const z=L.circleMarker(pts[pts.length-1],{radius:7,color:'#fff',weight:2,fillColor:'#ff6b6b',fillOpacity:1}).bindTooltip(tr('old_end'));
+  oldLayer=L.layerGroup([line,a,z]).addTo(map1);
+  S.viewOld=true; map1.fitBounds(L.latLngBounds(pts),{padding:[40,40],animate:false});
+  $('old-bar-t').textContent=new Date(meta.t0*1000).toLocaleString([],{dateStyle:'short',timeStyle:'short'})+' · '+fmtDur(meta.t1-meta.t0)+' · '+meta.km.toFixed(1)+' km · '+meta.maxAlt+' m';
+  $('old-bar').hidden=false; $('sim').classList.remove('open');
+}
+function updStopBtn(){ const F=window.FLIGHT, b=$('stop-btn'); if(b) b.hidden=!(F&&F.state==='flying'&&F.landed); }      // Stopp erst nach der Landung sichtbar
 function recStep(){                                          // wird bei jedem empfangenen Paket aufgerufen
   const F=window.FLIGHT; if(!F||F.state==='ended'||S.wxWait) return;
   const o=S.orbit, b=S.base, g=ground(o.e,o.n), agl=o.alt-g, [la,lo]=ll(o.e,o.n), [bla,blo]=ll(b.e,b.n), m=S.met[S.met.length-1]||{};
-  const sp=Math.hypot(o.ve,o.vn), ts=Math.round((F.t0Ms+S.t*1000)/1000), dt=Math.max(0,S.t-F.lastT); F.lastT=S.t;
+  const sp=Math.hypot(o.ve,o.vn), ts=Math.round((F.t0Ms+S.t*1000)/1000), dt=F.orbit.length?Math.max(0,S.t-F.lastT):0; F.lastT=S.t;
   F.orbit.push([ts,+la.toFixed(6),+lo.toFixed(6),+o.alt.toFixed(1),+o.vario.toFixed(2),+sp.toFixed(1),Math.round(brg(o.ve,o.vn)),+(m.T||0).toFixed(2),+(m.p||0).toFixed(1),Math.round(m.rh||0),+S.link.batt.toFixed(2),Math.round(S.link.rssi)]);
   F.base.push([ts,+bla.toFixed(6),+blo.toFixed(6)]);          // GPS-Spur der Base
-  if(agl>FL.airAgl && !F.airborne){ F.airborne=true; if(F.state==='ready') F.state='flying'; try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist(); }catch(e){} }
+  if(agl>FL.airAgl && !F.airborne){ F.airborne=true; if(F.state==='ready') F.state='flying'; hideOldTrip(); renderFlights(); try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist(); }catch(e){} }
   if(F.airborne && F.state==='flying'){
-    const still=sp<FL.still && agl<FL.groundAgl && Math.abs(b.spd||0)<FL.still;     // Ballon und Base stehen am Boden
-    if(still){ F.groundS+=dt; if(F.groundS>=FL.askAfterS && !F.asking) askEnd(); } else F.groundS=0;
+    const orbStill=sp<FL.still && agl<FL.groundAgl, baseStill=Math.abs(b.spd||0)<FL.still;
+    if(!orbStill){ F.landed=false; F.groundS=0; }                                    // Ballon bewegt sich wieder: der Zwischenstopp ist vorbei
+    else if(baseStill){ F.groundS+=dt; if(F.groundS>=FL.askAfterS){ F.landed=true; if(!F.asking) askEnd(); } }   // Ballon und Base stehen: gelandet
+    else F.groundS=0;                                                                // die Base fährt noch zum Ballon
   }
   updStopBtn();
 }
@@ -1691,13 +1747,15 @@ async function exportFlight(id,kind){
 async function renderFlights(){
   const box=$('fl-list'); if(!box) return; let m=[]; try{ m=(await idbAll('meta')).sort((a,b)=>b.t0-a.t0); }catch(e){}
   box.innerHTML=''; $('fl-all').hidden=!m.length;
+  if(m.length && !canBrowse()){ const n=document.createElement('div'); n.className='lbl'; n.textContent=tr('fl_busy'); box.appendChild(n); }
   if(!m.length){ const e=document.createElement('div'); e.className='lbl'; e.textContent=tr('fl_none'); box.appendChild(e); return; }
   m.forEach(x=>{ const row=document.createElement('div'); row.className='flrow';
     const tx=document.createElement('div'); tx.className='fltx'; tx.textContent=new Date(x.t0*1000).toLocaleString([],{dateStyle:'short',timeStyle:'short'})+' · '+fmtDur(x.t1-x.t0)+' · '+x.km.toFixed(1)+' km · '+x.maxAlt+' m';
     const bt=document.createElement('div'); bt.className='flbtn';
-    [['GPX',()=>exportFlight(x.id,'gpx')],['CSV',()=>exportFlight(x.id,'csv')],['✕',()=>dlg(tr('fl_del_t'),tr('fl_del_x'),[{t:tr('fl_del_yes'),pri:true,f:async()=>{ await idbDel('meta',x.id); await idbDel('data',x.id); renderFlights(); }},{t:tr('stop_no')}])]].forEach(([l,f])=>{ const b=document.createElement('button'); b.className='sm'; b.textContent=l; b.addEventListener('click',f); bt.appendChild(b); });
+    [...(canBrowse()?[[tr('old_show'),()=>showOldTrip(x.id)]]:[]),['GPX',()=>exportFlight(x.id,'gpx')],['CSV',()=>exportFlight(x.id,'csv')],['✕',()=>dlg(tr('fl_del_t'),tr('fl_del_x'),[{t:tr('fl_del_yes'),pri:true,f:async()=>{ await idbDel('meta',x.id); await idbDel('data',x.id); renderFlights(); }},{t:tr('stop_no')}])]].forEach(([l,f])=>{ const b=document.createElement('button'); b.className='sm'; b.textContent=l; b.addEventListener('click',f); bt.appendChild(b); });
     row.appendChild(tx); row.appendChild(bt); box.appendChild(row); });
 }
+$('old-hide').addEventListener('click',hideOldTrip);
 $('stop-btn').addEventListener('click',()=>dlg(tr('stop_t'),tr('stop_x'),[{t:tr('stop_yes'),pri:true,f:()=>stopFlight('stop')},{t:tr('stop_no')}]));
 $('fl-all').addEventListener('click',()=>dlg(tr('fl_del_t'),tr('fl_del_x'),[{t:tr('fl_del_yes'),pri:true,f:async()=>{ try{ for(const x of await idbAll('meta')){ await idbDel('meta',x.id); await idbDel('data',x.id); } }catch(e){} renderFlights(); }},{t:tr('stop_no')}]));
 $('btn-sim').addEventListener('click',renderFlights);
@@ -1885,7 +1943,7 @@ function setLang(l){
   applyLang(); buildLegend();
   $('btn-pause').textContent=tr(S.paused?'b_resume':'b_pause');
   startMks.forEach(m=>m.setTooltipContent(tr('launch')));
-  predPts.forEach(p=>p.setTooltipContent(hLabel(p._h))); renderFriends(); stShowCurrent(); updProfRef();
+  predPts.forEach(p=>p.setTooltipContent(hLabel(p._h))); renderFriends(); stShowCurrent(); updProfRef(); applyDemoMark(DEMO_MARK);
   if($('net-note').style.display==='block') $('net-note').textContent=tr('net_err',{n:tileErr});
   renderPop(); updData(); updMeteo(true); render();
 }
