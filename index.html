@@ -323,6 +323,7 @@ main{position:relative;flex:1;min-height:0}
           <div id="lyr-list"></div>
           <div class="rw1"><span data-i="sh_quality">Datenqualität</span><b id="q-val">–</b></div>
           <div class="wn" id="q-sub">–</div>
+          <div class="wn" id="model-line"></div>
         </div>
 
         <div class="card2 mb">
@@ -487,6 +488,10 @@ const TX = {
  w_reset:["Standardwerte","Defaults","Valeurs par défaut","Wartości domyślne","Výchozí hodnoty","預設值"],
  ofm_btn:["Luftfahrtkarte","Aeronautical chart","Carte aéronautique","Mapa lotnicza","Letecká mapa","航空圖"],
  ofm_hint:["Nur zur Orientierung, ersetzt keine amtliche Karte. Hindernisse und Leitungen können fehlen. Quelle: open flightmaps.","For orientation only, not a substitute for an official chart. Obstacles and power lines may be missing. Source: open flightmaps.","À titre indicatif, ne remplace pas une carte officielle. Des obstacles et des lignes peuvent manquer. Source : open flightmaps.","Tylko orientacyjnie, nie zastępuje oficjalnej mapy. Przeszkody i linie mogą być pominięte. Źródło: open flightmaps.","Pouze orientačně, nenahrazuje oficiální mapu. Překážky a vedení mohou chybět. Zdroj: open flightmaps.","僅供參考，不能取代官方航圖。障礙物與電線可能缺漏。來源：open flightmaps。"],
+ lg_model:["Startprofil (Modell)","Start profile (model)","Profil de départ (modèle)","Profil startowy (model)","Počáteční profil (model)","起飛剖面（模型）"],
+ mo_ok:["Modellprofil für den Startplatz geladen","Model profile for the launch site loaded","Profil modèle du site de départ chargé","Załadowano profil modelowy dla miejsca startu","Modelový profil pro místo startu načten","已載入起飛地點的模型剖面"],
+ mo_none:["Kein Startprofil (offline oder nicht erreichbar)","No start profile (offline or unreachable)","Pas de profil de départ (hors ligne ou injoignable)","Brak profilu startowego (offline lub niedostępny)","Žádný počáteční profil (offline nebo nedostupný)","沒有起飛剖面（離線或無法連線）"],
+ mo_line:["Startprofil: Open-Meteo.com (CC BY 4.0), Stand {t} UTC, {n} Höhenstufen","Start profile: Open-Meteo.com (CC BY 4.0), valid {t} UTC, {n} levels","Profil de départ : Open-Meteo.com (CC BY 4.0), valide {t} UTC, {n} niveaux","Profil startowy: Open-Meteo.com (CC BY 4.0), ważny {t} UTC, {n} poziomów","Počáteční profil: Open-Meteo.com (CC BY 4.0), platnost {t} UTC, {n} hladin","起飛剖面：Open-Meteo.com（CC BY 4.0），有效時間 {t} UTC，{n} 個高度層"],
  wb_mine:["Meine Geräte","My devices","Mes appareils","Moje urządzenia","Má zařízení","我的裝置"],
  wb_menu:["Weitere Ballons","More balloons","Autres ballons","Więcej balonów","Další balony","其他熱氣球"],
  wb_reset:["Namen zurücksetzen","Reset names","Réinitialiser les noms","Zresetuj nazwy","Obnovit názvy","重設名稱"],
@@ -495,7 +500,7 @@ const TX = {
  wind_toggle_t:["Antippen: Windeinheit wechseln","Tap to change the wind unit","Touchez pour changer l’unité du vent","Dotknij, aby zmienić jednostkę wiatru","Klepnutím změníte jednotku větru","點一下切換風速單位"],
  notice_t:["Hinweis","Notice","Avis","Uwaga","Upozornění","注意"],
  notice_x:["Bo Twins ist ein Hilfsmittel zum Verfolgen und Auswerten von Ballonfahrten. Es ist kein zugelassenes Navigations-, Kollisionswarn- oder Flugsicherungssystem und ersetzt weder Sicht und Flugvorbereitung noch vorgeschriebene Ausrüstung. Mit Bo Twins allein ist dein Ballon für andere Flieger nicht sichtbar, und du siehst keinen Fremdverkehr.","Bo Twins is an aid for tracking and analysing balloon flights. It is not an approved navigation, collision-warning or air-traffic system and does not replace visual lookout, flight preparation or required equipment. With Bo Twins alone your balloon is not visible to other aircraft, and you do not see other traffic.","Bo Twins est un outil de suivi et d’analyse des vols en ballon. Ce n’est pas un système de navigation, d’anticollision ou de contrôle aérien homologué et il ne remplace ni la vigilance visuelle, ni la préparation du vol, ni l’équipement obligatoire. Avec Bo Twins seul, votre ballon n’est pas visible pour les autres aéronefs et vous ne voyez pas le trafic.","Bo Twins to pomoc do śledzenia i analizy lotów balonowych. Nie jest to zatwierdzony system nawigacyjny, ostrzegania przed kolizją ani kontroli ruchu lotniczego i nie zastępuje obserwacji wzrokowej, przygotowania lotu ani wymaganego wyposażenia. Sam Bo Twins nie czyni Twojego balonu widocznym dla innych statków powietrznych, a Ty nie widzisz innego ruchu.","Bo Twins je pomůcka pro sledování a vyhodnocení balonových letů. Není to schválený navigační systém, systém varování před srážkou ani systém řízení letového provozu a nenahrazuje vizuální pozorování, přípravu letu ani předepsané vybavení. Samotný Bo Twins váš balon pro ostatní letadla nezviditelní a vy nevidíte žádný jiný provoz.","Bo Twins 是追蹤與分析熱氣球飛行的輔助工具，不是經核准的導航、防撞警示或空中交通系統，也無法取代目視觀察、飛行準備或規定的設備。僅靠 Bo Twins，其他航空器看不到你的熱氣球，你也看不到其他交通。"],
- launch:["Ballonstartplatz Bitterfeld","Balloon launch site Bitterfeld","Site de décollage de montgolfières, Bitterfeld","Miejsce startu balonów, Bitterfeld","Startovací místo balonů Bitterfeld","熱氣球起飛場 Bitterfeld"],
+ launch:["Startplatz","Launch site","Site de départ","Miejsce startu","Místo startu","起飛地點"],
  vario:["Vario","Vario","Vario","Wario","Vario","升降率"],
  alt_nn:["Höhe NN","Altitude MSL","Altitude (mer)","Wysokość n.p.m.","Výška n.m.","海拔高度"],
  agl:["über Grund","above ground","au-dessus du sol","nad gruntem","nad zemí","離地高度"],
@@ -617,7 +622,7 @@ const TX = {
  ver:["Version","Version","Version","Wersja","Verze","版本"],
  b_reset:["Neustart","Restart","Redémarrer","Uruchom ponownie","Restart","重新開始"],
  // Hinweise
- toast_ready:["Orbit steht am Startplatz Bitterfeld bereit","Orbit is ready at the Bitterfeld launch site","L’Orbit est prêt sur le site de Bitterfeld","Orbit czeka na miejscu startu w Bitterfeld","Orbit je připraven na startovišti Bitterfeld","Orbit 已在 Bitterfeld 起飛場就緒"],
+ toast_ready:["Orbit steht am Startplatz bereit","Orbit is ready at the launch site","L’Orbit est prêt sur le site de départ","Orbit czeka na miejscu startu","Orbit je připraven na místě startu","Orbit 已在起飛地點就緒"],
  toast_o1:["Orbit gestartet, Aufstieg läuft","Orbit launched, climb in progress","Orbit décollé, montée en cours","Orbit wystartował, trwa wznoszenie","Orbit odstartoval, probíhá stoupání","Orbit 已起飛，正在爬升"],
  toast_o2:["Orbit 2 gestartet, befreundeter Ballon","Orbit 2 launched, friend's balloon","Orbit 2 décollé, ballon d’un ami","Orbit 2 wystartował, balon znajomego","Orbit 2 odstartoval, balon přítele","Orbit 2 已起飛，朋友的熱氣球"],
  toast_cleared:["Zwischenspeicher geleert, App lädt neu","Cache cleared, reloading","Cache vidé, rechargement en cours","Pamięć wyczyszczona, przeładowuję","Mezipaměť vymazána, načítám znovu","快取已清除，正在重新載入"],
@@ -697,7 +702,7 @@ const DATA = {tileBytes:0, tileNet:0, tileHit:0, routeBytes:0, routeN:0, sw:fals
 
 /* ---------------- Meteorologie: Atmosphärenmodell, Gewichtung, Schichtung ---------------- */
 const ATM_T0 = 7200;   // Flugbeginn 2 h nach Sonnenaufgang
-const MET_MIN_W = 0.05, MET_MAX_AGE_S = 86400, WIND_MIN_AGL = 20;   // MET-16 und Windregel: Mindestgewicht, Höchstalter 24 h, Wind nur ab 20 m über Grund
+const MET_MIN_W = 0.05, MET_MAX_AGE_S = 86400, WIND_MIN_AGL = 20, MODEL_TAU_MIN = 180, MODEL_W0 = 0.5;   // Modellprofil: eigene Zeitkonstante und Anfangsgewicht (Vorschlag, OP-28)   // MET-16 und Windregel: Mindestgewicht, Höchstalter 24 h, Wind nur ab 20 m über Grund
 const MET_DEFAULT = {tau:60, sigma:15, d0:25};                          // MET-15: Standardwerte der Gewichtung
 const MET = {x:'T',y:'nn',weighted:true,tau:60,sigma:15,d0:25,thr:0.9,distOffset:0,R:null,last:0,wind:'barb',unit:'kt'};
 const CAT = {inv:{c:'#5aa9ff',n:'Inversion'},stab:{c:'#4fd1a5',n:'Stabil'},neut:{c:'#ffc83d',n:'Bedingt labil'},labil:{c:'#ff5d5d',n:'Labil'}};
@@ -741,13 +746,13 @@ function metCompute(){
   const bs=25, now=S.t, bins=new Map(); let nDamp=0;
   for(let i=S.met.length-1;i>=0;i--){                       // MET-16: zu alte oder zu leichte Punkte verwerfen
     const m0=S.met[i], age=now-m0.t;
-    const wp=MET.weighted ? Math.exp(-age/(MET.tau*60))*((m0.d>MET.d0)?Math.exp(-Math.pow(m0.d-MET.d0,2)/(2*MET.sigma*MET.sigma)):1) : 1;
+    const wp=MET.weighted ? Math.exp(-age/((m0.src==='model'?MODEL_TAU_MIN:MET.tau)*60))*(m0.w0||1)*((m0.d>MET.d0)?Math.exp(-Math.pow(m0.d-MET.d0,2)/(2*MET.sigma*MET.sigma)):1) : 1;
     if(age>MET_MAX_AGE_S || wp<MET_MIN_W) S.met.splice(i,1);
   }
   for(const m of S.met){
-    m.wt = MET.weighted ? Math.exp(-(now-m.t)/(MET.tau*60)) : 1;
+    m.wt = MET.weighted ? Math.exp(-(now-m.t)/((m.src==='model'?MODEL_TAU_MIN:MET.tau)*60)) : 1;
     m.wd = (MET.weighted && m.d>MET.d0) ? Math.exp(-Math.pow(m.d-MET.d0,2)/(2*MET.sigma*MET.sigma)) : 1;
-    m.w = m.wt*m.wd; if(m.w<0.5) nDamp++;
+    m.w = m.wt*m.wd*(MET.weighted?(m.w0||1):1); if(m.w<0.5) nDamp++;
     const k=Math.floor(m.alt/bs); let b=bins.get(k); if(!b){ b={k,sw:0,swT:0,sww:0,swu:0,swv:0}; bins.set(k,b); }
     b.sw+=m.w; b.swT+=m.w*m.T;
     if(m.wo){ b.sww+=m.w; b.swu+=m.w*m.ve; b.swv+=m.w*m.vn; }
@@ -1333,7 +1338,7 @@ function buildLegend(){
     `<span><i style="background:${CAT.labil.c}"></i>${tr('lg_labil',{x:th})}</span>`+
     `<span><i style="background:#5fe3a1;height:2px;border-radius:0"></i>${tr('lg_adia')}</span>`+
     `<span><i style="background:#9fe3ff;border-radius:50%"></i>${tr('lg_now')}</span>`+
-    `<span><i style="background:#c9b8ff;border-radius:50%"></i>${tr('lg_prior')}</span>`;
+    `<span><i style="background:#c9b8ff;border-radius:50%"></i>${tr('lg_prior')}</span>`+`<span><i style="background:#5eead4;border-radius:50%"></i>${tr('lg_model')}</span>`;
 }
 function drawCurve(cv,fn,xmax,unit,marks){
   const r=cv.getBoundingClientRect(), dpr=window.devicePixelRatio||1, W=Math.round(r.width), H=Math.round(r.height); if(!W||!H) return;
@@ -1381,7 +1386,7 @@ function updMeteo(force){
   D[0].label=tr('ds_pts'); D[1].label=tr('ds_adia'); D[2].label=tr('ds_prof');
   const pts=[],cols=[],rad2=[];
   if(!gm) for(let i=0;i<n;i+=stride){ const m=S.met[i], al=(0.07+0.93*Math.pow(m.w,0.7)).toFixed(2);
-    pts.push({x:m.T,y:ys(m.alt),m}); cols.push(m.src==='prior'?`rgba(201,184,255,${al})`:`rgba(159,227,255,${al})`); rad2.push(2+2*m.w); }
+    pts.push({x:m.T,y:ys(m.alt),m}); cols.push(m.src==='prior'?`rgba(201,184,255,${al})`:m.src==='model'?`rgba(94,234,212,${al})`:`rgba(159,227,255,${al})`); rad2.push(2+2*m.w); }
   D[0].data=pts; D[0].backgroundColor=cols; D[0].pointRadius=rad2;
   const pp=R.prof.filter(p=>gm?p.g!=null:true);
   D[2].data=pp.map(p=>({x:gm?p.g:p.T,y:ys(p.z),p})); metLineCol=pp.map(p=>p.cat?CAT[p.cat].c:'#9aabc4');
@@ -1509,12 +1514,63 @@ $('btn-clear').addEventListener('click',async()=>{   // alles verwerfen und neu 
 });
 
 /* ---------------- Datenzähler und Service Worker ---------------- */
-const BUILD = '2026-10-07.8';
+const BUILD = '2026-10-07.9';
+
+// ---- Startprofil aus Modelldaten (MET-13): Open-Meteo, Temperatur und Wind auf Druckflächen für den Startplatz
+const MODEL = { levels:[1000,975,950,925,900,850,800,700], maxAgeH:6, stepM:25 };
+function modelUrl(lat,lon){
+  const h=['temperature_2m','wind_speed_10m','wind_direction_10m'];
+  MODEL.levels.forEach(L=>['temperature','wind_speed','wind_direction','geopotential_height'].forEach(v=>h.push(v+'_'+L+'hPa')));
+  return 'https://api.open-meteo.com/v1/forecast?latitude='+lat.toFixed(4)+'&longitude='+lon.toFixed(4)+'&hourly='+h.join(',')+'&wind_speed_unit=ms&timezone=UTC&forecast_days=1';
+}
+// Wind aus Richtung dir (Grad) mit Geschwindigkeit spd: Bewegung der Luft nach Osten (u) und Norden (v)
+const windUV=(spd,dir)=>[-spd*Math.sin(dir*Math.PI/180), -spd*Math.cos(dir*Math.PI/180)];
+function modelParse(j,nowMs){
+  try{
+    const H=j.hourly, elev=+j.elevation||0, tt=H.time.map(t=>Date.parse(t+'Z'));
+    let k=0; tt.forEach((t,i)=>{ if(Math.abs(t-nowMs)<Math.abs(tt[k]-nowMs)) k=i; });
+    const rows=[]; const g=(n)=>H[n]&&H[n][k];
+    if(g('temperature_2m')!=null && g('wind_speed_10m')!=null){ const [u,v]=windUV(g('wind_speed_10m'),g('wind_direction_10m')); rows.push({z:elev+10,T:g('temperature_2m'),u,v}); }
+    MODEL.levels.forEach(L=>{ const z=g('geopotential_height_'+L+'hPa'), T=g('temperature_'+L+'hPa'), s=g('wind_speed_'+L+'hPa'), d=g('wind_direction_'+L+'hPa');
+      if(z!=null&&T!=null&&s!=null&&d!=null&&z>elev+40){ const [u,v]=windUV(s,d); rows.push({z,T,u,v}); } });   // Flächen unter dem Boden weglassen
+    rows.sort((a,b)=>a.z-b.z);
+    return rows.length>=3 ? {valid:tt[k],elev,rows} : null;
+  }catch(e){ return null; }
+}
+function modelPoints(m,nowMs){
+  const pts=[], r=m.rows, age=Math.min(3600,Math.max(0,(nowMs-m.valid)/1000)), top=r[r.length-1].z;
+  for(let z=r[0].z; z<=top; z+=MODEL.stepM){
+    let i=0; while(i<r.length-2 && r[i+1].z<z) i++;
+    const a=r[i], b=r[i+1], f=b.z===a.z?0:(z-a.z)/(b.z-a.z), agl=z-m.elev, alt=GREF+agl;
+    pts.push({t:S.t-age,alt,g:GREF,d:0,src:'model',T:a.T+(b.T-a.T)*f,p:pAt(alt),rh:60,w:1,wt:1,wd:1,ve:a.u+(b.u-a.u)*f,vn:a.v+(b.v-a.v)*f,wo:agl>WIND_MIN_AGL,w0:MODEL_W0});
+  }
+  return pts;
+}
+async function loadModelProfile(){
+  const KEY='bt-model', now=Date.now(); let cached=null, m=null;
+  try{ cached=JSON.parse(localStorage.getItem(KEY)||'null'); }catch(e){}
+  const same=c=>c&&Math.hypot((c.lat-O.lat)*111.32,(c.lon-O.lon)*111.32*Math.cos(O.lat*Math.PI/180))<15&&(now-c.fetched)<MODEL.maxAgeH*3600e3;
+  if(same(cached)) m=cached.parsed;                                   // gleicher Ort, jünger als 6 Stunden: kein neuer Abruf
+  else if(navigator.onLine!==false){
+    try{
+      const ctl=new AbortController(), to=setTimeout(()=>ctl.abort(),8000);
+      const r=await fetch(modelUrl(O.lat,O.lon),{signal:ctl.signal}); clearTimeout(to);
+      if(!r.ok) throw new Error('http');
+      m=modelParse(await r.json(),now);
+      if(m){ try{ localStorage.setItem(KEY,JSON.stringify({lat:O.lat,lon:O.lon,fetched:now,parsed:m})); }catch(e){} }
+    }catch(e){ m=null; }
+  }
+  if(!m){ $('model-line').textContent=tr('mo_none'); return; }
+  S.met=modelPoints(m,now).concat(S.met);
+  const hh=new Date(m.valid).toISOString().slice(11,16);
+  $('model-line').textContent=tr('mo_line',{t:hh,n:m.rows.length});
+  toast(tr('mo_ok')); updMeteo(true);
+}
 
 // ---- Luftfahrtkarte (KRT-03): open flightmaps als zuschaltbare Ebene; Adresse und Zoomgrenzen sind hier einstellbar
 const OFM = { url:'https://nwy-tiles-api.prod.newaydata.com/tiles/{z}/{x}/{y}.png?path=latest/aero/latest',
               attr:'© open flightmaps association', minZoom:7, maxNativeZoom:12 };   // Kacheln gibt es nur bis Zoomstufe 12
-let ofmLayer=null, ofmOn=false;
+let ofmLayer=null, ofmOn=false, ofmHintT=null;
 function applyOfm(){
   try{ localStorage.setItem('bt-ofm',ofmOn?'1':'0'); }catch(e){}
   if(ofmOn){
@@ -1522,6 +1578,7 @@ function applyOfm(){
     ofmLayer.addTo(map1);
   } else if(ofmLayer){ ofmLayer.remove(); }
   $('ofm-btn').classList.toggle('on',ofmOn); $('ofm-btn').setAttribute('aria-pressed',ofmOn?'true':'false'); $('ofm-hint').hidden=!ofmOn;
+  clearTimeout(ofmHintT); if(ofmOn) ofmHintT=setTimeout(()=>{ $('ofm-hint').hidden=true; },5000);   // Hinweis nur 5 Sekunden zeigen
 }
 $('ofm-btn').addEventListener('click',()=>{ ofmOn=!ofmOn; applyOfm(); });
 try{ ofmOn=localStorage.getItem('bt-ofm')==='1'; }catch(e){}
@@ -1600,7 +1657,7 @@ renderFriends(); applyFriendVis(); stShowCurrent();
 setInterval(updData,1000); updData();
 bindMeteo();
 showScreen('chaser');
-toast(tr('toast_ready'));
+toast(tr('toast_ready')); loadModelProfile();
 
 </script>
 </body>
