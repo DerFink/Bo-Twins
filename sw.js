@@ -3,7 +3,7 @@
    - Bibliotheken (Leaflet, Chart.js, Tailwind, Schriften): einmal laden, dann aus dem Zwischenspeicher
    - Kartenkacheln: nur was angezeigt wurde, wird gespeichert und beim nächsten Mal nicht erneut geladen
    - Routing-Abfragen gehen immer direkt ins Netz */
-const VER = 'v5';   // v5: Startdatei wird immer beim Server geprüft; ältere Zwischenspeicher werden verworfen
+const VER = 'v6';   // v6: Luftfahrtkarte (open flightmaps) mit auf 14 Tage begrenztem Zwischenspeicher; v5: Startdatei wird immer beim Server geprüft
 const SHELL = 'bt-shell-' + VER;
 const LIBS = 'bt-libs-' + VER;
 const TILES = 'bt-tiles-' + VER;
@@ -17,6 +17,9 @@ const LIB_URLS = [
   'https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap'
 ];
 const TILE_HOST = /(^|\.)(tile\.openstreetmap\.org)$/;
+const OFM_HOST = /(^|\.)(newaydata\.com)$/;                   // open flightmaps: Luftfahrtdaten dürfen nicht lange veralten
+const OFM_PERIOD = 14 * 24 * 3600 * 1000;
+const ofmName = () => 'bt-ofm-' + Math.floor(Date.now() / OFM_PERIOD);
 const LIB_HOST = /(^|\.)(cdnjs\.cloudflare\.com|cdn\.tailwindcss\.com|fonts\.googleapis\.com|fonts\.gstatic\.com|cdn\.jsdelivr\.net)$/;
 
 self.addEventListener('install', e => {
@@ -34,7 +37,7 @@ self.addEventListener('install', e => {
 
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
-    for (const k of await caches.keys()) if (k.startsWith('bt-') && ![SHELL, LIBS, TILES].includes(k)) await caches.delete(k);
+    for (const k of await caches.keys()) if (k.startsWith('bt-') && ![SHELL, LIBS, TILES, ofmName()].includes(k)) await caches.delete(k);
     await self.clients.claim();
   })());
 });
@@ -44,6 +47,7 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (TILE_HOST.test(url.hostname)) { e.respondWith(tile(req)); return; }
+  if (OFM_HOST.test(url.hostname)) { e.respondWith(ofmTile(req)); return; }
   if (url.origin === location.origin) { e.respondWith(shell(req)); return; }
   if (LIB_HOST.test(url.hostname)) { e.respondWith(lib(req)); return; }
   // alles andere (z. B. Straßenrouting) geht direkt ins Netz
@@ -88,6 +92,27 @@ async function tile(req) {
     const res = await fetch(req.url, {mode: 'cors', credentials: 'omit'});
     if (res.ok) {
       cache.put(key, res.clone()).then(() => trim(cache));
+      const len = +res.headers.get('content-length');
+      if (len) note({net: 1, bytes: len});
+      else res.clone().arrayBuffer().then(b => note({net: 1, bytes: b.byteLength}));
+    }
+    return res;
+  } catch (err) {
+    try { const res = await fetch(req); note({net: 1, bytes: 20000}); return res; }
+    catch (e2) { return Response.error(); }
+  }
+}
+
+async function ofmTile(req) {                       // eigener Zwischenspeicher je 14 Tage; ältere werden gelöscht
+  const name = ofmName();
+  caches.keys().then(ks => ks.forEach(k => { if (k.startsWith('bt-ofm-') && k !== name) caches.delete(k); }));
+  const cache = await caches.open(name);
+  const hit = await cache.match(req.url);
+  if (hit) { note({hit: 1}); return hit; }
+  try {
+    const res = await fetch(req.url, {mode: 'cors', credentials: 'omit'});
+    if (res.ok) {
+      cache.put(req.url, res.clone()).then(() => trim(cache));
       const len = +res.headers.get('content-length');
       if (len) note({net: 1, bytes: len});
       else res.clone().arrayBuffer().then(b => note({net: 1, bytes: b.byteLength}));

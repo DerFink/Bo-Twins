@@ -221,6 +221,15 @@ main{position:relative;flex:1;min-height:0}
 .wbsec{font-size:12px;font-weight:600;color:var(--mut);letter-spacing:.04em;text-transform:uppercase;margin:8px 0 2px}
 .wbsec:first-child{margin-top:0}
 .wbrow.own .wbico.own{display:grid;place-items:center;width:44px;height:36px}
+
+.stsec{margin-top:12px}
+.stbtns{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}
+
+.ofmbtn{display:block;margin-left:auto;padding:8px 12px;min-height:42px;font-size:14px;font-weight:500;cursor:pointer}
+.ofmbtn.on{background:#ffc83d;color:#0a1019;border-color:#ffc83d}
+.ofm-hint{margin-top:6px;max-width:210px;margin-left:auto;font-size:12px;line-height:1.35;color:var(--mut);background:rgba(10,16,25,.92);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+.leaflet-tile.tiles-ofm{background:rgba(238,238,232,.92)}   /* heller Untergrund, damit die Luftfahrtkarte auf der dunklen Karte lesbar bleibt */
+.rdbtn b small::after{content:" \21C4";color:var(--mut)}
 </style>
 </head>
 
@@ -254,6 +263,10 @@ main{position:relative;flex:1;min-height:0}
     <section id="s-chaser" class="screen active">
       <div id="map1" class="map"></div>
       <div class="ov card pop" id="pop" hidden></div>
+      <div class="ov" id="ofm" style="right:8px;top:58px">
+        <button id="ofm-btn" class="card ofmbtn" aria-pressed="false" data-i="ofm_btn">Luftfahrtkarte</button>
+        <div id="ofm-hint" class="ofm-hint" hidden data-i="ofm_hint"></div>
+      </div>
       <div class="ov" id="wb" style="right:8px;top:8px">
         <button id="wb-btn" class="card wbbtn" aria-expanded="false" aria-haspopup="true"><span data-i="wb_menu">Weitere Ballons</span><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
         <div id="wb-panel" class="card wbpanel" hidden>
@@ -294,6 +307,10 @@ main{position:relative;flex:1;min-height:0}
         <div class="sh-h"><b data-i="sh_title">Schichtung und Gewichtung</b><button id="btn-sheet-x" class="iconbtn" data-ia="close" aria-label="Schließen" style="font-size:22px;line-height:1">×</button></div>
 
         <div class="card2 mb">
+          <div class="rw"><span data-i="w_unit">Windeinheit</span><div class="seg" id="seg-unit"><button data-v="kt" class="on">kt</button><button data-v="kmh">km/h</button><button data-v="ms">m/s</button></div></div>
+        </div>
+
+        <div class="card2 mb">
           <div class="rw1"><span id="sv-altl" data-i="alt_nn">Höhe NN</span><b id="sv-alt">–</b></div>
           <div class="rw1"><span data-i="agl">über Grund</span><b id="sv-agl">–</b></div>
           <div class="rw1"><span data-i="x_temp">Temperatur</span><b id="sv-T">–</b></div>
@@ -320,9 +337,10 @@ main{position:relative;flex:1;min-height:0}
           <div class="rw"><span data-i="w_mode">Darstellung</span><div class="seg" id="seg-mw"><button data-v="1" class="on" data-i="w_on">Gewichtet</button><button data-v="0" data-i="w_off">Roh</button></div></div>
           <div class="rw"><span data-i="w_tau">Zeitkonstante τ</span><div class="seg" id="seg-tau"><button data-v="30">30 min</button><button data-v="60" class="on">60 min</button><button data-v="120">120 min</button></div></div>
           <div class="rw"><span data-i="w_sigma">Gauß-Breite σ</span><div class="seg" id="seg-sig"><button data-v="8">8 km</button><button data-v="15" class="on">15 km</button><button data-v="25">25 km</button></div></div>
+          <div class="rw"><span data-i="w_d0">Grenzabstand d₀</span><div class="seg" id="seg-d0"><button data-v="10">10 km</button><button data-v="25" class="on">25 km</button><button data-v="50">50 km</button></div></div>
+          <div class="rw"><span></span><button class="sm" id="w-reset" data-i="w_reset">Standardwerte</button></div>
           <div class="rw"><span data-i="w_thr">Labil ab γ =</span><div class="seg" id="seg-thr"><button data-v="0.65">0,65</button><button data-v="0.9" class="on">0,90</button><button data-v="0.98">0,98</button></div></div>
           <div class="rw"><span data-i="w_wind">Wind-Darstellung</span><div class="seg" id="seg-wd"><button data-v="barb" class="on" data-i="wd_barb">Fähnchen</button><button data-v="deg" data-i="wd_deg">Grad</button><button data-v="off" data-i="wd_off">Aus</button></div></div>
-          <div class="rw"><span data-i="w_unit">Windeinheit</span><div class="seg" id="seg-unit"><button data-v="kt" class="on">kt</button><button data-v="kmh">km/h</button><button data-v="ms">m/s</button></div></div>
           <div class="mt">
             <div class="rw1"><span data-i="w_offs">Orbit-Abstand simulieren</span><b id="met-off-v">+0 km</b></div>
             <input type="range" id="met-off" min="0" max="60" step="5" value="0" aria-label="km">
@@ -413,6 +431,11 @@ main{position:relative;flex:1;min-height:0}
       <button class="act" id="btn-clear" data-i="b_clear">Zwischenspeicher leeren</button>
       <button class="act" id="btn-reset" data-i="b_reset">Neustart</button>
     </div>
+    <div class="stsec">
+      <div class="wbsec" data-i="st_title">Startplatz</div>
+      <div class="stbtns"><button class="sm" id="st-set" data-i="st_set">Start setzen</button><button class="sm" id="st-map" data-i="st_map">Per Karte setzen</button><button class="sm" id="st-reset" data-i="st_reset">Standard (Bitterfeld)</button></div>
+      <div class="lbl" id="st-info"></div>
+    </div>
     <div class="notice"><b data-i="notice_t">Hinweis</b><div class="txt" data-i="notice_x"></div></div>
   </div>
 </div>
@@ -449,6 +472,21 @@ const TX = {
  f_orbit:["Orbit folgen","Follow Orbit","Suivre Orbit","Śledź Orbit","Sledovat Orbit","追蹤 Orbit"],
  f_both:["Beide zeigen","Show both","Voir les deux","Pokaż oba","Zobrazit oba","顯示兩者"],
  f_base:["Base folgen","Follow Base","Suivre Base","Śledź Base","Sledovat Base","追蹤 Base"],
+ st_title:["Startplatz","Launch site","Site de départ","Miejsce startu","Místo startu","起飛地點"],
+ st_set:["Start setzen","Set start","Définir le départ","Ustaw start","Nastavit start","設定起飛點"],
+ st_map:["Per Karte setzen","Set on map","Placer sur la carte","Ustaw na mapie","Nastavit na mapě","在地圖上設定"],
+ st_reset:["Standard (Bitterfeld)","Default (Bitterfeld)","Par défaut (Bitterfeld)","Domyślnie (Bitterfeld)","Výchozí (Bitterfeld)","預設（Bitterfeld）"],
+ st_wait:["Warte auf GPS …","Waiting for GPS …","En attente du GPS …","Czekam na GPS …","Čekám na GPS …","等待 GPS …"],
+ st_avg:["Mittle Position … noch {n} s","Averaging position … {n} s left","Moyenne de la position … encore {n} s","Uśrednianie pozycji … jeszcze {n} s","Průměruji polohu … ještě {n} s","平均定位中…還需 {n} 秒"],
+ st_ok:["Startplatz gesetzt","Launch site set","Site de départ défini","Miejsce startu ustawione","Místo startu nastaveno","已設定起飛地點"],
+ st_err:["Kein GPS verfügbar. Bitte per Karte setzen.","GPS not available. Please set it on the map.","GPS indisponible. Veuillez le placer sur la carte.","Brak GPS. Ustaw na mapie.","GPS není k dispozici. Nastavte na mapě.","無法取得 GPS，請在地圖上設定。"],
+ st_tap:["Tippe auf die Karte …","Tap the map …","Touchez la carte …","Dotknij mapy …","Klepněte na mapu …","請點選地圖…"],
+ st_cur:["Startplatz: {lat}, {lon} {acc}","Launch site: {lat}, {lon} {acc}","Site de départ : {lat}, {lon} {acc}","Miejsce startu: {lat}, {lon} {acc}","Místo startu: {lat}, {lon} {acc}","起飛地點：{lat}, {lon} {acc}"],
+ st_def:["Standard: Bitterfeld","Default: Bitterfeld","Par défaut : Bitterfeld","Domyślnie: Bitterfeld","Výchozí: Bitterfeld","預設：Bitterfeld"],
+ w_d0:["Grenzabstand d₀","Limit distance d₀","Distance limite d₀","Odległość graniczna d₀","Hraniční vzdálenost d₀","界限距離 d₀"],
+ w_reset:["Standardwerte","Defaults","Valeurs par défaut","Wartości domyślne","Výchozí hodnoty","預設值"],
+ ofm_btn:["Luftfahrtkarte","Aeronautical chart","Carte aéronautique","Mapa lotnicza","Letecká mapa","航空圖"],
+ ofm_hint:["Nur zur Orientierung, ersetzt keine amtliche Karte. Hindernisse und Leitungen können fehlen. Quelle: open flightmaps.","For orientation only, not a substitute for an official chart. Obstacles and power lines may be missing. Source: open flightmaps.","À titre indicatif, ne remplace pas une carte officielle. Des obstacles et des lignes peuvent manquer. Source : open flightmaps.","Tylko orientacyjnie, nie zastępuje oficjalnej mapy. Przeszkody i linie mogą być pominięte. Źródło: open flightmaps.","Pouze orientačně, nenahrazuje oficiální mapu. Překážky a vedení mohou chybět. Zdroj: open flightmaps.","僅供參考，不能取代官方航圖。障礙物與電線可能缺漏。來源：open flightmaps。"],
  wb_mine:["Meine Geräte","My devices","Mes appareils","Moje urządzenia","Má zařízení","我的裝置"],
  wb_menu:["Weitere Ballons","More balloons","Autres ballons","Więcej balonów","Další balony","其他熱氣球"],
  wb_reset:["Namen zurücksetzen","Reset names","Réinitialiser les noms","Zresetuj nazwy","Obnovit názvy","重設名稱"],
@@ -622,7 +660,7 @@ function applyLang(){
   const sel=$('lang-sel'); if(sel) sel.value=S.lang;
 }
 
-const O = {lat:51.62458, lon:12.29456};   // Ballonstartplatz Bitterfeld, Richard-Schütze-Str. 1 (Quelle: Ballonsport im Bitterfelder VfL e.V.)
+const O = (()=>{ try{ const s=JSON.parse(localStorage.getItem('bt-start')||'null'); if(s && isFinite(s.lat) && isFinite(s.lon)) return {lat:s.lat,lon:s.lon}; }catch(e){} return {lat:51.62458, lon:12.29456}; })();   // Ballonstartplatz Bitterfeld, Richard-Schütze-Str. 1 (Quelle: Ballonsport im Bitterfelder VfL e.V.)
 const KLAT = 111320, KLON = 111320*Math.cos(O.lat*Math.PI/180);
 const ll = (e,n) => [O.lat + n/KLAT, O.lon + e/KLON];
 const rad = d => d*Math.PI/180, deg = r => r*180/Math.PI;
@@ -659,6 +697,8 @@ const DATA = {tileBytes:0, tileNet:0, tileHit:0, routeBytes:0, routeN:0, sw:fals
 
 /* ---------------- Meteorologie: Atmosphärenmodell, Gewichtung, Schichtung ---------------- */
 const ATM_T0 = 7200;   // Flugbeginn 2 h nach Sonnenaufgang
+const MET_MIN_W = 0.05, MET_MAX_AGE_S = 86400, WIND_MIN_AGL = 20;   // MET-16 und Windregel: Mindestgewicht, Höchstalter 24 h, Wind nur ab 20 m über Grund
+const MET_DEFAULT = {tau:60, sigma:15, d0:25};                          // MET-15: Standardwerte der Gewichtung
 const MET = {x:'T',y:'nn',weighted:true,tau:60,sigma:15,d0:25,thr:0.9,distOffset:0,R:null,last:0,wind:'barb',unit:'kt'};
 const CAT = {inv:{c:'#5aa9ff',n:'Inversion'},stab:{c:'#4fd1a5',n:'Stabil'},neut:{c:'#ffc83d',n:'Bedingt labil'},labil:{c:'#ff5d5d',n:'Labil'}};
 const catOf = g => g<0 ? 'inv' : g<0.5 ? 'stab' : g<MET.thr ? 'neut' : 'labil';   // g = Temperaturabnahme in K/100 m
@@ -687,7 +727,7 @@ function metSample(t,alt,g,dist,src,ve=0,vn=0){
     T:atmT(h,t+ATM_T0)+0.07*gauss()+0.05*Math.max(0,dist-5),
     p:1013.25*Math.pow(1-2.25577e-5*alt,5.25588)+0.15*gauss(),
     rh:clamp(72-0.02*h+4*Math.sin(t/900)+gauss(),20,100), w:1, wt:1, wd:1,
-    ve,vn,wo:(alt-g)>40};   // Wind = Drift des Ballons, nur in der Luft
+    ve,vn,wo:(alt-g)>WIND_MIN_AGL};   // Wind = Drift des Ballons, nur in der Luft
 }
 // Vorflug: Auf- und Abstieg vor rund 80 bis 95 min (zeigt den Zeitverfall von Beginn an)
 function seedMet(){
@@ -699,6 +739,11 @@ function seedMet(){
 }
 function metCompute(){
   const bs=25, now=S.t, bins=new Map(); let nDamp=0;
+  for(let i=S.met.length-1;i>=0;i--){                       // MET-16: zu alte oder zu leichte Punkte verwerfen
+    const m0=S.met[i], age=now-m0.t;
+    const wp=MET.weighted ? Math.exp(-age/(MET.tau*60))*((m0.d>MET.d0)?Math.exp(-Math.pow(m0.d-MET.d0,2)/(2*MET.sigma*MET.sigma)):1) : 1;
+    if(age>MET_MAX_AGE_S || wp<MET_MIN_W) S.met.splice(i,1);
+  }
   for(const m of S.met){
     m.wt = MET.weighted ? Math.exp(-(now-m.t)/(MET.tau*60)) : 1;
     m.wd = (MET.weighted && m.d>MET.d0) ? Math.exp(-Math.pow(m.d-MET.d0,2)/(2*MET.sigma*MET.sigma)) : 1;
@@ -1361,9 +1406,15 @@ function bindMeteo(){
   bindSeg($('seg-mw'),v=>{ MET.weighted=v==='1'; updMeteo(true); });
   bindSeg($('seg-tau'),v=>{ MET.tau=+v; updMeteo(true); });
   bindSeg($('seg-sig'),v=>{ MET.sigma=+v; updMeteo(true); });
+  bindSeg($('seg-d0'),v=>{ MET.d0=+v; updMeteo(true); });
+  $('w-reset').addEventListener('click',()=>{            // MET-15: Standardwerte der Gewichtung
+    MET.tau=MET_DEFAULT.tau; MET.sigma=MET_DEFAULT.sigma; MET.d0=MET_DEFAULT.d0;
+    [['seg-tau',MET.tau],['seg-sig',MET.sigma],['seg-d0',MET.d0]].forEach(([id,v])=>$(id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',+x.dataset.v===v)));
+    updMeteo(true);
+  });
   bindSeg($('seg-thr'),v=>{ MET.thr=+v; buildLegend(); updMeteo(true); });
   bindSeg($('seg-wd'),v=>{ MET.wind=v; updMeteo(true); });
-  bindSeg($('seg-unit'),v=>{ MET.unit=v; syncUnitSeg(); updMeteo(true); updFlight(); });
+  bindSeg($('seg-unit'),v=>setWindUnit(v));
   $('met-off').addEventListener('input',e=>{ MET.distOffset=+e.target.value; $('met-off-v').textContent='+'+MET.distOffset+' km'; });
   $('met-ff').addEventListener('click',()=>{ for(let i=0;i<1800;i++) step(1); updMeteo(true); });
   $('btn-sheet').addEventListener('click',()=>{ $('sheet').classList.add('open'); updMeteo(true); });
@@ -1435,7 +1486,19 @@ $('wb-list').addEventListener('input',e=>{ const t=e.target; if(!t.classList.con
   if(t.dataset.own){ let v=t.value.replace(/[<>]/g,'').trim(); if(t.dataset.own==='base' && /^base$/i.test(v)) v=''; OWN[t.dataset.own].name=v; saveOwn(); updateFriendLabels(); return; } const f=FR.find(x=>x.id===t.dataset.id); if(f){ f.name=t.value.replace(/[<>]/g,'').trim(); saveFriends(); updateFriendLabels(); } });
 $('wb-reset').addEventListener('click',()=>{ FR.forEach(f=>{ f.name=''; }); OWN.orbit.name=''; OWN.base.name=''; saveOwn(); saveFriends(); renderFriends(); updateFriendLabels(); });
 function syncUnitSeg(){ document.querySelectorAll('#seg-unit button').forEach(b=>b.classList.toggle('on',b.dataset.v===MET.unit)); }
-$('rd-wind').addEventListener('click',()=>{ const o=['kt','kmh','ms']; MET.unit=o[(o.indexOf(MET.unit)+1)%o.length]; syncUnitSeg(); updFlight(); updMeteo(true); });
+const WIND_UNITS=['kt','kmh','ms'], WIND_UNIT_NAME={kt:'kt',kmh:'km/h',ms:'m/s'};
+function setWindUnit(u){                                   // Einheit der Windgeschwindigkeit: gilt überall und bleibt gespeichert
+  if(!WIND_UNITS.includes(u)) return;
+  MET.unit=u; try{ localStorage.setItem('bt-unit',u); }catch(e){}
+  syncUnitSeg();
+  try{ updFlight(); }catch(e){ console.error(e); }
+  try{ updMeteo(true); }catch(e){ console.error(e); }
+  toast(tr('w_unit')+': '+WIND_UNIT_NAME[u]);
+}
+function nextWindUnit(){ setWindUnit(WIND_UNITS[(WIND_UNITS.indexOf(MET.unit)+1)%WIND_UNITS.length]); }
+$('rd-wind').addEventListener('click',nextWindUnit);
+$('rd-wind').addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); nextWindUnit(); } });
+try{ const su=localStorage.getItem('bt-unit'); if(WIND_UNITS.includes(su)){ MET.unit=su; syncUnitSeg(); } }catch(e){}
 $('btn-o2').addEventListener('click',()=>{ if(!S.o2.active) activateO2(); $('sim').classList.remove('open'); });
 $('btn-clear').addEventListener('click',async()=>{   // alles verwerfen und neu laden: erzwingt die neueste Version
   try{
@@ -1446,7 +1509,56 @@ $('btn-clear').addEventListener('click',async()=>{   // alles verwerfen und neu 
 });
 
 /* ---------------- Datenzähler und Service Worker ---------------- */
-const BUILD = '2026-10-06.6';   // bei jeder Auslieferung erhöhen; steht in den Einstellungen
+const BUILD = '2026-10-07.8';
+
+// ---- Luftfahrtkarte (KRT-03): open flightmaps als zuschaltbare Ebene; Adresse und Zoomgrenzen sind hier einstellbar
+const OFM = { url:'https://nwy-tiles-api.prod.newaydata.com/tiles/{z}/{x}/{y}.png?path=latest/aero/latest',
+              attr:'© open flightmaps association', minZoom:7, maxNativeZoom:12 };   // Kacheln gibt es nur bis Zoomstufe 12
+let ofmLayer=null, ofmOn=false;
+function applyOfm(){
+  try{ localStorage.setItem('bt-ofm',ofmOn?'1':'0'); }catch(e){}
+  if(ofmOn){
+    if(!ofmLayer) ofmLayer=L.tileLayer(OFM.url,{minZoom:OFM.minZoom,maxZoom:19,maxNativeZoom:OFM.maxNativeZoom,className:'tiles-ofm',attribution:OFM.attr,opacity:.95,zIndex:5});
+    ofmLayer.addTo(map1);
+  } else if(ofmLayer){ ofmLayer.remove(); }
+  $('ofm-btn').classList.toggle('on',ofmOn); $('ofm-btn').setAttribute('aria-pressed',ofmOn?'true':'false'); $('ofm-hint').hidden=!ofmOn;
+}
+$('ofm-btn').addEventListener('click',()=>{ ofmOn=!ofmOn; applyOfm(); });
+try{ ofmOn=localStorage.getItem('bt-ofm')==='1'; }catch(e){}
+applyOfm();
+
+// ---- Startplatz (CHS-15, CHS-04): „Start setzen“ mittelt das GPS des Handys (im Prototyp; später GPS und Höhe des Orbits über die Base)
+const ST_KEY='bt-start';
+function stInfo(msg){ $('st-info').textContent=msg; }
+function stShowCurrent(){
+  let s=null; try{ s=JSON.parse(localStorage.getItem(ST_KEY)||'null'); }catch(e){}
+  stInfo(s ? tr('st_cur',{lat:s.lat.toFixed(5),lon:s.lon.toFixed(5),acc:s.acc?('±'+Math.round(s.acc)+' m'):''}) : tr('st_def'));
+}
+function stSave(lat,lon,alt,acc){
+  try{ localStorage.setItem(ST_KEY,JSON.stringify({lat,lon,alt,acc,ts:Date.now()})); }catch(e){}
+  toast(tr('st_ok')); setTimeout(()=>location.reload(),900);
+}
+let stWatch=null, stPick=false;
+function stOnMapClick(e){ if(!stPick) return; stPick=false; stSave(e.latlng.lat,e.latlng.lng,null,null); }
+$('st-set').addEventListener('click',()=>{
+  if(!navigator.geolocation){ stInfo(tr('st_err')); return; }
+  if(stWatch!==null){ navigator.geolocation.clearWatch(stWatch); stWatch=null; }
+  const pts=[]; let t0=null; stInfo(tr('st_wait'));
+  stWatch=navigator.geolocation.watchPosition(p=>{
+    if(p.coords.accuracy>30){ stInfo(tr('st_wait')+' (±'+Math.round(p.coords.accuracy)+' m)'); return; }   // erst ein brauchbarer Fix
+    if(t0===null) t0=Date.now();
+    pts.push(p.coords); const el=(Date.now()-t0)/1000;
+    stInfo(tr('st_avg',{n:Math.max(0,Math.ceil(15-el))}));
+    if(el>=15 && pts.length>=3){
+      navigator.geolocation.clearWatch(stWatch); stWatch=null;
+      const m=k=>pts.reduce((a,c)=>a+(c[k]||0),0)/pts.length;
+      stSave(m('latitude'),m('longitude'),m('altitude'),Math.max(...pts.map(c=>c.accuracy)));
+    }
+  },()=>{ stInfo(tr('st_err')); stWatch=null; },{enableHighAccuracy:true,maximumAge:0,timeout:60000});
+});
+$('st-map').addEventListener('click',()=>{ stPick=!stPick; if(stPick) stInfo(tr('st_tap')); else stShowCurrent(); });
+map1.on('click',stOnMapClick);
+$('st-reset').addEventListener('click',()=>{ try{ localStorage.removeItem(ST_KEY); }catch(e){} toast(tr('st_ok')); setTimeout(()=>location.reload(),900); });   // bei jeder Auslieferung erhöhen; steht in den Einstellungen
 function updData(){
   $('ver').textContent=tr('ver')+' '+BUILD;
   const mb=v=>(v/1048576).toFixed(1).replace('.',',')+' MB', all=DATA.tileHit+DATA.tileNet;
@@ -1473,7 +1585,7 @@ function setLang(l){
   applyLang(); buildLegend();
   $('btn-pause').textContent=tr(S.paused?'b_resume':'b_pause');
   startMks.forEach(m=>m.setTooltipContent(tr('launch')));
-  predPts.forEach(p=>p.setTooltipContent(hLabel(p._h))); renderFriends();
+  predPts.forEach(p=>p.setTooltipContent(hLabel(p._h))); renderFriends(); stShowCurrent();
   if($('net-note').style.display==='block') $('net-note').textContent=tr('net_err',{n:tileErr});
   renderPop(); updData(); updMeteo(true); render();
 }
@@ -1484,7 +1596,7 @@ function setLang(l){
   applyLang();
 })();
 
-renderFriends(); applyFriendVis();
+renderFriends(); applyFriendVis(); stShowCurrent();
 setInterval(updData,1000); updData();
 bindMeteo();
 showScreen('chaser');
