@@ -1,7 +1,7 @@
 {
-  "name": "The Bo Twins",
-  "short_name": "Bo Twins",
-  "description": "Companion-App für Base und Orbit: Chaser-Karte, Flug und Profil, Luftraum",
+  "name": "Gasballon-Simulator",
+  "short_name": "Gasballon",
+  "description": "Gasballon fahren mit echter Physik: Sandsäcke, Sandmulde, Ventil und Wind in verschiedenen Höhen",
   "lang": "de",
   "start_url": "./",
   "scope": "./",
