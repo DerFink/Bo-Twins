@@ -237,6 +237,19 @@ main{position:relative;flex:1;min-height:0}
 .lbtn{display:flex;align-items:center;gap:8px;min-height:44px;padding:6px 10px;border-radius:12px;border:1px solid var(--line);background:var(--pan2);color:var(--tx);font:inherit;font-size:14px;text-align:left;cursor:pointer}
 .lbtn.on{border-color:#ffc83d;box-shadow:0 0 0 1px #ffc83d inset;font-weight:600}
 .lbtn .flag{flex:none;border-radius:3px;outline:1px solid rgba(255,255,255,.28);outline-offset:0}
+
+/* Sprachauswahl als Liste mit Flaggen */
+.langdd{position:relative}
+.langdd .lbtn{width:100%;justify-content:flex-start}
+.langdd .lbtn .lname{flex:1}
+.langdd .lbtn .chev{flex:none;color:var(--mut)}
+.langlist{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:30;max-height:min(360px,60vh);overflow:auto;background:#0d1626;border:1px solid var(--line);border-radius:12px;padding:4px;box-shadow:0 10px 28px rgba(0,0,0,.55)}
+.lopt{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:6px 10px;border:0;border-radius:8px;background:transparent;color:var(--tx);font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.lopt .flag{flex:none;border-radius:3px;outline:1px solid rgba(255,255,255,.28)}
+.lopt.on{background:var(--pan2);font-weight:600}
+.lopt.on::after{content:"\2713";margin-left:auto;color:#ffc83d}
+
+.fl-ref{font-size:11px;line-height:1.3;color:var(--mut);opacity:.8;padding:3px 8px 0;min-height:14px}
 </style>
 </head>
 
@@ -306,6 +319,7 @@ main{position:relative;flex:1;min-height:0}
             <canvas id="met-canvas"></canvas>
             <div id="met-nolib" data-i="nolib" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--mut)">Chart.js konnte nicht geladen werden. Für das Profil ist eine Internetverbindung nötig.</div>
           </div>
+          <div class="fl-ref" id="prof-ref"></div>
         </div>
       </div>
       <div id="b-alert" role="alert"></div>
@@ -417,7 +431,7 @@ main{position:relative;flex:1;min-height:0}
   <!-- Einstellungen -->
   <div class="simpanel" id="sim">
     <div class="sh-h"><b data-i="settings">Einstellungen</b></div>
-    <div class="r lang"><span data-i="s_lang">Sprache</span><div id="lang-sel" class="langgrid" role="radiogroup" aria-label="Language"></div></div>
+    <div class="r lang"><span data-i="s_lang">Sprache</span><div class="langdd" id="lang-sel"><button type="button" id="lang-btn" class="lbtn" aria-haspopup="listbox" aria-expanded="false"></button><div id="lang-list" class="langlist" role="listbox" hidden></div></div></div>
     <div class="r"><span data-i="s_map">Karte</span><div class="seg" data-key="map"><button data-v="dark" class="on" data-i="m_dark">Dunkel</button><button data-v="light" data-i="m_light">Hell (Sonne)</button></div></div>
     <div class="dbox">
       <div class="lbl" data-i="s_data">Datenverbrauch seit App-Start</div>
@@ -457,200 +471,211 @@ main{position:relative;flex:1;min-height:0}
    Rechenraum: lokale Ost/Nord-Koordinaten in Metern um einen Ursprung.
    ===================================================================== */
 const $ = id => document.getElementById(id);
-/* ---------------- Sprachen: Deutsch, Englisch, Französisch, Polnisch, Tschechisch, Chinesisch (Taiwan) ---------------- */
-const LANGS = [['de','Deutsch'],['en','English'],['fr','Français'],['pl','Polski'],['cs','Čeština'],['zh-TW','繁體中文']];
-const LI = {de:0,en:1,fr:2,pl:3,cs:4,'zh-TW':5};
+/* ---------------- Sprachen: Deutsch, Englisch, Französisch, Spanisch, Polnisch, Tschechisch, Chinesisch (Taiwan) ---------------- */
+const LANGS = [['de','Deutsch'],['en','English'],['fr','Français'],['es','Español'],['pl','Polski'],['cs','Čeština'],['zh-TW','繁體中文']];
+const LI = {de:0,en:1,fr:2,pl:3,cs:4,'zh-TW':5,es:6};   // Position der Sprache in den Übersetzungslisten
 const TX = {
  // Kopfzeile, Navigation, Allgemeines
- ble:["Base verbunden","Base connected","Base connectée","Base połączona","Base připojena","Base 已連線"],
- ble_t:["Smartphone-Verbindung zur Base (Bluetooth)","Smartphone connection to the Base (Bluetooth)","Connexion du smartphone à la Base (Bluetooth)","Połączenie smartfona z Base (Bluetooth)","Spojení telefonu s Base (Bluetooth)","手機與 Base 的連線（藍牙）"],
- lora_t:["LoRa-Verbindung, für Details antippen","LoRa link, tap for details","Liaison LoRa, touchez pour les détails","Łącze LoRa, dotknij, aby zobaczyć szczegóły","Spojení LoRa, klepnutím zobrazíte podrobnosti","LoRa 連線，點一下查看詳細資料"],
- settings:["Einstellungen","Settings","Réglages","Ustawienia","Nastavení","設定"],
- close:["Schließen","Close","Fermer","Zamknij","Zavřít","關閉"],
- nav_chaser:["Chaser","Chaser","Chaser","Chaser","Chaser","追蹤車"],
- nav_flight:["Flug und Profil","Flight and profile","Vol et profil","Lot i profil","Let a profil","飛行與剖面"],
- nav_air:["Luftraum","Airspace","Espace aérien","Przestrzeń powietrzna","Vzdušný prostor","空域"],
+ ble:["Base verbunden","Base connected","Base connectée","Base połączona","Base připojena","Base 已連線","Base conectada"],
+ ble_t:["Smartphone-Verbindung zur Base (Bluetooth)","Smartphone connection to the Base (Bluetooth)","Connexion du smartphone à la Base (Bluetooth)","Połączenie smartfona z Base (Bluetooth)","Spojení telefonu s Base (Bluetooth)","手機與 Base 的連線（藍牙）","Conexión del smartphone con la Base (Bluetooth)"],
+ lora_t:["LoRa-Verbindung, für Details antippen","LoRa link, tap for details","Liaison LoRa, touchez pour les détails","Łącze LoRa, dotknij, aby zobaczyć szczegóły","Spojení LoRa, klepnutím zobrazíte podrobnosti","LoRa 連線，點一下查看詳細資料","Enlace LoRa, toca para ver detalles"],
+ settings:["Einstellungen","Settings","Réglages","Ustawienia","Nastavení","設定","Ajustes"],
+ close:["Schließen","Close","Fermer","Zamknij","Zavřít","關閉","Cerrar"],
+ nav_chaser:["Chaser","Chaser","Chaser","Chaser","Chaser","追蹤車","Seguimiento"],
+ nav_flight:["Flug und Profil","Flight and profile","Vol et profil","Lot i profil","Let a profil","飛行與剖面","Vuelo y perfil"],
+ nav_air:["Luftraum","Airspace","Espace aérien","Przestrzeń powietrzna","Vzdušný prostor","空域","Espacio aéreo"],
  // LoRa-Details
- lp_title:["LoRa-Verbindung","LoRa link","Liaison LoRa","Łącze LoRa","Spojení LoRa","LoRa 連線"],
- lp_rssi:["Signalstärke","Signal strength","Puissance du signal","Siła sygnału","Síla signálu","訊號強度"],
- lp_snr:["Signal-Rausch-Abstand","Signal-to-noise ratio","Rapport signal/bruit","Stosunek sygnału do szumu","Odstup signálu od šumu","訊噪比"],
- lp_pk:["Pakete empfangen","Packets received","Paquets reçus","Odebrane pakiety","Přijaté pakety","已接收封包"],
- lp_bat:["Akku Orbit","Orbit battery","Batterie Orbit","Akumulator Orbit","Baterie Orbit","Orbit 電池"],
+ lp_title:["LoRa-Verbindung","LoRa link","Liaison LoRa","Łącze LoRa","Spojení LoRa","LoRa 連線","Enlace LoRa"],
+ lp_rssi:["Signalstärke","Signal strength","Puissance du signal","Siła sygnału","Síla signálu","訊號強度","Intensidad de señal"],
+ lp_snr:["Signal-Rausch-Abstand","Signal-to-noise ratio","Rapport signal/bruit","Stosunek sygnału do szumu","Odstup signálu od šumu","訊噪比","Relación señal/ruido"],
+ lp_pk:["Pakete empfangen","Packets received","Paquets reçus","Odebrane pakiety","Přijaté pakety","已接收封包","Paquetes recibidos"],
+ lp_bat:["Akku Orbit","Orbit battery","Batterie Orbit","Akumulator Orbit","Baterie Orbit","Orbit 電池","Batería del Orbit"],
  // Chaser
- f_orbit:["Orbit folgen","Follow Orbit","Suivre Orbit","Śledź Orbit","Sledovat Orbit","追蹤 Orbit"],
- f_both:["Beide zeigen","Show both","Voir les deux","Pokaż oba","Zobrazit oba","顯示兩者"],
- f_base:["Base folgen","Follow Base","Suivre Base","Śledź Base","Sledovat Base","追蹤 Base"],
- st_title:["Startplatz","Launch site","Site de départ","Miejsce startu","Místo startu","起飛地點"],
- st_set:["Start setzen","Set start","Définir le départ","Ustaw start","Nastavit start","設定起飛點"],
- st_map:["Per Karte setzen","Set on map","Placer sur la carte","Ustaw na mapie","Nastavit na mapě","在地圖上設定"],
- st_reset:["Standard (Bitterfeld)","Default (Bitterfeld)","Par défaut (Bitterfeld)","Domyślnie (Bitterfeld)","Výchozí (Bitterfeld)","預設（Bitterfeld）"],
- st_wait:["Warte auf GPS …","Waiting for GPS …","En attente du GPS …","Czekam na GPS …","Čekám na GPS …","等待 GPS …"],
- st_avg:["Mittle Position … noch {n} s","Averaging position … {n} s left","Moyenne de la position … encore {n} s","Uśrednianie pozycji … jeszcze {n} s","Průměruji polohu … ještě {n} s","平均定位中…還需 {n} 秒"],
- st_ok:["Startplatz gesetzt","Launch site set","Site de départ défini","Miejsce startu ustawione","Místo startu nastaveno","已設定起飛地點"],
- st_err:["Kein GPS verfügbar. Bitte per Karte setzen.","GPS not available. Please set it on the map.","GPS indisponible. Veuillez le placer sur la carte.","Brak GPS. Ustaw na mapie.","GPS není k dispozici. Nastavte na mapě.","無法取得 GPS，請在地圖上設定。"],
- st_tap:["Tippe auf die Karte …","Tap the map …","Touchez la carte …","Dotknij mapy …","Klepněte na mapu …","請點選地圖…"],
- st_cur:["Startplatz: {lat}, {lon} {acc}","Launch site: {lat}, {lon} {acc}","Site de départ : {lat}, {lon} {acc}","Miejsce startu: {lat}, {lon} {acc}","Místo startu: {lat}, {lon} {acc}","起飛地點：{lat}, {lon} {acc}"],
- st_def:["Standard: Bitterfeld","Default: Bitterfeld","Par défaut : Bitterfeld","Domyślnie: Bitterfeld","Výchozí: Bitterfeld","預設：Bitterfeld"],
- w_d0:["Grenzabstand d₀","Limit distance d₀","Distance limite d₀","Odległość graniczna d₀","Hraniční vzdálenost d₀","界限距離 d₀"],
- w_reset:["Standardwerte","Defaults","Valeurs par défaut","Wartości domyślne","Výchozí hodnoty","預設值"],
- ofm_btn:["Luftfahrtkarte","Aeronautical chart","Carte aéronautique","Mapa lotnicza","Letecká mapa","航空圖"],
- ofm_hint:["Nur zur Orientierung, ersetzt keine amtliche Karte. Hindernisse und Leitungen können fehlen. Quelle: open flightmaps.","For orientation only, not a substitute for an official chart. Obstacles and power lines may be missing. Source: open flightmaps.","À titre indicatif, ne remplace pas une carte officielle. Des obstacles et des lignes peuvent manquer. Source : open flightmaps.","Tylko orientacyjnie, nie zastępuje oficjalnej mapy. Przeszkody i linie mogą być pominięte. Źródło: open flightmaps.","Pouze orientačně, nenahrazuje oficiální mapu. Překážky a vedení mohou chybět. Zdroj: open flightmaps.","僅供參考，不能取代官方航圖。障礙物與電線可能缺漏。來源：open flightmaps。"],
- lg_model:["Startprofil (Modell)","Start profile (model)","Profil de départ (modèle)","Profil startowy (model)","Počáteční profil (model)","起飛剖面（模型）"],
- mo_ok:["Modellprofil für den Startplatz geladen","Model profile for the launch site loaded","Profil modèle du site de départ chargé","Załadowano profil modelowy dla miejsca startu","Modelový profil pro místo startu načten","已載入起飛地點的模型剖面"],
- mo_none:["Kein Startprofil (offline oder nicht erreichbar)","No start profile (offline or unreachable)","Pas de profil de départ (hors ligne ou injoignable)","Brak profilu startowego (offline lub niedostępny)","Žádný počáteční profil (offline nebo nedostupný)","沒有起飛剖面（離線或無法連線）"],
- mo_line:["Startprofil: Open-Meteo.com (CC BY 4.0), Stand {t} UTC, {n} Höhenstufen","Start profile: Open-Meteo.com (CC BY 4.0), valid {t} UTC, {n} levels","Profil de départ : Open-Meteo.com (CC BY 4.0), valide {t} UTC, {n} niveaux","Profil startowy: Open-Meteo.com (CC BY 4.0), ważny {t} UTC, {n} poziomów","Počáteční profil: Open-Meteo.com (CC BY 4.0), platnost {t} UTC, {n} hladin","起飛剖面：Open-Meteo.com（CC BY 4.0），有效時間 {t} UTC，{n} 個高度層"],
- wb_mine:["Meine Geräte","My devices","Mes appareils","Moje urządzenia","Má zařízení","我的裝置"],
- wb_menu:["Weitere Ballons","More balloons","Autres ballons","Więcej balonów","Další balony","其他熱氣球"],
- wb_reset:["Namen zurücksetzen","Reset names","Réinitialiser les noms","Zresetuj nazwy","Obnovit názvy","重設名稱"],
- wb_hint:["Namen gehören zur LoRa-ID und bleiben gespeichert.","Names belong to the LoRa ID and stay saved.","Les noms sont liés à l’ID LoRa et restent enregistrés.","Nazwy są powiązane z ID LoRa i pozostają zapisane.","Názvy patří k ID LoRa a zůstávají uloženy.","名稱綁定 LoRa ID 並會保存。"],
- wb_name:["Name","Name","Nom","Nazwa","Název","名稱"],
- wind_toggle_t:["Antippen: Windeinheit wechseln","Tap to change the wind unit","Touchez pour changer l’unité du vent","Dotknij, aby zmienić jednostkę wiatru","Klepnutím změníte jednotku větru","點一下切換風速單位"],
- notice_t:["Hinweis","Notice","Avis","Uwaga","Upozornění","注意"],
- notice_x:["Bo Twins ist ein Hilfsmittel zum Verfolgen und Auswerten von Ballonfahrten. Es ist kein zugelassenes Navigations-, Kollisionswarn- oder Flugsicherungssystem und ersetzt weder Sicht und Flugvorbereitung noch vorgeschriebene Ausrüstung. Mit Bo Twins allein ist dein Ballon für andere Flieger nicht sichtbar, und du siehst keinen Fremdverkehr.","Bo Twins is an aid for tracking and analysing balloon flights. It is not an approved navigation, collision-warning or air-traffic system and does not replace visual lookout, flight preparation or required equipment. With Bo Twins alone your balloon is not visible to other aircraft, and you do not see other traffic.","Bo Twins est un outil de suivi et d’analyse des vols en ballon. Ce n’est pas un système de navigation, d’anticollision ou de contrôle aérien homologué et il ne remplace ni la vigilance visuelle, ni la préparation du vol, ni l’équipement obligatoire. Avec Bo Twins seul, votre ballon n’est pas visible pour les autres aéronefs et vous ne voyez pas le trafic.","Bo Twins to pomoc do śledzenia i analizy lotów balonowych. Nie jest to zatwierdzony system nawigacyjny, ostrzegania przed kolizją ani kontroli ruchu lotniczego i nie zastępuje obserwacji wzrokowej, przygotowania lotu ani wymaganego wyposażenia. Sam Bo Twins nie czyni Twojego balonu widocznym dla innych statków powietrznych, a Ty nie widzisz innego ruchu.","Bo Twins je pomůcka pro sledování a vyhodnocení balonových letů. Není to schválený navigační systém, systém varování před srážkou ani systém řízení letového provozu a nenahrazuje vizuální pozorování, přípravu letu ani předepsané vybavení. Samotný Bo Twins váš balon pro ostatní letadla nezviditelní a vy nevidíte žádný jiný provoz.","Bo Twins 是追蹤與分析熱氣球飛行的輔助工具，不是經核准的導航、防撞警示或空中交通系統，也無法取代目視觀察、飛行準備或規定的設備。僅靠 Bo Twins，其他航空器看不到你的熱氣球，你也看不到其他交通。"],
- launch:["Startplatz","Launch site","Site de départ","Miejsce startu","Místo startu","起飛地點"],
- vario:["Vario","Vario","Vario","Wario","Vario","升降率"],
- alt_nn:["Höhe NN","Altitude MSL","Altitude (mer)","Wysokość n.p.m.","Výška n.m.","海拔高度"],
- agl:["über Grund","above ground","au-dessus du sol","nad gruntem","nad zemí","離地高度"],
- wind:["Wind","Wind","Vent","Wiatr","Vítr","風"],
- spd_crs:["Tempo und Kurs","Speed and course","Vitesse et cap","Prędkość i kurs","Rychlost a kurz","速度與航向"],
- dist_base:["Abstand zur Base","Distance to Base","Distance à la Base","Odległość od Base","Vzdálenost od Base","與 Base 的距離"],
- dist_orbit:["Abstand zu Orbit","Distance to Orbit","Distance à Orbit","Odległość od Orbit","Vzdálenost od Orbit","與 Orbit 的距離"],
- above_base:["über Base","above Base","au-dessus de Base","nad Base","nad Base","高於 Base"],
+ f_orbit:["Orbit folgen","Follow Orbit","Suivre Orbit","Śledź Orbit","Sledovat Orbit","追蹤 Orbit","Seguir Orbit"],
+ f_both:["Beide zeigen","Show both","Voir les deux","Pokaż oba","Zobrazit oba","顯示兩者","Mostrar ambos"],
+ f_base:["Base folgen","Follow Base","Suivre Base","Śledź Base","Sledovat Base","追蹤 Base","Seguir Base"],
+ st_title:["Startplatz","Launch site","Site de départ","Miejsce startu","Místo startu","起飛地點","Lugar de despegue"],
+ st_set:["Start setzen","Set start","Définir le départ","Ustaw start","Nastavit start","設定起飛點","Fijar inicio"],
+ st_map:["Per Karte setzen","Set on map","Placer sur la carte","Ustaw na mapie","Nastavit na mapě","在地圖上設定","Fijar en el mapa"],
+ st_reset:["Standard (Bitterfeld)","Default (Bitterfeld)","Par défaut (Bitterfeld)","Domyślnie (Bitterfeld)","Výchozí (Bitterfeld)","預設（Bitterfeld）","Predeterminado (Bitterfeld)"],
+ st_wait:["Warte auf GPS …","Waiting for GPS …","En attente du GPS …","Czekam na GPS …","Čekám na GPS …","等待 GPS …","Esperando GPS …"],
+ st_avg:["Mittle Position … noch {n} s","Averaging position … {n} s left","Moyenne de la position … encore {n} s","Uśrednianie pozycji … jeszcze {n} s","Průměruji polohu … ještě {n} s","平均定位中…還需 {n} 秒","Promediando posición … faltan {n} s"],
+ st_ok:["Startplatz gesetzt","Launch site set","Site de départ défini","Miejsce startu ustawione","Místo startu nastaveno","已設定起飛地點","Lugar de despegue fijado"],
+ st_err:["Kein GPS verfügbar. Bitte per Karte setzen.","GPS not available. Please set it on the map.","GPS indisponible. Veuillez le placer sur la carte.","Brak GPS. Ustaw na mapie.","GPS není k dispozici. Nastavte na mapě.","無法取得 GPS，請在地圖上設定。","GPS no disponible. Fíjalo en el mapa."],
+ st_tap:["Tippe auf die Karte …","Tap the map …","Touchez la carte …","Dotknij mapy …","Klepněte na mapu …","請點選地圖…","Toca el mapa …"],
+ st_cur:["Startplatz: {lat}, {lon} {acc}","Launch site: {lat}, {lon} {acc}","Site de départ : {lat}, {lon} {acc}","Miejsce startu: {lat}, {lon} {acc}","Místo startu: {lat}, {lon} {acc}","起飛地點：{lat}, {lon} {acc}","Lugar de despegue: {lat}, {lon} {acc}"],
+ st_def:["Standard: Bitterfeld","Default: Bitterfeld","Par défaut : Bitterfeld","Domyślnie: Bitterfeld","Výchozí: Bitterfeld","預設：Bitterfeld","Predeterminado: Bitterfeld"],
+ w_d0:["Grenzabstand d₀","Limit distance d₀","Distance limite d₀","Odległość graniczna d₀","Hraniční vzdálenost d₀","界限距離 d₀","Distancia límite d₀"],
+ w_reset:["Standardwerte","Defaults","Valeurs par défaut","Wartości domyślne","Výchozí hodnoty","預設值","Valores predeterminados"],
+ ofm_btn:["Luftfahrtkarte","Aeronautical chart","Carte aéronautique","Mapa lotnicza","Letecká mapa","航空圖","Carta aeronáutica"],
+ ofm_hint:["Nur zur Orientierung, ersetzt keine amtliche Karte. Hindernisse und Leitungen können fehlen. Quelle: open flightmaps.","For orientation only, not a substitute for an official chart. Obstacles and power lines may be missing. Source: open flightmaps.","À titre indicatif, ne remplace pas une carte officielle. Des obstacles et des lignes peuvent manquer. Source : open flightmaps.","Tylko orientacyjnie, nie zastępuje oficjalnej mapy. Przeszkody i linie mogą być pominięte. Źródło: open flightmaps.","Pouze orientačně, nenahrazuje oficiální mapu. Překážky a vedení mohou chybět. Zdroj: open flightmaps.","僅供參考，不能取代官方航圖。障礙物與電線可能缺漏。來源：open flightmaps。","Solo orientativo, no sustituye a una carta oficial. Pueden faltar obstáculos y líneas eléctricas. Fuente: open flightmaps."],
+ lg_model:["Startprofil (Modell)","Start profile (model)","Profil de départ (modèle)","Profil startowy (model)","Počáteční profil (model)","起飛剖面（模型）","Perfil inicial (modelo)"],
+ mo_ok:["Modellprofil für den Startplatz geladen","Model profile for the launch site loaded","Profil modèle du site de départ chargé","Załadowano profil modelowy dla miejsca startu","Modelový profil pro místo startu načten","已載入起飛地點的模型剖面","Perfil del modelo para el lugar de despegue cargado"],
+ mo_none:["Kein Startprofil (offline oder nicht erreichbar)","No start profile (offline or unreachable)","Pas de profil de départ (hors ligne ou injoignable)","Brak profilu startowego (offline lub niedostępny)","Žádný počáteční profil (offline nebo nedostupný)","沒有起飛剖面（離線或無法連線）","Sin perfil inicial (sin conexión o inaccesible)"],
+ mo_line:["Startprofil: Open-Meteo.com (CC BY 4.0), Stand {t} UTC, {n} Höhenstufen","Start profile: Open-Meteo.com (CC BY 4.0), valid {t} UTC, {n} levels","Profil de départ : Open-Meteo.com (CC BY 4.0), valide {t} UTC, {n} niveaux","Profil startowy: Open-Meteo.com (CC BY 4.0), ważny {t} UTC, {n} poziomów","Počáteční profil: Open-Meteo.com (CC BY 4.0), platnost {t} UTC, {n} hladin","起飛剖面：Open-Meteo.com（CC BY 4.0），有效時間 {t} UTC，{n} 個高度層","Perfil inicial: Open-Meteo.com (CC BY 4.0), válido {t} UTC, {n} niveles"],
+ pr_ref:["Erste Daten: Open-Meteo, {p}, {t} UTC ({l} Ortszeit)","First data: Open-Meteo, {p}, {t} UTC ({l} local)","Premières données : Open-Meteo, {p}, {t} UTC ({l} heure locale)","Pierwsze dane: Open-Meteo, {p}, {t} UTC ({l} czas lokalny)","První data: Open-Meteo, {p}, {t} UTC ({l} místní čas)","初始資料：Open-Meteo，{p}，{t} UTC（當地 {l}）","Primeros datos: Open-Meteo, {p}, {t} UTC ({l} hora local)"],
+ pr_ref0:["Erste Daten: Open-Meteo, {t} UTC ({l} Ortszeit)","First data: Open-Meteo, {t} UTC ({l} local)","Premières données : Open-Meteo, {t} UTC ({l} heure locale)","Pierwsze dane: Open-Meteo, {t} UTC ({l} czas lokalny)","První data: Open-Meteo, {t} UTC ({l} místní čas)","初始資料：Open-Meteo，{t} UTC（當地 {l}）","Primeros datos: Open-Meteo, {t} UTC ({l} hora local)"],
+ pr_none:["Erste Daten: keine Daten verfügbar","First data: no data available","Premières données : aucune donnée disponible","Pierwsze dane: brak danych","První data: žádná data k dispozici","初始資料：無可用資料","Primeros datos: no hay datos disponibles"],
+ pr_off:["{d} km {c} von Start","{d} km {c} of start","{d} km {c} du départ","{d} km {c} od startu","{d} km {c} od startu","起點{c}方 {d} km","{d} km al {c} del inicio"],
+ pr_off0:["am Start","at the start","au départ","przy starcie","u startu","在起點","en el inicio"],
+ cmp:["N,NO,O,SO,S,SW,W,NW","N,NE,E,SE,S,SW,W,NW","N,NE,E,SE,S,SO,O,NO","N,NE,E,SE,S,SW,W,NW","S,SV,V,JV,J,JZ,Z,SZ","北,東北,東,東南,南,西南,西,西北","N,NE,E,SE,S,SO,O,NO"],
+ mo_osm:["Ortsname: © OpenStreetMap-Mitwirkende (Nominatim)","Place name: © OpenStreetMap contributors (Nominatim)","Nom du lieu : © contributeurs d’OpenStreetMap (Nominatim)","Nazwa miejsca: © współtwórcy OpenStreetMap (Nominatim)","Název místa: © přispěvatelé OpenStreetMap (Nominatim)","地名：© OpenStreetMap 貢獻者（Nominatim）","Nombre del lugar: © colaboradores de OpenStreetMap (Nominatim)"],
+ mo_assume:["Keine Wetterdaten verfügbar. Annahme: Standardgradient von der gemessenen Bodentemperatur, Wind 0.","No weather data available. Assumption: standard gradient from the measured ground temperature, wind 0.","Aucune donnée météo disponible. Hypothèse : gradient standard à partir de la température mesurée au sol, vent nul.","Brak danych pogodowych. Założenie: standardowy gradient od zmierzonej temperatury przy ziemi, wiatr 0.","Žádná data o počasí. Předpoklad: standardní gradient od naměřené teploty při zemi, vítr 0.","沒有天氣資料。假設：以量測到的地面溫度採標準溫度梯度，風速為 0。","No hay datos meteorológicos. Supuesto: gradiente estándar a partir de la temperatura medida en el suelo, viento 0."],
+ lg_assume:["Annahme (Standardgradient)","Assumption (standard gradient)","Hypothèse (gradient standard)","Założenie (gradient standardowy)","Předpoklad (standardní gradient)","假設（標準梯度）","Supuesto (gradiente estándar)"],
+ wb_mine:["Meine Geräte","My devices","Mes appareils","Moje urządzenia","Má zařízení","我的裝置","Mis dispositivos"],
+ wb_menu:["Weitere Ballons","More balloons","Autres ballons","Więcej balonów","Další balony","其他熱氣球","Más globos"],
+ wb_reset:["Namen zurücksetzen","Reset names","Réinitialiser les noms","Zresetuj nazwy","Obnovit názvy","重設名稱","Restablecer nombres"],
+ wb_hint:["Namen gehören zur LoRa-ID und bleiben gespeichert.","Names belong to the LoRa ID and stay saved.","Les noms sont liés à l’ID LoRa et restent enregistrés.","Nazwy są powiązane z ID LoRa i pozostają zapisane.","Názvy patří k ID LoRa a zůstávají uloženy.","名稱綁定 LoRa ID 並會保存。","Los nombres pertenecen al ID LoRa y se guardan."],
+ wb_name:["Name","Name","Nom","Nazwa","Název","名稱","Nombre"],
+ wind_toggle_t:["Antippen: Windeinheit wechseln","Tap to change the wind unit","Touchez pour changer l’unité du vent","Dotknij, aby zmienić jednostkę wiatru","Klepnutím změníte jednotku větru","點一下切換風速單位","Toca para cambiar la unidad del viento"],
+ notice_t:["Hinweis","Notice","Avis","Uwaga","Upozornění","注意","Aviso"],
+ notice_x:["Bo Twins ist ein Hilfsmittel zum Verfolgen und Auswerten von Ballonfahrten. Es ist kein zugelassenes Navigations-, Kollisionswarn- oder Flugsicherungssystem und ersetzt weder Sicht und Flugvorbereitung noch vorgeschriebene Ausrüstung. Mit Bo Twins allein ist dein Ballon für andere Flieger nicht sichtbar, und du siehst keinen Fremdverkehr.","Bo Twins is an aid for tracking and analysing balloon flights. It is not an approved navigation, collision-warning or air-traffic system and does not replace visual lookout, flight preparation or required equipment. With Bo Twins alone your balloon is not visible to other aircraft, and you do not see other traffic.","Bo Twins est un outil de suivi et d’analyse des vols en ballon. Ce n’est pas un système de navigation, d’anticollision ou de contrôle aérien homologué et il ne remplace ni la vigilance visuelle, ni la préparation du vol, ni l’équipement obligatoire. Avec Bo Twins seul, votre ballon n’est pas visible pour les autres aéronefs et vous ne voyez pas le trafic.","Bo Twins to pomoc do śledzenia i analizy lotów balonowych. Nie jest to zatwierdzony system nawigacyjny, ostrzegania przed kolizją ani kontroli ruchu lotniczego i nie zastępuje obserwacji wzrokowej, przygotowania lotu ani wymaganego wyposażenia. Sam Bo Twins nie czyni Twojego balonu widocznym dla innych statków powietrznych, a Ty nie widzisz innego ruchu.","Bo Twins je pomůcka pro sledování a vyhodnocení balonových letů. Není to schválený navigační systém, systém varování před srážkou ani systém řízení letového provozu a nenahrazuje vizuální pozorování, přípravu letu ani předepsané vybavení. Samotný Bo Twins váš balon pro ostatní letadla nezviditelní a vy nevidíte žádný jiný provoz.","Bo Twins 是追蹤與分析熱氣球飛行的輔助工具，不是經核准的導航、防撞警示或空中交通系統，也無法取代目視觀察、飛行準備或規定的設備。僅靠 Bo Twins，其他航空器看不到你的熱氣球，你也看不到其他交通。","Bo Twins es una ayuda para seguir y analizar vuelos en globo. No es un sistema de navegación, de alerta de colisión ni de tránsito aéreo homologado, y no sustituye la vigilancia visual, la preparación del vuelo ni el equipamiento obligatorio. Solo con Bo Twins tu globo no es visible para otras aeronaves, y tú no ves otro tráfico."],
+ launch:["Startplatz","Launch site","Site de départ","Miejsce startu","Místo startu","起飛地點","Lugar de despegue"],
+ vario:["Vario","Vario","Vario","Wario","Vario","升降率","Variómetro"],
+ alt_nn:["Höhe NN","Altitude MSL","Altitude (mer)","Wysokość n.p.m.","Výška n.m.","海拔高度","Altitud s.n.m."],
+ agl:["über Grund","above ground","au-dessus du sol","nad gruntem","nad zemí","離地高度","sobre el suelo"],
+ wind:["Wind","Wind","Vent","Wiatr","Vítr","風","Viento"],
+ spd_crs:["Tempo und Kurs","Speed and course","Vitesse et cap","Prędkość i kurs","Rychlost a kurz","速度與航向","Velocidad y rumbo"],
+ dist_base:["Abstand zur Base","Distance to Base","Distance à la Base","Odległość od Base","Vzdálenost od Base","與 Base 的距離","Distancia a la Base"],
+ dist_orbit:["Abstand zu Orbit","Distance to Orbit","Distance à Orbit","Odległość od Orbit","Vzdálenost od Orbit","與 Orbit 的距離","Distancia al Orbit"],
+ above_base:["über Base","above Base","au-dessus de Base","nad Base","nad Base","高於 Base","sobre la Base"],
  // Flug und Profil
- details:["Details","Details","Détails","Szczegóły","Podrobnosti","詳細資料"],
- x_temp:["Temperatur","Temperature","Température","Temperatura","Teplota","溫度"],
- x_grad:["Gradient","Gradient","Gradient","Gradient","Gradient","梯度"],
- y_nn:["NN","MSL","Mer","n.p.m.","n.m.","海拔"],
- y_agl:["Grund","AGL","Sol","AGL","AGL","離地"],
- nolib:["Chart.js konnte nicht geladen werden. Für das Profil ist eine Internetverbindung nötig.","Chart.js could not be loaded. The profile needs an internet connection.","Chart.js n’a pas pu être chargé. Le profil nécessite une connexion internet.","Nie udało się załadować Chart.js. Profil wymaga połączenia z internetem.","Chart.js se nepodařilo načíst. Profil potřebuje připojení k internetu.","無法載入 Chart.js，剖面圖需要網路連線。"],
- ax_temp:["Temperatur (°C)","Temperature (°C)","Température (°C)","Temperatura (°C)","Teplota (°C)","溫度（°C）"],
- ax_grad:["Gradient γ (K/100 m), positiv = Temperaturabnahme","Gradient γ (K/100 m), positive = temperature decrease","Gradient γ (K/100 m), positif = baisse de température","Gradient γ (K/100 m), dodatni = spadek temperatury","Gradient γ (K/100 m), kladný = pokles teploty","梯度 γ（K/100 m），正值＝溫度下降"],
- ax_alt_nn:["Höhe (m NN)","Altitude (m MSL)","Altitude (m, niveau de la mer)","Wysokość (m n.p.m.)","Výška (m n.m.)","高度（m，海拔）"],
- ax_alt_agl:["Höhe (m über Grund, Bezug Startplatz)","Height (m above ground, relative to launch site)","Hauteur (m au-dessus du sol, référence site de décollage)","Wysokość (m nad gruntem, względem miejsca startu)","Výška (m nad zemí, vztaženo ke startovišti)","高度（m，離地，以起飛場為基準）"],
- ds_pts:["Messpunkte","Data points","Points de mesure","Punkty pomiarowe","Měřicí body","量測點"],
- ds_prof:["Gewichtetes Profil","Weighted profile","Profil pondéré","Profil ważony","Vážený profil","加權剖面"],
- ds_adia:["Trockenadiabate durch die Bodenschicht","Dry adiabat through the surface layer","Adiabatique sèche par la couche de surface","Adiabata sucha przez warstwę przyziemną","Suchá adiabata přízemní vrstvou","通過地面層的乾絕熱線"],
- tt_pt1:["{T} °C auf {z} m NN","{T} °C at {z} m MSL","{T} °C à {z} m","{T} °C na {z} m n.p.m.","{T} °C ve {z} m n.m.","{T} °C，海拔 {z} m"],
- tt_pt2:["Alter {a}, Abstand {d} km","Age {a}, distance {d} km","Âge {a}, distance {d} km","Wiek {a}, odległość {d} km","Stáří {a}, vzdálenost {d} km","時齡 {a}，距離 {d} km"],
- tt_pt3:["Gewicht {w} (Zeit {wt} × Distanz {wd})","Weight {w} (time {wt} × distance {wd})","Poids {w} (temps {wt} × distance {wd})","Waga {w} (czas {wt} × odległość {wd})","Váha {w} (čas {wt} × vzdálenost {wd})","權重 {w}（時間 {wt} × 距離 {wd}）"],
- tt_pr2:["Gradient {g} K/100 m","Gradient {g} K/100 m","Gradient {g} K/100 m","Gradient {g} K/100 m","Gradient {g} K/100 m","梯度 {g} K/100 m"],
- tt_pr3:["Summe der Gewichte {w}","Sum of weights {w}","Somme des poids {w}","Suma wag {w}","Součet vah {w}","權重總和 {w}"],
- tt_orbit:["Orbit auf {z} m NN","Orbit at {z} m MSL","Orbit à {z} m","Orbit na {z} m n.p.m.","Orbit ve {z} m n.m.","Orbit，海拔 {z} m"],
+ details:["Details","Details","Détails","Szczegóły","Podrobnosti","詳細資料","Detalles"],
+ x_temp:["Temperatur","Temperature","Température","Temperatura","Teplota","溫度","Temperatura"],
+ x_grad:["Gradient","Gradient","Gradient","Gradient","Gradient","梯度","Gradiente"],
+ y_nn:["NN","MSL","Mer","n.p.m.","n.m.","海拔","s.n.m."],
+ y_agl:["Grund","AGL","Sol","AGL","AGL","離地","Suelo"],
+ nolib:["Chart.js konnte nicht geladen werden. Für das Profil ist eine Internetverbindung nötig.","Chart.js could not be loaded. The profile needs an internet connection.","Chart.js n’a pas pu être chargé. Le profil nécessite une connexion internet.","Nie udało się załadować Chart.js. Profil wymaga połączenia z internetem.","Chart.js se nepodařilo načíst. Profil potřebuje připojení k internetu.","無法載入 Chart.js，剖面圖需要網路連線。","No se pudo cargar Chart.js. El perfil necesita conexión a internet."],
+ ax_temp:["Temperatur (°C)","Temperature (°C)","Température (°C)","Temperatura (°C)","Teplota (°C)","溫度（°C）","Temperatura (°C)"],
+ ax_grad:["Gradient γ (K/100 m), positiv = Temperaturabnahme","Gradient γ (K/100 m), positive = temperature decrease","Gradient γ (K/100 m), positif = baisse de température","Gradient γ (K/100 m), dodatni = spadek temperatury","Gradient γ (K/100 m), kladný = pokles teploty","梯度 γ（K/100 m），正值＝溫度下降","Gradiente γ (K/100 m), positivo = descenso de temperatura"],
+ ax_alt_nn:["Höhe (m NN)","Altitude (m MSL)","Altitude (m, niveau de la mer)","Wysokość (m n.p.m.)","Výška (m n.m.)","高度（m，海拔）","Altitud (m s.n.m.)"],
+ ax_alt_agl:["Höhe (m über Grund, Bezug Startplatz)","Height (m above ground, relative to launch site)","Hauteur (m au-dessus du sol, référence site de décollage)","Wysokość (m nad gruntem, względem miejsca startu)","Výška (m nad zemí, vztaženo ke startovišti)","高度（m，離地，以起飛場為基準）","Altura (m sobre el suelo, relativa al lugar de despegue)"],
+ ds_pts:["Messpunkte","Data points","Points de mesure","Punkty pomiarowe","Měřicí body","量測點","Puntos de datos"],
+ ds_prof:["Gewichtetes Profil","Weighted profile","Profil pondéré","Profil ważony","Vážený profil","加權剖面","Perfil ponderado"],
+ ds_adia:["Trockenadiabate durch die Bodenschicht","Dry adiabat through the surface layer","Adiabatique sèche par la couche de surface","Adiabata sucha przez warstwę przyziemną","Suchá adiabata přízemní vrstvou","通過地面層的乾絕熱線","Adiabática seca a través de la capa superficial"],
+ tt_pt1:["{T} °C auf {z} m NN","{T} °C at {z} m MSL","{T} °C à {z} m","{T} °C na {z} m n.p.m.","{T} °C ve {z} m n.m.","{T} °C，海拔 {z} m","{T} °C a {z} m s.n.m."],
+ tt_pt2:["Alter {a}, Abstand {d} km","Age {a}, distance {d} km","Âge {a}, distance {d} km","Wiek {a}, odległość {d} km","Stáří {a}, vzdálenost {d} km","時齡 {a}，距離 {d} km","Antigüedad {a}, distancia {d} km"],
+ tt_pt3:["Gewicht {w} (Zeit {wt} × Distanz {wd})","Weight {w} (time {wt} × distance {wd})","Poids {w} (temps {wt} × distance {wd})","Waga {w} (czas {wt} × odległość {wd})","Váha {w} (čas {wt} × vzdálenost {wd})","權重 {w}（時間 {wt} × 距離 {wd}）","Peso {w} (tiempo {wt} × distancia {wd})"],
+ tt_pr2:["Gradient {g} K/100 m","Gradient {g} K/100 m","Gradient {g} K/100 m","Gradient {g} K/100 m","Gradient {g} K/100 m","梯度 {g} K/100 m","Gradiente {g} K/100 m"],
+ tt_pr3:["Summe der Gewichte {w}","Sum of weights {w}","Somme des poids {w}","Suma wag {w}","Součet vah {w}","權重總和 {w}","Suma de pesos {w}"],
+ tt_orbit:["Orbit auf {z} m NN","Orbit at {z} m MSL","Orbit à {z} m","Orbit na {z} m n.p.m.","Orbit ve {z} m n.m.","Orbit，海拔 {z} m","Orbit a {z} m s.n.m."],
  // Details-Blatt
- sh_title:["Schichtung und Gewichtung","Layers and weighting","Couches et pondération","Warstwy i ważenie","Vrstvy a vážení","分層與加權"],
- grad_now:["Gradient γ (K/100 m)","Gradient γ (K/100 m)","Gradient γ (K/100 m)","Gradient γ (K/100 m)","Gradient γ (K/100 m)","梯度 γ（K/100 m）"],
- mix:["Mischungsschicht","Mixing layer","Couche de mélange","Warstwa mieszania","Směšovací vrstva","混合層"],
- mix_open:["offen","open","ouverte","otwarta","otevřená","未定"],
- sh_layers:["Schichten","Layers","Couches","Warstwy","Vrstvy","分層"],
- sh_top_down:["von oben nach unten","top to bottom","de haut en bas","od góry do dołu","shora dolů","由上到下"],
- sh_quality:["Datenqualität","Data quality","Qualité des données","Jakość danych","Kvalita dat","資料品質"],
- q_sub:["{n} Messpunkte, davon {p} % gedämpft","{n} data points, {p} % of them damped","{n} points de mesure, dont {p} % atténués","{n} punktów pomiarowych, {p} % stłumionych","{n} měřicích bodů, z toho {p} % utlumených","{n} 個量測點，其中 {p}% 已降權"],
- ly_inv:["Inversion, Deckel für Thermik","Inversion, lid for thermals","Inversion, plafond des thermiques","Inwersja, pokrywa dla termiki","Inverze, strop termiky","逆溫層，熱氣流的頂蓋"],
- ly_stab:["Stabile Schicht","Stable layer","Couche stable","Warstwa stabilna","Stabilní vrstva","穩定層"],
- ly_neut:["Bedingt labil","Conditionally unstable","Conditionnellement instable","Warunkowo chwiejna","Podmíněně labilní","條件不穩定"],
- ly_labil:["Labile Schicht","Unstable layer","Couche instable","Warstwa chwiejna","Labilní vrstva","不穩定層"],
- ly_none:["Noch keine Schichten erkannt. Der Orbit muss steigen oder sinken.","No layers detected yet. The Orbit has to climb or descend.","Aucune couche détectée pour l’instant. L’Orbit doit monter ou descendre.","Brak wykrytych warstw. Orbit musi się wznosić lub opadać.","Zatím nebyly rozpoznány žádné vrstvy. Orbit musí stoupat nebo klesat.","尚未偵測到分層，Orbit 需要上升或下降。"],
- ref_nn:["NN","MSL","mer","n.p.m.","n.m.","海拔"],
- ref_agl:["über Grund","AGL","sol","nad gruntem","nad zemí","離地"],
- ly_range:["{a} bis {b} m {ref}","{a} to {b} m {ref}","{a} à {b} m {ref}","{a} do {b} m {ref}","{a} až {b} m {ref}","{a} 至 {b} m {ref}"],
- sh_read:["So liest du das Profil","How to read the profile","Lire le profil","Jak czytać profil","Jak číst profil","如何閱讀剖面"],
+ sh_title:["Schichtung und Gewichtung","Layers and weighting","Couches et pondération","Warstwy i ważenie","Vrstvy a vážení","分層與加權","Capas y ponderación"],
+ grad_now:["Gradient γ (K/100 m)","Gradient γ (K/100 m)","Gradient γ (K/100 m)","Gradient γ (K/100 m)","Gradient γ (K/100 m)","梯度 γ（K/100 m）","Gradiente γ (K/100 m)"],
+ mix:["Mischungsschicht","Mixing layer","Couche de mélange","Warstwa mieszania","Směšovací vrstva","混合層","Capa de mezcla"],
+ mix_open:["offen","open","ouverte","otwarta","otevřená","未定","abierta"],
+ sh_layers:["Schichten","Layers","Couches","Warstwy","Vrstvy","分層","Capas"],
+ sh_top_down:["von oben nach unten","top to bottom","de haut en bas","od góry do dołu","shora dolů","由上到下","de arriba abajo"],
+ sh_quality:["Datenqualität","Data quality","Qualité des données","Jakość danych","Kvalita dat","資料品質","Calidad de los datos"],
+ q_sub:["{n} Messpunkte, davon {p} % gedämpft","{n} data points, {p} % of them damped","{n} points de mesure, dont {p} % atténués","{n} punktów pomiarowych, {p} % stłumionych","{n} měřicích bodů, z toho {p} % utlumených","{n} 個量測點，其中 {p}% 已降權","{n} puntos de datos, {p} % de ellos atenuados"],
+ ly_inv:["Inversion, Deckel für Thermik","Inversion, lid for thermals","Inversion, plafond des thermiques","Inwersja, pokrywa dla termiki","Inverze, strop termiky","逆溫層，熱氣流的頂蓋","Inversión, tapa de las térmicas"],
+ ly_stab:["Stabile Schicht","Stable layer","Couche stable","Warstwa stabilna","Stabilní vrstva","穩定層","Capa estable"],
+ ly_neut:["Bedingt labil","Conditionally unstable","Conditionnellement instable","Warunkowo chwiejna","Podmíněně labilní","條件不穩定","Condicionalmente inestable"],
+ ly_labil:["Labile Schicht","Unstable layer","Couche instable","Warstwa chwiejna","Labilní vrstva","不穩定層","Capa inestable"],
+ ly_none:["Noch keine Schichten erkannt. Der Orbit muss steigen oder sinken.","No layers detected yet. The Orbit has to climb or descend.","Aucune couche détectée pour l’instant. L’Orbit doit monter ou descendre.","Brak wykrytych warstw. Orbit musi się wznosić lub opadać.","Zatím nebyly rozpoznány žádné vrstvy. Orbit musí stoupat nebo klesat.","尚未偵測到分層，Orbit 需要上升或下降。","Aún no se han detectado capas. El Orbit tiene que subir o bajar."],
+ ref_nn:["NN","MSL","mer","n.p.m.","n.m.","海拔","s.n.m."],
+ ref_agl:["über Grund","AGL","sol","nad gruntem","nad zemí","離地","sobre el suelo"],
+ ly_range:["{a} bis {b} m {ref}","{a} to {b} m {ref}","{a} à {b} m {ref}","{a} do {b} m {ref}","{a} až {b} m {ref}","{a} 至 {b} m {ref}","{a} a {b} m {ref}"],
+ sh_read:["So liest du das Profil","How to read the profile","Lire le profil","Jak czytać profil","Jak číst profil","如何閱讀剖面","Cómo leer el perfil"],
  sh_read_txt:[
   "Die grünen Linien sind Trockenadiabaten, also Linien gleicher potenzieller Temperatur θ im Abstand von 2 K. Ein aufsteigendes Luftpaket folgt ihnen. Fällt die Profilkurve nach oben schneller ab als eine grüne Linie, ist die Schicht labil und trägt Thermik. Steht sie senkrechter oder knickt nach rechts, ist sie stabil. Eine Inversion bremst das Steigen. Windfähnchen am rechten Rand: Der Schaft zeigt, woher der Wind weht. Eine ganze Fahne steht für 10 kt, eine halbe für 5 kt, ein Dreieck für 50 kt. Im Gradient-Modus zeigt die grüne Linie 0,98 K/100 m.",
   "The green lines are dry adiabats, i.e. lines of constant potential temperature θ, 2 K apart. A rising air parcel follows them. If the profile curve falls off faster with height than a green line, the layer is unstable and supports thermals. If it is more vertical or bends to the right, it is stable. An inversion stops the climb. Wind barbs on the right edge: the staff points to where the wind comes from. A full feather is 10 kt, a half feather 5 kt, a triangle 50 kt. In gradient mode the green line marks 0.98 K/100 m.",
   "Les lignes vertes sont des adiabatiques sèches, donc des lignes de température potentielle θ constante, espacées de 2 K. Une particule d’air ascendante les suit. Si la courbe du profil décroît plus vite avec l’altitude qu’une ligne verte, la couche est instable et porte des thermiques. Si elle est plus verticale ou se décale vers la droite, elle est stable. Une inversion freine la montée. Barbules de vent sur le bord droit : la hampe pointe vers la direction d’où vient le vent. Une barbe entière vaut 10 kt, une demi-barbe 5 kt, un triangle 50 kt. En mode gradient, la ligne verte marque 0,98 K/100 m.",
   "Zielone linie to adiabaty suche, czyli linie stałej temperatury potencjalnej θ co 2 K. Unosząca się cząstka powietrza podąża wzdłuż nich. Jeśli krzywa profilu spada z wysokością szybciej niż zielona linia, warstwa jest chwiejna i sprzyja termice. Jeśli jest bardziej pionowa lub odchyla się w prawo, jest stabilna. Inwersja hamuje wznoszenie. Znaczniki wiatru przy prawej krawędzi: drzewce wskazuje, skąd wieje wiatr. Pełna chorągiewka to 10 kt, połowa to 5 kt, trójkąt to 50 kt. W trybie gradientu zielona linia oznacza 0,98 K/100 m.",
   "Zelené čáry jsou suché adiabaty, tedy čáry stálé potenciální teploty θ po 2 K. Stoupající částice vzduchu je sleduje. Pokud křivka profilu s výškou klesá rychleji než zelená čára, je vrstva labilní a podporuje termiku. Je-li svislejší nebo se lomí doprava, je stabilní. Inverze stoupání brzdí. Větrné praporky na pravém okraji: žerď ukazuje, odkud vítr vane. Celý praporek značí 10 kt, půl praporku 5 kt, trojúhelník 50 kt. V režimu gradientu zelená čára značí 0,98 K/100 m.",
-  "綠色線條是乾絕熱線，也就是位溫 θ 固定的線，每隔 2 K 一條。上升的空氣塊會沿著它們移動。如果剖面曲線隨高度下降得比綠線快，該層就不穩定，有利於熱氣流。如果曲線較垂直或向右彎，則為穩定層。逆溫會阻礙上升。右側邊緣的風標：桿指向風吹來的方向。一整道羽表示 10 kt，半道羽表示 5 kt，三角旗表示 50 kt。在梯度模式下，綠線標示 0.98 K/100 m。"],
- lg_inv:["Inversion, γ unter 0","Inversion, γ below 0","Inversion, γ inférieur à 0","Inwersja, γ poniżej 0","Inverze, γ pod 0","逆溫，γ 小於 0"],
- lg_stab:["Stabil, bis {x}","Stable, up to {x}","Stable, jusqu’à {x}","Stabilna, do {x}","Stabilní, do {x}","穩定，至 {x}"],
- lg_neut:["Bedingt labil, bis {x}","Conditionally unstable, up to {x}","Conditionnellement instable, jusqu’à {x}","Warunkowo chwiejna, do {x}","Podmíněně labilní, do {x}","條件不穩定，至 {x}"],
- lg_labil:["Labil, ab {x} K/100 m","Unstable, from {x} K/100 m","Instable, à partir de {x} K/100 m","Chwiejna, od {x} K/100 m","Labilní, od {x} K/100 m","不穩定，自 {x} K/100 m 起"],
- lg_adia:["Trockenadiabaten, θ in K","Dry adiabats, θ in K","Adiabatiques sèches, θ en K","Adiabaty suche, θ w K","Suché adiabaty, θ v K","乾絕熱線，θ 單位 K"],
- lg_now:["Messpunkte jetzt","Data points now","Mesures actuelles","Bieżące pomiary","Aktuální body","目前量測點"],
- lg_prior:["Vorflug","Earlier flight","Vol précédent","Wcześniejszy lot","Dřívější let","先前飛行"],
- sh_weight:["Gewichtung der Messpunkte","Weighting of data points","Pondération des mesures","Ważenie punktów pomiarowych","Vážení měřicích bodů","量測點加權"],
+  "綠色線條是乾絕熱線，也就是位溫 θ 固定的線，每隔 2 K 一條。上升的空氣塊會沿著它們移動。如果剖面曲線隨高度下降得比綠線快，該層就不穩定，有利於熱氣流。如果曲線較垂直或向右彎，則為穩定層。逆溫會阻礙上升。右側邊緣的風標：桿指向風吹來的方向。一整道羽表示 10 kt，半道羽表示 5 kt，三角旗表示 50 kt。在梯度模式下，綠線標示 0.98 K/100 m。",
+  "Las líneas verdes son adiabáticas secas, es decir, líneas de temperatura potencial θ constante, separadas 2 K. Una burbuja de aire ascendente las sigue. Si la curva del perfil desciende con la altura más deprisa que una línea verde, la capa es inestable y favorece las térmicas. Si es más vertical o se curva hacia la derecha, es estable. Una inversión detiene el ascenso. Plumas de viento en el borde derecho: el asta señala de dónde viene el viento. Una pluma entera son 10 kt, media pluma 5 kt, un triángulo 50 kt. En el modo de gradiente, la línea verde marca 0,98 K/100 m."],
+ lg_inv:["Inversion, γ unter 0","Inversion, γ below 0","Inversion, γ inférieur à 0","Inwersja, γ poniżej 0","Inverze, γ pod 0","逆溫，γ 小於 0","Inversión, γ por debajo de 0"],
+ lg_stab:["Stabil, bis {x}","Stable, up to {x}","Stable, jusqu’à {x}","Stabilna, do {x}","Stabilní, do {x}","穩定，至 {x}","Estable, hasta {x}"],
+ lg_neut:["Bedingt labil, bis {x}","Conditionally unstable, up to {x}","Conditionnellement instable, jusqu’à {x}","Warunkowo chwiejna, do {x}","Podmíněně labilní, do {x}","條件不穩定，至 {x}","Condicionalmente inestable, hasta {x}"],
+ lg_labil:["Labil, ab {x} K/100 m","Unstable, from {x} K/100 m","Instable, à partir de {x} K/100 m","Chwiejna, od {x} K/100 m","Labilní, od {x} K/100 m","不穩定，自 {x} K/100 m 起","Inestable, desde {x} K/100 m"],
+ lg_adia:["Trockenadiabaten, θ in K","Dry adiabats, θ in K","Adiabatiques sèches, θ en K","Adiabaty suche, θ w K","Suché adiabaty, θ v K","乾絕熱線，θ 單位 K","Adiabáticas secas, θ en K"],
+ lg_now:["Messpunkte jetzt","Data points now","Mesures actuelles","Bieżące pomiary","Aktuální body","目前量測點","Puntos de datos actuales"],
+ lg_prior:["Vorflug","Earlier flight","Vol précédent","Wcześniejszy lot","Dřívější let","先前飛行","Vuelo anterior"],
+ sh_weight:["Gewichtung der Messpunkte","Weighting of data points","Pondération des mesures","Ważenie punktów pomiarowych","Vážení měřicích bodů","量測點加權","Ponderación de los puntos de datos"],
  sh_weight_txt:[
   "Gewicht w = Zeitverfall × Distanzgewicht. Zeit: exp(−Alter / τ). Distanz: volles Gewicht bis d₀ = 25 km, danach Gauß-Abfall mit Breite σ. Je blasser ein Punkt im Diagramm, desto kleiner sein Gewicht. Für den Wind gilt dieselbe Gewichtung.",
   "Weight w = time decay × distance weight. Time: exp(−age / τ). Distance: full weight up to d₀ = 25 km, then a Gaussian fall-off with width σ. The fainter a point in the chart, the smaller its weight. Wind uses the same weighting.",
   "Poids w = décroissance temporelle × poids de distance. Temps : exp(−âge / τ). Distance : poids complet jusqu’à d₀ = 25 km, puis décroissance gaussienne de largeur σ. Plus un point est pâle dans le graphique, plus son poids est faible. Le vent suit la même pondération.",
   "Waga w = zanik w czasie × waga odległości. Czas: exp(−wiek / τ). Odległość: pełna waga do d₀ = 25 km, potem spadek gaussowski o szerokości σ. Im bledszy punkt na wykresie, tym mniejsza jego waga. Wiatr ma to samo ważenie.",
   "Váha w = časový útlum × váha vzdálenosti. Čas: exp(−stáří / τ). Vzdálenost: plná váha do d₀ = 25 km, poté gaussovský pokles se šířkou σ. Čím bledší bod v grafu, tím menší jeho váha. Vítr používá stejné vážení.",
-  "權重 w = 時間衰減 × 距離權重。時間：exp(−時齡 / τ)。距離：25 km（d₀）以內為完整權重，超過後以寬度 σ 的高斯曲線遞減。圖中的點越淡，權重越小。風資料採用相同的加權。"],
- w_mode:["Darstellung","Display","Affichage","Wyświetlanie","Zobrazení","顯示方式"],
- w_on:["Gewichtet","Weighted","Pondéré","Ważone","Vážené","加權"],
- w_off:["Roh","Raw","Brut","Surowe","Surové","原始"],
- w_tau:["Zeitkonstante τ","Time constant τ","Constante de temps τ","Stała czasowa τ","Časová konstanta τ","時間常數 τ"],
- w_sigma:["Gauß-Breite σ","Gaussian width σ","Largeur gaussienne σ","Szerokość gaussowska σ","Šířka gaussovky σ","高斯寬度 σ"],
- w_thr:["Labil ab γ =","Unstable from γ =","Instable à partir de γ =","Chwiejna od γ =","Labilní od γ =","γ 達此值起為不穩定："],
- w_wind:["Wind-Darstellung","Wind display","Affichage du vent","Wyświetlanie wiatru","Zobrazení větru","風的顯示"],
- wd_barb:["Fähnchen","Barbs","Barbules","Znaczniki","Praporky","風標"],
- wd_deg:["Grad","Degrees","Degrés","Stopnie","Stupně","角度"],
- wd_off:["Aus","Off","Désactivé","Wył.","Vyp.","關"],
- w_unit:["Windeinheit","Wind unit","Unité du vent","Jednostka wiatru","Jednotka větru","風速單位"],
- w_offs:["Orbit-Abstand simulieren","Simulate Orbit distance","Simuler la distance de l’Orbit","Symuluj odległość Orbit","Simulovat vzdálenost Orbit","模擬 Orbit 距離"],
- w_offs_hint:["Neue Messpunkte entstehen in diesem Zusatzabstand zur Base. Ab 25 km werden sie gedämpft.","New data points are created at this extra distance from the Base. Beyond 25 km they are damped.","Les nouveaux points sont générés à cette distance supplémentaire de la Base. Au-delà de 25 km, ils sont atténués.","Nowe punkty powstają w tej dodatkowej odległości od Base. Powyżej 25 km są tłumione.","Nové body vznikají v této přidané vzdálenosti od Base. Nad 25 km jsou utlumeny.","新的量測點會以此額外距離產生，超過 25 km 即降權。"],
- w_time:["Zeitverfall","Time decay","Décroissance temporelle","Zanik w czasie","Časový útlum","時間衰減"],
- w_dist:["Distanzgewicht","Distance weight","Poids de distance","Waga odległości","Váha vzdálenosti","距離權重"],
- w_ff:["30 min vorspulen","Skip ahead 30 min","Avancer de 30 min","Przewiń o 30 min","Přetočit o 30 min","快轉 30 分鐘"],
- cn_now:["Aktuelle Punkte: Gewicht 1,00","Current points: weight 1.00","Points actuels : poids 1,00","Bieżące punkty: waga 1,00","Aktuální body: váha 1,00","目前量測點：權重 1.00"],
- cn_prior:["Vorflug (violett): Ø {a} min alt, w = {w}","Earlier flight (violet): Ø {a} min old, w = {w}","Vol précédent (violet) : Ø {a} min, w = {w}","Wcześniejszy lot (fiolet): śr. {a} min, w = {w}","Dřívější let (fialově): Ø {a} min, w = {w}","先前飛行（紫色）：平均 {a} 分鐘前，w = {w}"],
- cn_oldest:["Ältester Livepunkt: {a} min, w = {w}","Oldest live point: {a} min, w = {w}","Plus ancien point en direct : {a} min, w = {w}","Najstarszy punkt bieżący: {a} min, w = {w}","Nejstarší živý bod: {a} min, w = {w}","最舊的即時點：{a} 分鐘，w = {w}"],
- cn_dist:["Orbit {d} km von der Base, w = {w}","Orbit {d} km from Base, w = {w}","Orbit à {d} km de la Base, w = {w}","Orbit {d} km od Base, w = {w}","Orbit {d} km od Base, w = {w}","Orbit 距 Base {d} km，w = {w}"],
- cn_real:["Reale Distanz {d} km","Real distance {d} km","Distance réelle {d} km","Rzeczywista odległość {d} km","Skutečná vzdálenost {d} km","實際距離 {d} km"],
+  "權重 w = 時間衰減 × 距離權重。時間：exp(−時齡 / τ)。距離：25 km（d₀）以內為完整權重，超過後以寬度 σ 的高斯曲線遞減。圖中的點越淡，權重越小。風資料採用相同的加權。",
+  "Peso w = decaimiento temporal × peso por distancia. Tiempo: exp(−antigüedad / τ). Distancia: peso completo hasta d₀ = 25 km, después una caída gaussiana con anchura σ. Cuanto más tenue es un punto en el gráfico, menor es su peso. El viento usa la misma ponderación."],
+ w_mode:["Darstellung","Display","Affichage","Wyświetlanie","Zobrazení","顯示方式","Visualización"],
+ w_on:["Gewichtet","Weighted","Pondéré","Ważone","Vážené","加權","Ponderado"],
+ w_off:["Roh","Raw","Brut","Surowe","Surové","原始","Sin procesar"],
+ w_tau:["Zeitkonstante τ","Time constant τ","Constante de temps τ","Stała czasowa τ","Časová konstanta τ","時間常數 τ","Constante de tiempo τ"],
+ w_sigma:["Gauß-Breite σ","Gaussian width σ","Largeur gaussienne σ","Szerokość gaussowska σ","Šířka gaussovky σ","高斯寬度 σ","Anchura gaussiana σ"],
+ w_thr:["Labil ab γ =","Unstable from γ =","Instable à partir de γ =","Chwiejna od γ =","Labilní od γ =","γ 達此值起為不穩定：","Inestable desde γ ="],
+ w_wind:["Wind-Darstellung","Wind display","Affichage du vent","Wyświetlanie wiatru","Zobrazení větru","風的顯示","Visualización del viento"],
+ wd_barb:["Fähnchen","Barbs","Barbules","Znaczniki","Praporky","風標","Plumas"],
+ wd_deg:["Grad","Degrees","Degrés","Stopnie","Stupně","角度","Grados"],
+ wd_off:["Aus","Off","Désactivé","Wył.","Vyp.","關","Desactivado"],
+ w_unit:["Windeinheit","Wind unit","Unité du vent","Jednostka wiatru","Jednotka větru","風速單位","Unidad del viento"],
+ w_offs:["Orbit-Abstand simulieren","Simulate Orbit distance","Simuler la distance de l’Orbit","Symuluj odległość Orbit","Simulovat vzdálenost Orbit","模擬 Orbit 距離","Simular distancia del Orbit"],
+ w_offs_hint:["Neue Messpunkte entstehen in diesem Zusatzabstand zur Base. Ab 25 km werden sie gedämpft.","New data points are created at this extra distance from the Base. Beyond 25 km they are damped.","Les nouveaux points sont générés à cette distance supplémentaire de la Base. Au-delà de 25 km, ils sont atténués.","Nowe punkty powstają w tej dodatkowej odległości od Base. Powyżej 25 km są tłumione.","Nové body vznikají v této přidané vzdálenosti od Base. Nad 25 km jsou utlumeny.","新的量測點會以此額外距離產生，超過 25 km 即降權。","Los nuevos puntos de datos se crean a esta distancia adicional de la Base. Más allá de 25 km se atenúan."],
+ w_time:["Zeitverfall","Time decay","Décroissance temporelle","Zanik w czasie","Časový útlum","時間衰減","Decaimiento temporal"],
+ w_dist:["Distanzgewicht","Distance weight","Poids de distance","Waga odległości","Váha vzdálenosti","距離權重","Peso por distancia"],
+ w_ff:["30 min vorspulen","Skip ahead 30 min","Avancer de 30 min","Przewiń o 30 min","Přetočit o 30 min","快轉 30 分鐘","Avanzar 30 min"],
+ cn_now:["Aktuelle Punkte: Gewicht 1,00","Current points: weight 1.00","Points actuels : poids 1,00","Bieżące punkty: waga 1,00","Aktuální body: váha 1,00","目前量測點：權重 1.00","Puntos actuales: peso 1,00"],
+ cn_prior:["Vorflug (violett): Ø {a} min alt, w = {w}","Earlier flight (violet): Ø {a} min old, w = {w}","Vol précédent (violet) : Ø {a} min, w = {w}","Wcześniejszy lot (fiolet): śr. {a} min, w = {w}","Dřívější let (fialově): Ø {a} min, w = {w}","先前飛行（紫色）：平均 {a} 分鐘前，w = {w}","Vuelo anterior (violeta): Ø {a} min de antigüedad, w = {w}"],
+ cn_oldest:["Ältester Livepunkt: {a} min, w = {w}","Oldest live point: {a} min, w = {w}","Plus ancien point en direct : {a} min, w = {w}","Najstarszy punkt bieżący: {a} min, w = {w}","Nejstarší živý bod: {a} min, w = {w}","最舊的即時點：{a} 分鐘，w = {w}","Punto en directo más antiguo: {a} min, w = {w}"],
+ cn_dist:["Orbit {d} km von der Base, w = {w}","Orbit {d} km from Base, w = {w}","Orbit à {d} km de la Base, w = {w}","Orbit {d} km od Base, w = {w}","Orbit {d} km od Base, w = {w}","Orbit 距 Base {d} km，w = {w}","Orbit a {d} km de la Base, w = {w}"],
+ cn_real:["Reale Distanz {d} km","Real distance {d} km","Distance réelle {d} km","Rzeczywista odległość {d} km","Skutečná vzdálenost {d} km","實際距離 {d} km","Distancia real {d} km"],
  // Einstellungen
- s_lang:["Sprache","Language","Langue","Język","Jazyk","語言"],
- s_map:["Karte","Map","Carte","Mapa","Mapa","地圖"],
- m_dark:["Dunkel","Dark","Sombre","Ciemna","Tmavá","深色"],
- m_light:["Hell (Sonne)","Light (sun)","Clair (soleil)","Jasna (słońce)","Světlá (slunce)","淺色（日照）"],
- s_data:["Datenverbrauch seit App-Start","Data use since app start","Consommation de données depuis le démarrage","Zużycie danych od uruchomienia aplikacji","Spotřeba dat od spuštění aplikace","啟動後的資料用量"],
- d_none:["Der Zähler läuft ab dem zweiten Start der installierten App.","The counter starts with the second launch of the installed app.","Le compteur démarre au deuxième lancement de l’app installée.","Licznik działa od drugiego uruchomienia zainstalowanej aplikacji.","Počítadlo se spustí při druhém spuštění nainstalované aplikace.","計數器從已安裝 App 的第二次啟動開始運作。"],
- d_sub:["Karten {m}, Routen {r} KB. {p} % der Kartenkacheln kamen aus dem Zwischenspeicher.","Maps {m}, routes {r} KB. {p} % of map tiles came from the cache.","Cartes {m}, itinéraires {r} Ko. {p} % des tuiles venaient du cache.","Mapy {m}, trasy {r} KB. {p} % kafelków pochodziło z pamięci podręcznej.","Mapy {m}, trasy {r} KB. {p} % dlaždic pochází z mezipaměti.","地圖 {m}，路線 {r} KB。{p}% 的地圖圖磚來自快取。"],
- d_tiles:["Kartenkacheln: {ok} geladen, {err} Fehler. Quelle: OpenStreetMap{dark}.","Map tiles: {ok} loaded, {err} errors. Source: OpenStreetMap{dark}.","Tuiles : {ok} chargées, {err} erreurs. Source : OpenStreetMap{dark}.","Kafelki mapy: {ok} załadowano, {err} błędów. Źródło: OpenStreetMap{dark}.","Dlaždice mapy: {ok} načteno, {err} chyb. Zdroj: OpenStreetMap{dark}.","地圖圖磚：已載入 {ok}，錯誤 {err}。來源：OpenStreetMap{dark}。"],
- d_dark:[", dunkel eingefärbt",", tinted dark",", teintée en sombre",", przyciemniona",", ztmavená","，已調暗"],
- s_view:["Ansicht","View","Affichage","Widok","Zobrazení","檢視"],
- v_full:["Voll","Full","Plein","Pełny","Plný","全螢幕"],
- v_port:["Hoch","Portrait","Portrait","Pionowo","Na výšku","直向"],
- v_land:["Quer","Landscape","Paysage","Poziomo","Na šířku","橫向"],
- s_rate:["Simulationstempo","Simulation speed","Vitesse de simulation","Tempo symulacji","Rychlost simulace","模擬速度"],
- s_pilot:["Pilot Orbit","Orbit pilot","Pilote Orbit","Pilot Orbit","Pilot Orbit","Orbit 駕駛"],
- p_auto:["Auto","Auto","Auto","Auto","Auto","自動"],
- p_climb:["Steigen","Climb","Montée","Wznoszenie","Stoupání","上升"],
- p_hold:["Halten","Hold","Maintien","Utrzymanie","Držet","保持"],
- p_sink:["Sinken","Descend","Descente","Opadanie","Klesání","下降"],
- s_air:["Luftraum-Seite (Demo)","Airspace page (demo)","Page espace aérien (démo)","Strona przestrzeni powietrznej (demo)","Stránka vzdušného prostoru (demo)","空域頁面（示範）"],
- air_off:["Aus","Off","Désactivé","Wył.","Vyp.","關"],
- air_on:["Ein","On","Activé","Wł.","Zap.","開"],
- s_air_note:["Nur mit Verkehrsempfänger an Bord sinnvoll. Zeigt hier simulierte Ziele.","Only useful with a traffic receiver on board. Shows simulated targets here.","Utile seulement avec un récepteur de trafic à bord. Affiche ici des cibles simulées.","Przydatne tylko z odbiornikiem ruchu na pokładzie. Pokazuje tu symulowane cele.","Smysluplné jen s přijímačem provozu na palubě. Zde zobrazuje simulované cíle.","僅在機上有交通接收器時才有用，此處顯示模擬目標。"],
- b_pause:["Pause","Pause","Pause","Pauza","Pauza","暫停"],
- b_resume:["Fortsetzen","Resume","Reprendre","Wznów","Pokračovat","繼續"],
- b_hunter:["Konfliktziel erzeugen","Create conflict target","Créer une cible en conflit","Utwórz cel kolizyjny","Vytvořit konfliktní cíl","建立衝突目標"],
- b_o2:["Orbit 2 jetzt starten","Start Orbit 2 now","Lancer Orbit 2 maintenant","Uruchom Orbit 2 teraz","Spustit Orbit 2 hned","立即啟動 Orbit 2"],
- b_clear:["Speicher leeren und neu laden","Clear cache and reload","Vider le cache et recharger","Wyczyść pamięć i przeładuj","Vymazat mezipaměť a znovu načíst","清除快取並重新載入"],
- ver:["Version","Version","Version","Wersja","Verze","版本"],
- b_reset:["Neustart","Restart","Redémarrer","Uruchom ponownie","Restart","重新開始"],
+ s_lang:["Sprache","Language","Langue","Język","Jazyk","語言","Idioma"],
+ s_map:["Karte","Map","Carte","Mapa","Mapa","地圖","Mapa"],
+ m_dark:["Dunkel","Dark","Sombre","Ciemna","Tmavá","深色","Oscuro"],
+ m_light:["Hell (Sonne)","Light (sun)","Clair (soleil)","Jasna (słońce)","Světlá (slunce)","淺色（日照）","Claro (sol)"],
+ s_data:["Datenverbrauch seit App-Start","Data use since app start","Consommation de données depuis le démarrage","Zużycie danych od uruchomienia aplikacji","Spotřeba dat od spuštění aplikace","啟動後的資料用量","Uso de datos desde el inicio de la app"],
+ d_none:["Der Zähler läuft ab dem zweiten Start der installierten App.","The counter starts with the second launch of the installed app.","Le compteur démarre au deuxième lancement de l’app installée.","Licznik działa od drugiego uruchomienia zainstalowanej aplikacji.","Počítadlo se spustí při druhém spuštění nainstalované aplikace.","計數器從已安裝 App 的第二次啟動開始運作。","El contador empieza con el segundo arranque de la app instalada."],
+ d_sub:["Karten {m}, Routen {r} KB. {p} % der Kartenkacheln kamen aus dem Zwischenspeicher.","Maps {m}, routes {r} KB. {p} % of map tiles came from the cache.","Cartes {m}, itinéraires {r} Ko. {p} % des tuiles venaient du cache.","Mapy {m}, trasy {r} KB. {p} % kafelków pochodziło z pamięci podręcznej.","Mapy {m}, trasy {r} KB. {p} % dlaždic pochází z mezipaměti.","地圖 {m}，路線 {r} KB。{p}% 的地圖圖磚來自快取。","Mapas {m}, rutas {r} KB. El {p} % de las teselas del mapa procedía de la caché."],
+ d_tiles:["Kartenkacheln: {ok} geladen, {err} Fehler. Quelle: OpenStreetMap{dark}.","Map tiles: {ok} loaded, {err} errors. Source: OpenStreetMap{dark}.","Tuiles : {ok} chargées, {err} erreurs. Source : OpenStreetMap{dark}.","Kafelki mapy: {ok} załadowano, {err} błędów. Źródło: OpenStreetMap{dark}.","Dlaždice mapy: {ok} načteno, {err} chyb. Zdroj: OpenStreetMap{dark}.","地圖圖磚：已載入 {ok}，錯誤 {err}。來源：OpenStreetMap{dark}。","Teselas de mapa: {ok} cargadas, {err} errores. Fuente: OpenStreetMap{dark}."],
+ d_dark:[", dunkel eingefärbt",", tinted dark",", teintée en sombre",", przyciemniona",", ztmavená","，已調暗",", tintado oscuro"],
+ s_view:["Ansicht","View","Affichage","Widok","Zobrazení","檢視","Vista"],
+ v_full:["Voll","Full","Plein","Pełny","Plný","全螢幕","Completa"],
+ v_port:["Hoch","Portrait","Portrait","Pionowo","Na výšku","直向","Vertical"],
+ v_land:["Quer","Landscape","Paysage","Poziomo","Na šířku","橫向","Horizontal"],
+ s_rate:["Simulationstempo","Simulation speed","Vitesse de simulation","Tempo symulacji","Rychlost simulace","模擬速度","Velocidad de simulación"],
+ s_pilot:["Pilot Orbit","Orbit pilot","Pilote Orbit","Pilot Orbit","Pilot Orbit","Orbit 駕駛","Piloto del Orbit"],
+ p_auto:["Auto","Auto","Auto","Auto","Auto","自動","Auto"],
+ p_climb:["Steigen","Climb","Montée","Wznoszenie","Stoupání","上升","Subir"],
+ p_hold:["Halten","Hold","Maintien","Utrzymanie","Držet","保持","Mantener"],
+ p_sink:["Sinken","Descend","Descente","Opadanie","Klesání","下降","Descender"],
+ s_air:["Luftraum-Seite (Demo)","Airspace page (demo)","Page espace aérien (démo)","Strona przestrzeni powietrznej (demo)","Stránka vzdušného prostoru (demo)","空域頁面（示範）","Página de espacio aéreo (demo)"],
+ air_off:["Aus","Off","Désactivé","Wył.","Vyp.","關","No"],
+ air_on:["Ein","On","Activé","Wł.","Zap.","開","Sí"],
+ s_air_note:["Nur mit Verkehrsempfänger an Bord sinnvoll. Zeigt hier simulierte Ziele.","Only useful with a traffic receiver on board. Shows simulated targets here.","Utile seulement avec un récepteur de trafic à bord. Affiche ici des cibles simulées.","Przydatne tylko z odbiornikiem ruchu na pokładzie. Pokazuje tu symulowane cele.","Smysluplné jen s přijímačem provozu na palubě. Zde zobrazuje simulované cíle.","僅在機上有交通接收器時才有用，此處顯示模擬目標。","Solo útil con un receptor de tráfico a bordo. Aquí muestra objetivos simulados."],
+ b_pause:["Pause","Pause","Pause","Pauza","Pauza","暫停","Pausa"],
+ b_resume:["Fortsetzen","Resume","Reprendre","Wznów","Pokračovat","繼續","Continuar"],
+ b_hunter:["Konfliktziel erzeugen","Create conflict target","Créer une cible en conflit","Utwórz cel kolizyjny","Vytvořit konfliktní cíl","建立衝突目標","Crear objetivo en conflicto"],
+ b_o2:["Orbit 2 jetzt starten","Start Orbit 2 now","Lancer Orbit 2 maintenant","Uruchom Orbit 2 teraz","Spustit Orbit 2 hned","立即啟動 Orbit 2","Iniciar Orbit 2 ahora"],
+ b_clear:["Speicher leeren und neu laden","Clear cache and reload","Vider le cache et recharger","Wyczyść pamięć i przeładuj","Vymazat mezipaměť a znovu načíst","清除快取並重新載入","Borrar caché y recargar"],
+ ver:["Version","Version","Version","Wersja","Verze","版本","Versión"],
+ b_reset:["Neustart","Restart","Redémarrer","Uruchom ponownie","Restart","重新開始","Reiniciar"],
  // Hinweise
- toast_ready:["Orbit steht am Startplatz bereit","Orbit is ready at the launch site","L’Orbit est prêt sur le site de départ","Orbit czeka na miejscu startu","Orbit je připraven na místě startu","Orbit 已在起飛地點就緒"],
- toast_o1:["Orbit gestartet, Aufstieg läuft","Orbit launched, climb in progress","Orbit décollé, montée en cours","Orbit wystartował, trwa wznoszenie","Orbit odstartoval, probíhá stoupání","Orbit 已起飛，正在爬升"],
- toast_o2:["Orbit 2 gestartet, befreundeter Ballon","Orbit 2 launched, friend's balloon","Orbit 2 décollé, ballon d’un ami","Orbit 2 wystartował, balon znajomego","Orbit 2 odstartoval, balon přítele","Orbit 2 已起飛，朋友的熱氣球"],
- toast_cleared:["Zwischenspeicher geleert, App lädt neu","Cache cleared, reloading","Cache vidé, rechargement en cours","Pamięć wyczyszczona, przeładowuję","Mezipaměť vymazána, načítám znovu","快取已清除，正在重新載入"],
- toast_newver:["Neue Version geladen. Beim nächsten Start ist sie aktiv.","New version downloaded. It will be active at the next start.","Nouvelle version chargée. Elle sera active au prochain démarrage.","Pobrano nową wersję. Będzie aktywna po następnym uruchomieniu.","Nová verze je stažena. Aktivuje se při dalším spuštění.","已下載新版本，下次啟動時生效。"],
- toast_nocache:["Zwischenspeicher nicht verfügbar","Cache not available","Cache indisponible","Pamięć podręczna niedostępna","Mezipaměť není dostupná","快取無法使用"],
- net_err:["Es werden keine Kartenkacheln geladen ({n} Fehler). Mögliche Ursachen: kein Empfang, Werbeblocker, Datenschutz-Erweiterung oder gesperrtes Firmen-WLAN.","No map tiles are loading ({n} errors). Possible causes: no reception, ad blocker, privacy extension or a blocked company Wi-Fi.","Aucune tuile ne se charge ({n} erreurs). Causes possibles : pas de réseau, bloqueur de publicités, extension de confidentialité ou Wi-Fi d’entreprise bloqué.","Kafelki mapy się nie ładują ({n} błędów). Możliwe przyczyny: brak zasięgu, blokada reklam, rozszerzenie prywatności lub zablokowane firmowe Wi-Fi.","Dlaždice mapy se nenačítají ({n} chyb). Možné příčiny: žádný signál, blokování reklam, rozšíření pro soukromí nebo blokovaná firemní Wi-Fi.","地圖圖磚無法載入（{n} 個錯誤）。可能原因：沒有訊號、廣告攔截器、隱私權擴充功能或受限的公司 Wi-Fi。"],
+ toast_ready:["Orbit steht am Startplatz bereit","Orbit is ready at the launch site","L’Orbit est prêt sur le site de départ","Orbit czeka na miejscu startu","Orbit je připraven na místě startu","Orbit 已在起飛地點就緒","El Orbit está listo en el lugar de despegue"],
+ toast_o1:["Orbit gestartet, Aufstieg läuft","Orbit launched, climb in progress","Orbit décollé, montée en cours","Orbit wystartował, trwa wznoszenie","Orbit odstartoval, probíhá stoupání","Orbit 已起飛，正在爬升","Orbit lanzado, ascenso en curso"],
+ toast_o2:["Orbit 2 gestartet, befreundeter Ballon","Orbit 2 launched, friend's balloon","Orbit 2 décollé, ballon d’un ami","Orbit 2 wystartował, balon znajomego","Orbit 2 odstartoval, balon přítele","Orbit 2 已起飛，朋友的熱氣球","Orbit 2 lanzado, globo de un amigo"],
+ toast_cleared:["Zwischenspeicher geleert, App lädt neu","Cache cleared, reloading","Cache vidé, rechargement en cours","Pamięć wyczyszczona, przeładowuję","Mezipaměť vymazána, načítám znovu","快取已清除，正在重新載入","Caché borrada, recargando"],
+ toast_newver:["Neue Version geladen. Beim nächsten Start ist sie aktiv.","New version downloaded. It will be active at the next start.","Nouvelle version chargée. Elle sera active au prochain démarrage.","Pobrano nową wersję. Będzie aktywna po następnym uruchomieniu.","Nová verze je stažena. Aktivuje se při dalším spuštění.","已下載新版本，下次啟動時生效。","Nueva versión descargada. Se activará en el próximo inicio."],
+ toast_nocache:["Zwischenspeicher nicht verfügbar","Cache not available","Cache indisponible","Pamięć podręczna niedostępna","Mezipaměť není dostupná","快取無法使用","Caché no disponible"],
+ net_err:["Es werden keine Kartenkacheln geladen ({n} Fehler). Mögliche Ursachen: kein Empfang, Werbeblocker, Datenschutz-Erweiterung oder gesperrtes Firmen-WLAN.","No map tiles are loading ({n} errors). Possible causes: no reception, ad blocker, privacy extension or a blocked company Wi-Fi.","Aucune tuile ne se charge ({n} erreurs). Causes possibles : pas de réseau, bloqueur de publicités, extension de confidentialité ou Wi-Fi d’entreprise bloqué.","Kafelki mapy się nie ładują ({n} błędów). Możliwe przyczyny: brak zasięgu, blokada reklam, rozszerzenie prywatności lub zablokowane firmowe Wi-Fi.","Dlaždice mapy se nenačítají ({n} chyb). Možné příčiny: žádný signál, blokování reklam, rozšíření pro soukromí nebo blokovaná firemní Wi-Fi.","地圖圖磚無法載入（{n} 個錯誤）。可能原因：沒有訊號、廣告攔截器、隱私權擴充功能或受限的公司 Wi-Fi。","No se cargan teselas del mapa ({n} errores). Posibles causas: sin cobertura, bloqueador de anuncios, extensión de privacidad o una wifi de empresa bloqueada."],
  // Luftraum (Demo)
- a_hdr:["OGN, simulierte Ziele","OGN, simulated targets","OGN, cibles simulées","OGN, cele symulowane","OGN, simulované cíle","OGN，模擬目標"],
- a_clear:["Luftraum frei, kein Konflikt absehbar","Airspace clear, no conflict expected","Espace aérien dégagé, aucun conflit prévu","Przestrzeń wolna, brak przewidywanego konfliktu","Vzdušný prostor volný, žádný konflikt nehrozí","空域暢通，預期無衝突"],
- a_warn:["Kollisionswarnung: {id}, {d}, {dh}, Annäherung in {s} s","Collision warning: {id}, {d}, {dh}, closing in {s} s","Alerte collision : {id}, {d}, {dh}, rapprochement dans {s} s","Ostrzeżenie o kolizji: {id}, {d}, {dh}, zbliżenie za {s} s","Varování před srážkou: {id}, {d}, {dh}, přiblížení za {s} s","碰撞警告：{id}，{d}，{dh}，{s} 秒後最接近"],
- a_hint:["Verkehrshinweis: {id} kreuzt in {d} Abstand","Traffic advisory: {id} passes at {d} distance","Avis de trafic : {id} passe à {d}","Informacja o ruchu: {id} minie w odległości {d}","Provozní upozornění: {id} se mine ve vzdálenosti {d}","交通提示：{id} 將於 {d} 距離處交會"],
- a_count1:["1 Ziel im Umkreis von {r} km","1 target within {r} km","1 cible dans un rayon de {r} km","1 cel w promieniu {r} km","1 cíl v okruhu {r} km","{r} km 內有 1 個目標"],
- a_count:["{n} Ziele im Umkreis von {r} km","{n} targets within {r} km","{n} cibles dans un rayon de {r} km","{n} celów w promieniu {r} km","{n} cílů v okruhu {r} km","{r} km 內有 {n} 個目標"],
- a_none:["Keine Ziele in diesem Umkreis. Größeren Radius wählen.","No targets in this radius. Choose a larger radius.","Aucune cible dans ce rayon. Choisissez un rayon plus grand.","Brak celów w tym promieniu. Wybierz większy promień.","V tomto okruhu nejsou žádné cíle. Zvolte větší okruh.","此範圍內沒有目標，請選擇較大的半徑。"],
- ty_glider:["Segelflieger","Glider","Planeur","Szybowiec","Kluzák","滑翔機"],
- ty_motor:["Motorsegler","Motor glider","Motoplaneur","Motoszybowiec","Motorový kluzák","動力滑翔機"],
- ty_tow:["Schleppflugzeug","Tow plane","Avion remorqueur","Samolot holowniczy","Vlečné letadlo","拖曳機"],
- ty_balloon:["Ballon","Balloon","Montgolfière","Balon","Balon","熱氣球"],
- ty_friend:["Befreundeter Ballon","Friend's balloon","Ballon d’un ami","Balon znajomego","Balon přítele","朋友的熱氣球"],
- ty_unk:["FLARM, unbekannt","FLARM, unknown","FLARM, inconnu","FLARM, nieznany","FLARM, neznámý","FLARM，未知"],
- fl_alert:["Verkehr: {id} in {d}, {dh}","Traffic: {id} at {d}, {dh}","Trafic : {id} à {d}, {dh}","Ruch: {id} w odległości {d}, {dh}","Provoz: {id} ve vzdálenosti {d}, {dh}","交通：{id}，距離 {d}，{dh}"]
+ a_hdr:["OGN, simulierte Ziele","OGN, simulated targets","OGN, cibles simulées","OGN, cele symulowane","OGN, simulované cíle","OGN，模擬目標","OGN, objetivos simulados"],
+ a_clear:["Luftraum frei, kein Konflikt absehbar","Airspace clear, no conflict expected","Espace aérien dégagé, aucun conflit prévu","Przestrzeń wolna, brak przewidywanego konfliktu","Vzdušný prostor volný, žádný konflikt nehrozí","空域暢通，預期無衝突","Espacio aéreo despejado, sin conflicto previsto"],
+ a_warn:["Kollisionswarnung: {id}, {d}, {dh}, Annäherung in {s} s","Collision warning: {id}, {d}, {dh}, closing in {s} s","Alerte collision : {id}, {d}, {dh}, rapprochement dans {s} s","Ostrzeżenie o kolizji: {id}, {d}, {dh}, zbliżenie za {s} s","Varování před srážkou: {id}, {d}, {dh}, přiblížení za {s} s","碰撞警告：{id}，{d}，{dh}，{s} 秒後最接近","Alerta de colisión: {id}, {d}, {dh}, aproximándose en {s} s"],
+ a_hint:["Verkehrshinweis: {id} kreuzt in {d} Abstand","Traffic advisory: {id} passes at {d} distance","Avis de trafic : {id} passe à {d}","Informacja o ruchu: {id} minie w odległości {d}","Provozní upozornění: {id} se mine ve vzdálenosti {d}","交通提示：{id} 將於 {d} 距離處交會","Aviso de tráfico: {id} pasa a {d} de distancia"],
+ a_count1:["1 Ziel im Umkreis von {r} km","1 target within {r} km","1 cible dans un rayon de {r} km","1 cel w promieniu {r} km","1 cíl v okruhu {r} km","{r} km 內有 1 個目標","1 objetivo en {r} km"],
+ a_count:["{n} Ziele im Umkreis von {r} km","{n} targets within {r} km","{n} cibles dans un rayon de {r} km","{n} celów w promieniu {r} km","{n} cílů v okruhu {r} km","{r} km 內有 {n} 個目標","{n} objetivos en {r} km"],
+ a_none:["Keine Ziele in diesem Umkreis. Größeren Radius wählen.","No targets in this radius. Choose a larger radius.","Aucune cible dans ce rayon. Choisissez un rayon plus grand.","Brak celów w tym promieniu. Wybierz większy promień.","V tomto okruhu nejsou žádné cíle. Zvolte větší okruh.","此範圍內沒有目標，請選擇較大的半徑。","No hay objetivos en este radio. Elige un radio mayor."],
+ ty_glider:["Segelflieger","Glider","Planeur","Szybowiec","Kluzák","滑翔機","Planeador"],
+ ty_motor:["Motorsegler","Motor glider","Motoplaneur","Motoszybowiec","Motorový kluzák","動力滑翔機","Motoplaneador"],
+ ty_tow:["Schleppflugzeug","Tow plane","Avion remorqueur","Samolot holowniczy","Vlečné letadlo","拖曳機","Avión remolcador"],
+ ty_balloon:["Ballon","Balloon","Montgolfière","Balon","Balon","熱氣球","Globo"],
+ ty_friend:["Befreundeter Ballon","Friend's balloon","Ballon d’un ami","Balon znajomego","Balon přítele","朋友的熱氣球","Globo de un amigo"],
+ ty_unk:["FLARM, unbekannt","FLARM, unknown","FLARM, inconnu","FLARM, nieznany","FLARM, neznámý","FLARM，未知","FLARM, desconocido"],
+ fl_alert:["Verkehr: {id} in {d}, {dh}","Traffic: {id} at {d}, {dh}","Trafic : {id} à {d}, {dh}","Ruch: {id} w odległości {d}, {dh}","Provoz: {id} ve vzdálenosti {d}, {dh}","交通：{id}，距離 {d}，{dh}","Tráfico: {id} a {d}, {dh}"]
 };
 function tr(k,p){
   const e=TX[k]; let s=e ? (e[LI[S.lang]]||e[0]) : k;
@@ -669,7 +694,7 @@ function applyLang(){
   document.querySelectorAll('[data-i]').forEach(e=>{ e.textContent=tr(e.dataset.i); });
   document.querySelectorAll('[data-it]').forEach(e=>{ e.title=tr(e.dataset.it); });
   document.querySelectorAll('[data-ia]').forEach(e=>{ e.setAttribute('aria-label',tr(e.dataset.ia)); });
-  document.querySelectorAll('#lang-sel .lbtn').forEach(b=>{ const on=b.dataset.c===S.lang; b.classList.toggle('on',on); b.setAttribute('aria-checked',on?'true':'false'); });
+  if(typeof markLang==='function') markLang();
 }
 
 const O = (()=>{ try{ const s=JSON.parse(localStorage.getItem('bt-start')||'null'); if(s && isFinite(s.lat) && isFinite(s.lon)) return {lat:s.lat,lon:s.lon}; }catch(e){} return {lat:51.62458, lon:12.29456}; })();   // Ballonstartplatz Bitterfeld, Richard-Schütze-Str. 1 (Quelle: Ballonsport im Bitterfelder VfL e.V.)
@@ -709,7 +734,7 @@ const DATA = {tileBytes:0, tileNet:0, tileHit:0, routeBytes:0, routeN:0, sw:fals
 
 /* ---------------- Meteorologie: Atmosphärenmodell, Gewichtung, Schichtung ---------------- */
 const ATM_T0 = 7200;   // Flugbeginn 2 h nach Sonnenaufgang
-const MET_MIN_W = 0.05, MET_MAX_AGE_S = 86400, WIND_MIN_AGL = 20, MODEL_TAU_MIN = 180, MODEL_W0 = 0.5;   // Modellprofil: eigene Zeitkonstante und Anfangsgewicht (Vorschlag, OP-28)   // MET-16 und Windregel: Mindestgewicht, Höchstalter 24 h, Wind nur ab 20 m über Grund
+const MET_MIN_W = 0.05, MET_MAX_AGE_S = 86400, WIND_MIN_AGL = 20, MODEL_TAU_MIN = 180, MODEL_W0 = 0.5, MODEL_SIGMA_KM = 200;   // Modellprofil: eigene Zeitkonstante und Anfangsgewicht (Vorschlag, OP-28)   // MET-16 und Windregel: Mindestgewicht, Höchstalter 24 h, Wind nur ab 20 m über Grund
 const MET_DEFAULT = {tau:60, sigma:15, d0:25};                          // MET-15: Standardwerte der Gewichtung
 const MET = {x:'T',y:'nn',weighted:true,tau:60,sigma:15,d0:25,thr:0.9,distOffset:0,R:null,last:0,wind:'barb',unit:'kt'};
 const CAT = {inv:{c:'#5aa9ff',n:'Inversion'},stab:{c:'#4fd1a5',n:'Stabil'},neut:{c:'#ffc83d',n:'Bedingt labil'},labil:{c:'#ff5d5d',n:'Labil'}};
@@ -753,12 +778,12 @@ function metCompute(){
   const bs=25, now=S.t, bins=new Map(); let nDamp=0;
   for(let i=S.met.length-1;i>=0;i--){                       // MET-16: zu alte oder zu leichte Punkte verwerfen
     const m0=S.met[i], age=now-m0.t;
-    const wp=MET.weighted ? Math.exp(-age/((m0.src==='model'?MODEL_TAU_MIN:MET.tau)*60))*(m0.w0||1)*((m0.d>MET.d0)?Math.exp(-Math.pow(m0.d-MET.d0,2)/(2*MET.sigma*MET.sigma)):1) : 1;
+    const wp=MET.weighted ? Math.exp(-age/((m0.tauM||MET.tau)*60))*(m0.w0||1)*((m0.d>MET.d0)?Math.exp(-Math.pow(m0.d-MET.d0,2)/(2*(m0.sigM||MET.sigma)*(m0.sigM||MET.sigma))):1) : 1;
     if(age>MET_MAX_AGE_S || wp<MET_MIN_W) S.met.splice(i,1);
   }
   for(const m of S.met){
-    m.wt = MET.weighted ? Math.exp(-(now-m.t)/((m.src==='model'?MODEL_TAU_MIN:MET.tau)*60)) : 1;
-    m.wd = (MET.weighted && m.d>MET.d0) ? Math.exp(-Math.pow(m.d-MET.d0,2)/(2*MET.sigma*MET.sigma)) : 1;
+    m.wt = MET.weighted ? Math.exp(-(now-m.t)/((m.tauM||MET.tau)*60)) : 1;
+    m.wd = (MET.weighted && m.d>MET.d0) ? Math.exp(-Math.pow(m.d-MET.d0,2)/(2*(m.sigM||MET.sigma)*(m.sigM||MET.sigma))) : 1;
     m.w = m.wt*m.wd*(MET.weighted?(m.w0||1):1); if(m.w<0.5) nDamp++;
     const k=Math.floor(m.alt/bs); let b=bins.get(k); if(!b){ b={k,sw:0,swT:0,sww:0,swu:0,swv:0}; bins.set(k,b); }
     b.sw+=m.w; b.swT+=m.w*m.T;
@@ -847,6 +872,7 @@ function driveCar(R,car,orb,dt){   // folgt der Straßenroute; ohne Netz Luftlin
 }
 
 /* ---------------- Simulation: Startsequenz Orbit, dann Orbit 2 ---------------- */
+const DEMO_CEIL_M = 5000;   // Obergrenze der Demo in m NN
 const LAUNCH1 = 20, LAUNCH2 = 150;   // Startzeitpunkte in Sekunden Simulationszeit
 let lastSample = -1;
 function stepBalloon(o,dt,tt,mode){
@@ -857,7 +883,7 @@ function stepBalloon(o,dt,tt,mode){
   else if(mode==='sink') vt = -2.6 + 0.4*Math.sin(tt/6);
   else vt = 1.7*Math.sin(tt/150) + 0.9*Math.sin(tt/41+1) + 0.35*Math.sin(tt/9);
   if(agl<120) vt = Math.max(vt,2.0);      // Bodenabstand halten
-  if(o.alt>1450) vt = Math.min(vt,-2);    // Obergrenze
+  if(o.alt>DEMO_CEIL_M) vt = Math.min(vt,-2);    // Obergrenze der Demo
   o.vario += (vt-o.vario)*(1-Math.exp(-dt/6));
   o.alt += o.vario*dt;
   const [we,wn] = wind(o.alt), k = 1-Math.exp(-dt/20);
@@ -902,7 +928,7 @@ function sample(){
   S.btrack.push([b.e,b.n]); if(S.btrack.length>500) S.btrack.shift();
   if(S.o2.active){ S.o2.track.push([S.o2.e,S.o2.n]); if(S.o2.track.length>1200) S.o2.track.shift(); }
   S.hist.push({t:S.t,alt:o.alt,agl:o.alt-g,g,v:o.vario}); if(S.hist.length>720) S.hist.shift();
-  S.met.push(metSample(S.t,o.alt,g,Math.hypot(o.e-b.e,o.n-b.n)/1000+MET.distOffset,'live',o.ve,o.vn)); if(S.met.length>3000) S.met.shift();
+  S.met.push(metSample(S.t,o.alt,g,Math.hypot(o.e-b.e,o.n-b.n)/1000+MET.distOffset,'live',o.ve,o.vn)); if(S.met.length>3000){ const k0=S.met.findIndex(q=>q.src==='live'); S.met.splice(k0>=0?k0:0,1); }
 }
 
 /* ---------------- OGN-Ziele (simuliert) ---------------- */
@@ -1345,7 +1371,7 @@ function buildLegend(){
     `<span><i style="background:${CAT.labil.c}"></i>${tr('lg_labil',{x:th})}</span>`+
     `<span><i style="background:#5fe3a1;height:2px;border-radius:0"></i>${tr('lg_adia')}</span>`+
     `<span><i style="background:#9fe3ff;border-radius:50%"></i>${tr('lg_now')}</span>`+
-    `<span><i style="background:#c9b8ff;border-radius:50%"></i>${tr('lg_prior')}</span>`+`<span><i style="background:#5eead4;border-radius:50%"></i>${tr('lg_model')}</span>`;
+    `<span><i style="background:#c9b8ff;border-radius:50%"></i>${tr('lg_prior')}</span>`+`<span><i style="background:#5eead4;border-radius:50%"></i>${tr('lg_model')}</span>`+(window.ASSUMED?`<span><i style="background:#94a3b8;border-radius:50%"></i>${tr('lg_assume')}</span>`:'');
 }
 function drawCurve(cv,fn,xmax,unit,marks){
   const r=cv.getBoundingClientRect(), dpr=window.devicePixelRatio||1, W=Math.round(r.width), H=Math.round(r.height); if(!W||!H) return;
@@ -1393,7 +1419,7 @@ function updMeteo(force){
   D[0].label=tr('ds_pts'); D[1].label=tr('ds_adia'); D[2].label=tr('ds_prof');
   const pts=[],cols=[],rad2=[];
   if(!gm) for(let i=0;i<n;i+=stride){ const m=S.met[i], al=(0.07+0.93*Math.pow(m.w,0.7)).toFixed(2);
-    pts.push({x:m.T,y:ys(m.alt),m}); cols.push(m.src==='prior'?`rgba(201,184,255,${al})`:m.src==='model'?`rgba(94,234,212,${al})`:`rgba(159,227,255,${al})`); rad2.push(2+2*m.w); }
+    pts.push({x:m.T,y:ys(m.alt),m}); cols.push(m.src==='prior'?`rgba(201,184,255,${al})`:m.src==='model'?`rgba(94,234,212,${al})`:m.src==='assume'?`rgba(148,163,184,${al})`:`rgba(159,227,255,${al})`); rad2.push(2+2*m.w); }
   D[0].data=pts; D[0].backgroundColor=cols; D[0].pointRadius=rad2;
   const pp=R.prof.filter(p=>gm?p.g!=null:true);
   D[2].data=pp.map(p=>({x:gm?p.g:p.T,y:ys(p.z),p})); metLineCol=pp.map(p=>p.cat?CAT[p.cat].c:'#9aabc4');
@@ -1524,7 +1550,7 @@ $('btn-clear').addEventListener('click',async()=>{   // alles verwerfen und neu 
 const BUILD = '2026-10-07.9';
 
 // ---- Startprofil aus Modelldaten (MET-13): Open-Meteo, Temperatur und Wind auf Druckflächen für den Startplatz
-const MODEL = { levels:[1000,975,950,925,900,850,800,700], maxAgeH:6, stepM:25 };
+const MODEL = { levels:[1000,975,950,925,900,850,800,700,600,500,400,300], maxAgeH:6, stepM:25 };   // bis 300 hPa (rund 9000 m), damit auch Flüge bis 8000 m eine Windannahme haben
 function modelUrl(lat,lon){
   const h=['temperature_2m','wind_speed_10m','wind_direction_10m'];
   MODEL.levels.forEach(L=>['temperature','wind_speed','wind_direction','geopotential_height'].forEach(v=>h.push(v+'_'+L+'hPa')));
@@ -1541,7 +1567,7 @@ function modelParse(j,nowMs){
     MODEL.levels.forEach(L=>{ const z=g('geopotential_height_'+L+'hPa'), T=g('temperature_'+L+'hPa'), s=g('wind_speed_'+L+'hPa'), d=g('wind_direction_'+L+'hPa');
       if(z!=null&&T!=null&&s!=null&&d!=null&&z>elev+40){ const [u,v]=windUV(s,d); rows.push({z,T,u,v}); } });   // Flächen unter dem Boden weglassen
     rows.sort((a,b)=>a.z-b.z);
-    return rows.length>=3 ? {valid:tt[k],elev,rows} : null;
+    return rows.length>=3 ? {valid:tt[k],elev,rows,lat:+j.latitude,lon:+j.longitude} : null;
   }catch(e){ return null; }
 }
 function modelPoints(m,nowMs){
@@ -1549,30 +1575,70 @@ function modelPoints(m,nowMs){
   for(let z=r[0].z; z<=top; z+=MODEL.stepM){
     let i=0; while(i<r.length-2 && r[i+1].z<z) i++;
     const a=r[i], b=r[i+1], f=b.z===a.z?0:(z-a.z)/(b.z-a.z), agl=z-m.elev, alt=GREF+agl;
-    pts.push({t:S.t-age,alt,g:GREF,d:0,src:'model',T:a.T+(b.T-a.T)*f,p:pAt(alt),rh:60,w:1,wt:1,wd:1,ve:a.u+(b.u-a.u)*f,vn:a.v+(b.v-a.v)*f,wo:agl>WIND_MIN_AGL,w0:MODEL_W0});
+    pts.push({t:S.t-age,alt,g:GREF,d:m.dkm||0,tauM:MODEL_TAU_MIN,sigM:MODEL_SIGMA_KM,src:'model',T:a.T+(b.T-a.T)*f,p:pAt(alt),rh:60,w:1,wt:1,wd:1,ve:a.u+(b.u-a.u)*f,vn:a.v+(b.v-a.v)*f,wo:agl>WIND_MIN_AGL,w0:MODEL_W0});
   }
   return pts;
+}
+// Referenz der ersten Daten unter dem Profil: Ortsname, Abstand und Richtung vom Start, Uhrzeit (dezent, aber sichtbar)
+const MODEL_MAX_KM = 500;      // liegen die Daten weiter weg, gelten sie als nicht verfügbar
+let MODELREF=null;
+const distKm=(lat,lon)=>Math.hypot((lat-O.lat)*111.32,(lon-O.lon)*111.32*Math.cos(O.lat*Math.PI/180));
+const bearingIdx=(lat,lon)=>{ const dy=lat-O.lat, dx=(lon-O.lon)*Math.cos(O.lat*Math.PI/180); return Math.round(((Math.atan2(dx,dy)*180/Math.PI+360)%360)/45)%8; };
+function updProfRef(){
+  const el=$('prof-ref'); if(!el) return;
+  if(!MODELREF){ el.textContent=window.NOMODEL?tr('pr_none'):''; return; }
+  const m=MODELREF, ns=m.lat>=0?'N':'S', ew=m.lon>=0?'E':'W';
+  const t=new Date(m.valid).toISOString().slice(11,16), l=new Date(m.valid).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  if((S.t-m.t0)>=3600){ el.textContent=tr('pr_ref0',{t,l}); return; }       // nach einer Stunde verschwindet der Ort
+  const dk=Math.round(m.dkm), cmp=tr('cmp').split(',')[bearingIdx(m.lat,m.lon)];
+  const nm=m.place||(Math.abs(m.lat).toFixed(2)+'° '+ns+' '+Math.abs(m.lon).toFixed(2)+'° '+ew);
+  el.textContent=tr('pr_ref',{p:nm+', '+(dk<1?tr('pr_off0'):tr('pr_off',{d:dk,c:cmp})),t,l});
+}
+async function geoName(lat,lon){                           // Ortsname des Gitterpunkts (OpenStreetMap Nominatim), einmal je Profil
+  if(navigator.onLine===false) return null;
+  try{
+    const ctl=new AbortController(), to=setTimeout(()=>ctl.abort(),6000);
+    const r=await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&addressdetails=1&accept-language='+encodeURIComponent(S.lang)+'&lat='+lat.toFixed(4)+'&lon='+lon.toFixed(4),{signal:ctl.signal});
+    clearTimeout(to); if(!r.ok) return null;
+    const a=(await r.json()).address||{};
+    const place=a.suburb||a.neighbourhood||a.city_district||a.village||a.hamlet||a.town||null, city=a.city||a.town||a.village||a.municipality||a.county||null;
+    return (place&&city&&place!==city)?city+'-'+place:(city||place||null);
+  }catch(e){ return null; }
+}
+// Ersatzannahme ohne Wetterdaten: gemessene Bodentemperatur mit Standardgradient 0,65 K/100 m, Wind 0 bis in die Höhe
+function buildAssume(){
+  const lv=[...S.met].reverse().find(q=>q.src==='live'&&(q.alt-q.g)<40); if(!lv) return;
+  const pts=[]; for(let z=0;z<=8000;z+=MODEL.stepM){ const alt=GREF+z; pts.push({t:S.t,alt,g:GREF,d:0,tauM:MODEL_TAU_MIN,sigM:MODEL_SIGMA_KM,src:'assume',T:lv.T-0.0065*z,p:pAt(alt),rh:60,w:1,wt:1,wd:1,ve:0,vn:0,wo:z>WIND_MIN_AGL,w0:MODEL_W0}); }
+  S.met=pts.concat(S.met); window.ASSUMED=true; buildLegend(); updMeteo(true);
 }
 async function loadModelProfile(){
   const KEY='bt-model', now=Date.now(); let cached=null, m=null;
   try{ cached=JSON.parse(localStorage.getItem(KEY)||'null'); }catch(e){}
-  const same=c=>c&&Math.hypot((c.lat-O.lat)*111.32,(c.lon-O.lon)*111.32*Math.cos(O.lat*Math.PI/180))<15&&(now-c.fetched)<MODEL.maxAgeH*3600e3;
-  if(same(cached)) m=cached.parsed;                                   // gleicher Ort, jünger als 6 Stunden: kein neuer Abruf
+  const fresh=c=>c&&c.parsed&&c.parsed.rows&&(now-c.fetched)<MODEL.maxAgeH*3600e3;
+  if(fresh(cached) && distKm(cached.parsed.lat,cached.parsed.lon)<=15) m=cached.parsed;           // gleicher Ort, jünger als 6 Stunden: kein neuer Abruf
   else if(navigator.onLine!==false){
     try{
       const ctl=new AbortController(), to=setTimeout(()=>ctl.abort(),8000);
       const r=await fetch(modelUrl(O.lat,O.lon),{signal:ctl.signal}); clearTimeout(to);
       if(!r.ok) throw new Error('http');
       m=modelParse(await r.json(),now);
-      if(m){ try{ localStorage.setItem(KEY,JSON.stringify({lat:O.lat,lon:O.lon,fetched:now,parsed:m})); }catch(e){} }
+      if(m){ try{ localStorage.setItem(KEY,JSON.stringify({fetched:now,parsed:m})); }catch(e){} }
     }catch(e){ m=null; }
   }
-  if(!m){ $('model-line').textContent=tr('mo_none'); return; }
-  S.met=modelPoints(m,now).concat(S.met);
+  if(!m && fresh(cached)) m=cached.parsed;                                                       // Rückfall: Daten von einem anderen Ort
+  if(m){ m.dkm=distKm(m.lat,m.lon); if(!(m.dkm<=MODEL_MAX_KM)) m=null; }                          // weiter als 500 km: nicht verfügbar
+  if(!m){ MODELREF=null; window.NOMODEL=true; $('model-line').textContent=tr('mo_assume'); updProfRef(); return; }
+  const pts=modelPoints(m,now); S.met=pts.concat(S.met);
+  MODELREF=Object.assign({},m,{t0:pts[0].t}); window.NOMODEL=false;
   const hh=new Date(m.valid).toISOString().slice(11,16);
   $('model-line').textContent=tr('mo_line',{t:hh,n:m.rows.length});
-  toast(tr('mo_ok')); updMeteo(true);
+  updProfRef(); toast(tr('mo_ok')); updMeteo(true);
+  if(!m.place){ geoName(m.lat,m.lon).then(n=>{ if(!n) return; m.place=n; if(MODELREF) MODELREF.place=n;
+    try{ const c=JSON.parse(localStorage.getItem(KEY)||'null'); if(c&&c.parsed&&c.parsed.valid===m.valid){ c.parsed.place=n; localStorage.setItem(KEY,JSON.stringify(c)); } }catch(e){}
+    $('model-line').textContent=tr('mo_line',{t:hh,n:m.rows.length})+' · '+tr('mo_osm'); updProfRef(); }); }
+  else $('model-line').textContent=tr('mo_line',{t:hh,n:m.rows.length})+' · '+tr('mo_osm');
 }
+setInterval(()=>{ if(window.NOMODEL && !window.ASSUMED) buildAssume(); updProfRef(); },2000);
 
 // ---- Luftfahrtkarte (KRT-03): open flightmaps als zuschaltbare Ebene; Adresse und Zoomgrenzen sind hier einstellbar
 const OFM = { url:'https://nwy-tiles-api.prod.newaydata.com/tiles/{z}/{x}/{y}.png?path=latest/aero/latest',
@@ -1649,7 +1715,7 @@ function setLang(l){
   applyLang(); buildLegend();
   $('btn-pause').textContent=tr(S.paused?'b_resume':'b_pause');
   startMks.forEach(m=>m.setTooltipContent(tr('launch')));
-  predPts.forEach(p=>p.setTooltipContent(hLabel(p._h))); renderFriends(); stShowCurrent();
+  predPts.forEach(p=>p.setTooltipContent(hLabel(p._h))); renderFriends(); stShowCurrent(); updProfRef();
   if($('net-note').style.display==='block') $('net-note').textContent=tr('net_err',{n:tileErr});
   renderPop(); updData(); updMeteo(true); render();
 }
@@ -1660,16 +1726,29 @@ const FLAGS={
  'fr':'<rect width="20" height="40" fill="#0055A4"/><rect x="20" width="20" height="40" fill="#fff"/><rect x="40" width="20" height="40" fill="#EF4135"/>',
  'pl':'<rect width="60" height="20" fill="#fff"/><rect y="20" width="60" height="20" fill="#DC143C"/>',
  'cs':'<rect width="60" height="20" fill="#fff"/><rect y="20" width="60" height="20" fill="#D7141A"/><path d="M0 0L30 20L0 40Z" fill="#11457E"/>',
+ 'es':'<rect width="60" height="40" fill="#AA151B"/><rect y="10" width="60" height="20" fill="#F1BF00"/>',
  'zh-TW':'<rect width="60" height="40" fill="#FE0000"/><rect width="30" height="20" fill="#000095"/><circle cx="15" cy="10" r="6.2" fill="#fff"/><circle cx="15" cy="10" r="4.7" fill="#000095"/><circle cx="15" cy="10" r="3.7" fill="#fff"/>'
 };
 const flagSVG=c=>'<svg class="flag" viewBox="0 0 60 40" width="30" height="20" aria-hidden="true" focusable="false">'+(FLAGS[c]||'')+'</svg>';
+const CHEV='<svg class="chev" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+function markLang(){                                       // Schaltfläche zeigt die gewählte Sprache, in der Liste ist sie markiert
+  const btn=$('lang-btn'); if(!btn) return;
+  const cur=LANGS.find(l=>l[0]===S.lang)||LANGS[0];
+  btn.innerHTML=flagSVG(cur[0])+'<span class="lname"></span>'+CHEV; btn.querySelector('.lname').textContent=cur[1];
+  document.querySelectorAll('#lang-list .lopt').forEach(o=>{ const on=o.dataset.c===S.lang; o.classList.toggle('on',on); o.setAttribute('aria-selected',on?'true':'false'); });
+}
+function closeLangList(){ $('lang-list').hidden=true; $('lang-btn').setAttribute('aria-expanded','false'); }
 (function initLang(){
-  const sel=$('lang-sel');
+  const list=$('lang-list');
   LANGS.forEach(([c,n])=>{
-    const b=document.createElement('button'); b.type='button'; b.className='lbtn'; b.dataset.c=c; b.setAttribute('role','radio'); b.setAttribute('lang',c);
-    b.innerHTML=flagSVG(c)+'<span></span>'; b.lastChild.textContent=n;
-    b.addEventListener('click',()=>setLang(c)); sel.appendChild(b);
+    const o=document.createElement('button'); o.type='button'; o.className='lopt'; o.dataset.c=c; o.setAttribute('role','option'); o.setAttribute('lang',c);
+    o.innerHTML=flagSVG(c)+'<span></span>'; o.lastChild.textContent=n;
+    o.addEventListener('click',()=>{ setLang(c); closeLangList(); $('lang-btn').focus(); });
+    list.appendChild(o);
   });
+  $('lang-btn').addEventListener('click',e=>{ e.stopPropagation(); const open=list.hidden; list.hidden=!open; $('lang-btn').setAttribute('aria-expanded',open?'true':'false'); });
+  document.addEventListener('click',e=>{ if(!list.hidden && !$('lang-sel').contains(e.target)) closeLangList(); });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !list.hidden){ closeLangList(); $('lang-btn').focus(); } });
   applyLang();
 })();
 
