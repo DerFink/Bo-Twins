@@ -3,13 +3,13 @@
    - Bibliotheken (Leaflet, Schriften): einmal laden, dann aus dem Zwischenspeicher
    - Kartenkacheln: nur was angezeigt wurde, wird gespeichert und beim nächsten Mal nicht erneut geladen
    Vorlage: Service Worker der Tracker-App (v6) */
-const VER = 'v17';
+const VER = 'v20';
 const SHELL = 'gb-shell-' + VER;
 const LIBS = 'gb-libs-' + VER;
 const TILES = 'gb-tiles-' + VER;
 const MAX_TILES = 5000;   // ca. 100 MB Obergrenze, älteste werden verworfen
 
-const SHELL_FILES = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+const SHELL_FILES = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 const LIB_URLS = [
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js',
