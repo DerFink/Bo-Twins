@@ -196,7 +196,18 @@ main{position:relative;flex:1;min-height:0}
 /* Das Menü erscheint nach einer Sekunde und baut sich ruckelnd auf, wie auf einem alten Heimcomputer */
 .mcard.boot{animation:c64in 1.5s steps(1,end) 1s both}
 @keyframes c64in{0%{opacity:0;visibility:hidden}12%{opacity:.18;visibility:visible}27%{opacity:.4}36%{opacity:.32}52%{opacity:.6}60%{opacity:.52}78%{opacity:.82}86%{opacity:.74}100%{opacity:1;visibility:visible}}
-.mbtn{display:block;width:100%;text-align:left;margin-top:8px;padding:8px 11px;border-radius:4px;border:2px solid #6C5EB5;background:#17253b}
+.mname{display:flex;align-items:center;gap:8px;margin-top:6px;font-family:"Courier New",Courier,monospace;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#B8C76F}
+.mname input{flex:1;min-width:0;min-height:36px;padding:0 9px;border-radius:4px;border:2px solid #6C5EB5;background:#0d1626;font-family:"Courier New",Courier,monospace;font-size:16px;color:#eef3fa}
+.note.lg{display:flex;align-items:center;gap:8px;margin:4px 0 0}
+.note.lg i{flex:none;width:16px;height:12px;border-radius:2px}
+#scores{z-index:860}
+#scores .card{width:min(420px,100%)}
+table.sc{width:100%;border-collapse:collapse;font-size:13.5px}
+table.sc th{text-align:left;font-weight:500;font-size:11.5px;color:var(--mut);padding:3px 4px;border-bottom:1px solid var(--line)}
+table.sc td{padding:5px 4px;border-bottom:1px solid rgba(40,57,90,.5);font-family:var(--num);font-size:15px}
+table.sc td:nth-child(2){font-family:var(--ui);font-size:14px;word-break:break-word}
+table.sc td:nth-child(3){font-weight:700;color:var(--orb)}
+.mbtn{display:block;width:100%;text-align:left;margin-top:6px;padding:6px 11px;border-radius:4px;border:2px solid #6C5EB5;background:#17253b}
 .mbtn b{display:block;font-size:17px;font-weight:600}
 .mbtn span{display:block;font-size:12.5px;color:var(--mut);line-height:1.3;margin-top:1px}
 .mbtn em{float:right;font-style:normal;font-size:11px;color:#B8C76F;border:1px solid #B8C76F;border-radius:8px;padding:1px 7px;margin-left:8px}
@@ -262,6 +273,7 @@ main{position:relative;flex:1;min-height:0}
         <h2 data-i="landed">Gelandet</h2>
         <div class="kv tgtres big" hidden><span data-i="r_pts">Punkte</span><b id="r-pts">–</b></div>
         <div class="kv tgtres" hidden><span data-i="r_tdist">Abstand zum Ziel</span><b id="r-tdist">–</b></div>
+        <div class="kv tgtres" hidden><span data-i="r_rank"></span><b id="r-rank">–</b></div>
         <div class="kv"><span data-i="r_sink">Sinken beim Aufsetzen</span><b id="r-sink">–</b></div>
         <div class="kv"><span data-i="r_time">Fahrzeit</span><b id="r-time">–</b></div>
         <div class="kv"><span data-i="r_dist">Strecke</span><b id="r-dist">–</b></div>
@@ -303,8 +315,10 @@ main{position:relative;flex:1;min-height:0}
       <canvas id="c64" aria-hidden="true"></canvas>
       <div class="mcard">
         <h1 data-i="brand">Gasballon</h1>
+        <label class="mname"><span data-i="name_lbl"></span><input id="m-name" type="text" maxlength="16" autocomplete="off" autocapitalize="words" spellcheck="false" data-ip="name_ph"></label>
         <button class="mbtn" id="m-free"><b data-i="m_free"></b><span data-i="m_free_d"></span></button>
         <button class="mbtn" id="m-chal"><b data-i="m_chal"></b><span data-i="m_chal_d"></span></button>
+        <button class="mbtn" id="m-score"><b data-i="m_score"></b><span data-i="m_score_d"></span></button>
         <button class="mbtn" disabled><em data-i="soon"></em><b data-i="m_comp"></b><span data-i="m_comp_d"></span></button>
         <button class="mbtn" disabled><em data-i="soon"></em><b data-i="m_champ"></b><span data-i="m_champ_d"></span></button>
       </div>
@@ -352,6 +366,15 @@ main{position:relative;flex:1;min-height:0}
       </div>
     </div>
 
+    <!-- Bestenliste -->
+    <div class="full" id="scores" hidden>
+      <div class="card">
+        <h2 data-i="m_score"></h2>
+        <div id="sc-list"></div>
+        <button class="sec" id="sc-back" data-i="back"></button>
+      </div>
+    </div>
+
     <div class="full" id="busy" hidden><div class="card" id="busy-text" role="status"></div></div>
   </div>
 
@@ -375,6 +398,15 @@ main{position:relative;flex:1;min-height:0}
     <div class="row"><span data-i="v_gas"></span><div class="seg" id="seg-gas"><button data-v="0" data-i="off"></button><button data-v="1" data-i="on"></button></div></div>
     <div class="row"><span data-i="v_snd"></span><div class="seg" id="seg-snd"><button data-v="0" data-i="off"></button><button data-v="1" data-i="on"></button></div></div>
     <div class="row"><span data-i="v_music"></span><div class="seg" id="seg-music"><button data-v="0" data-i="off"></button><button data-v="1" data-i="on"></button></div></div>
+
+    <h4 data-i="lg_title"></h4>
+    <p class="note lg"><i style="background:#ff6e5f"></i><span data-i="lg_inv"></span></p>
+    <p class="note lg"><i style="background:#ffe14d"></i><span data-i="lg_stable"></span></p>
+    <p class="note lg"><i style="background:#5d6f8f"></i><span data-i="lg_normal"></span></p>
+    <p class="note lg"><i style="background:#4cc9ff"></i><span data-i="lg_labile"></span></p>
+    <p class="note lg"><i style="background:#eef3fa;height:3px"></i><span data-i="lg_temp"></span></p>
+    <p class="note lg"><i style="background:#4cc9ff;height:3px"></i><span data-i="lg_wind"></span></p>
+    <p class="note lg"><i style="background:#ff9f1c;height:3px"></i><span data-i="lg_balloon"></span></p>
 
     <h4 data-i="s_about"></h4>
     <p class="note" data-i="about1"></p>
@@ -428,7 +460,8 @@ const DEFAULT_CFG = {
   valveCd: 1.0,    // Ausflusszahl des voll geöffneten Ventils (Annahme, OP-16)
   ropeLen: 50,     // m, Länge des Schlepptaus (Vorgabe Nutzer)
   ropeKgM: 0.3,    // kg je Meter: 15 kg auf 50 m (Vorgabe Nutzer); das Tau zählt zur Ausrüstung
-  ropeMu: 0.8      // Reibungszahl des rund 10 cm dicken Taus am Boden, mittlerer Wert; hängt in Wirklichkeit vom Gelände ab (OP-28)
+  ropeMu: 3.8      // Schleppwiderstand je Gewicht des aufliegenden Taus. Das rund 10 cm dicke Tau pflügt durch den Bewuchs und bremst weit stärker als
+                   // bloße Reibung: Liegen 40 m auf, steht der Ballon bei 4 m/s Wind fast (Vorgabe Nutzer). Hängt in Wirklichkeit vom Gelände ab (OP-28)
 };
 
 /* Simulierte Atmosphäre (OP-18, vorläufig fest): Bodenwerte, Temperaturschichten mit Inversion, Wind dreht mit der Höhe.
@@ -674,12 +707,12 @@ function planFlight(cfg, tab, legs){
 const windDirTo = (tab, h) => { const a = atmAt(tab, h); return (Math.atan2(a.u, a.v) * 180 / Math.PI + 360) % 360; };
 const angDiff = (a, b) => Math.abs(((a - b + 540) % 360) - 180);
 /* Ziel für die Aufgabe Ziellanden: Fahrten mit zufälligen Höhenplänen rechnen; der Landepunkt einer passenden Fahrt wird das Ziel.
-   Fahrzeit bis zum Ziel: einfach rund eine halbe Stunde, mittel bis rund eine Stunde, schwer bis zu zwei Stunden (Vorgabe Nutzer).
+   Fahrzeit bis zum Ziel: einfach 10 bis 15 Minuten, mittel 15 bis 30 Minuten, schwer 30 bis 50 Minuten (Vorgabe Nutzer).
    level: 0 einfach (eine Höhe), 1 mittel (ein Wechsel der Höhe), 2 schwer (hohe Schicht mit anderer Windrichtung). */
 function makeTarget(cfg, tab, level, rnd){
   rnd = rnd || Math.random;
   const pick = arr => arr[Math.floor(rnd() * arr.length)], span = (a, b) => a + rnd() * (b - a);
-  const low = [300, 400, 500, 600, 800, 1000], high = [1500, 1800, 2200, 2600, 3000];
+  const low = [300, 400, 500, 600, 800], high = [1200, 1500, 1800, 2200];
   let best = null, lowShear = false;
   // größte Richtungsänderung, die das Profil hergibt
   let maxLo = 0, maxHi = 0;
@@ -689,20 +722,20 @@ function makeTarget(cfg, tab, level, rnd){
   if ((level === 1 && maxLo < 15) || (level === 2 && maxHi < 25)) lowShear = true;
   for (let tries = 0; tries < 24; tries++){
     let legs;
-    if (level === 0) legs = [{h: pick(low), dur: span(14, 24) * 60}];
+    if (level === 0) legs = [{h: pick(low.slice(0, 3)), dur: span(4, 8) * 60}];
     else if (level === 1){
       let a, b, n = 0; do { a = pick(low); b = pick(low); } while ((a === b || angDiff(windDirTo(tab, a), windDirTo(tab, b)) < needMid) && ++n < 40);
-      legs = [{h: a, dur: span(12, 22) * 60}, {h: b, dur: span(12, 22) * 60}];
+      legs = [{h: a, dur: span(5, 11) * 60}, {h: b, dur: span(5, 11) * 60}];
     } else {
       let a, b, n = 0; do { a = pick(low); b = pick(high); } while (angDiff(windDirTo(tab, a), windDirTo(tab, b)) < needHi && ++n < 40);
-      legs = [{h: a, dur: span(12, 22) * 60}, {h: b, dur: span(30, 50) * 60}, {h: pick(low), dur: span(8, 16) * 60}];
+      legs = [{h: a, dur: span(4, 7) * 60}, {h: b, dur: span(14, 22) * 60}, {h: pick(low), dur: span(6, 10) * 60}];
     }
     const r = planFlight(cfg, tab, legs);
     if (!r.ok || r.vLand > 1.5) continue;
-    const tMin = [1320, 2400, 4200][level], tMax = [2700, 4500, 7200][level], tMid = (tMin + tMax) / 2;          // Sekunden Fahrzeit je Stufe
+    const tMin = [600, 900, 1800][level], tMax = [900, 1800, 3000][level], tMid = (tMin + tMax) / 2;          // Sekunden Fahrzeit je Stufe
     const dist = Math.hypot(r.e, r.n), okTime = r.t >= tMin && r.t <= tMax, okSand = r.sandLeft >= 0.12 * r.sand0;
     const cand = Object.assign(r, {legs, dist, brg: (Math.atan2(r.e, r.n) * 180 / Math.PI + 360) % 360, level, lowShear});
-    if (okTime && okSand && dist > 2000) return cand;
+    if (okTime && okSand && dist > 1000) return cand;
     if (okSand && (!best || Math.abs(r.t - tMid) < Math.abs(best.t - tMid))) best = cand;      // Notlösung: die Fahrt, deren Dauer der Stufe am nächsten kommt
   }
   return best;
@@ -735,11 +768,12 @@ function osmClass(t){
 const mDist = (la1, lo1, la2, lo2) => Math.hypot((la2 - la1) * 111320, (lo2 - lo1) * 111320 * Math.cos(la1 * Math.PI / 180));
 /* Aus der Antwort den Zielort wählen: der nächste Sportplatz mit genug Abstand zu allen gesperrten Orten;
    sonst eine Landezone am berechneten Punkt, nötigenfalls von gesperrten Orten weggeschoben (blocked). */
-function pickPlace(els, lat, lon){
+function pickPlace(els, lat, lon, rMax){
+  rMax = rMax || OSM.rPlace;                               // Suchradius für den Zielort; bei nahen Zielen kleiner, damit das Ziel nicht weit vom berechneten Punkt abrückt
   const pts = (els || []).map(e => ({lat: e.lat != null ? e.lat : (e.center && e.center.lat), lon: e.lon != null ? e.lon : (e.center && e.center.lon), cls: osmClass(e.tags), name: e.tags && e.tags.name})).filter(x => x.cls && x.lat != null && x.lon != null);
   const excl = pts.filter(x => x.cls !== 'pitch');
   const gap = (la, lo) => { let w = null; for (const x of excl){ const d = mDist(la, lo, x.lat, x.lon), need = OSM.clear[x.cls]; if (d < need && (!w || need - d > w.need - w.d)) w = {x, d, need}; } return w; };
-  const pitches = pts.filter(x => x.cls === 'pitch').map(x => Object.assign(x, {d: mDist(lat, lon, x.lat, x.lon)})).filter(x => x.d <= OSM.rPlace).sort((a, b) => a.d - b.d);
+  const pitches = pts.filter(x => x.cls === 'pitch').map(x => Object.assign(x, {d: mDist(lat, lon, x.lat, x.lon)})).filter(x => x.d <= rMax).sort((a, b) => a.d - b.d);
   for (const q of pitches) if (!gap(q.lat, q.lon)) return {kind: 'pitch', lat: q.lat, lon: q.lon, name: q.name || null, blocked: false, clear: true};
   if (!gap(lat, lon)) return {kind: 'zone', lat, lon, name: null, blocked: false, clear: true};
   let la = lat, lo = lon;
@@ -763,7 +797,7 @@ const LANGS = [['de','Deutsch'],['en','English'],['fr','Français'],['pl','Polsk
 const TX = {
 de:{ brand:'Gasballon', speed:'Zeitraffer', settings:'Einstellungen', close:'Schließen', lang:'Sprache',
  m_free:'Freie Fahrt', m_free_d:'Startplatz und Wetter wählen und losfahren', m_chal:'Challenge', m_chal_d:'Aufgaben lösen, zuerst: Ziellanden', m_comp:'Wettkampf', m_comp_d:'Gegen andere antreten, Ergebnisse im Vergleich', m_champ:'Meisterschaft', m_champ_d:'Wettfahrt in Echtzeit nach Art des Gordon-Bennett-Rennens', soon:'kommt später',
- su_start:'Startplatz', su_wx:'Wetter', wx_real:'Aktuell vor Ort', wx_sim:'Simulation', su_level:'Stufe', lv_easy:'Einfach', lv_mid:'Mittel', lv_hard:'Schwer', su_task:'Aufgabe', task_target:'Ziellanden', task_target_d:'Lande so nah wie möglich am Ziel. Je nach Stufe liegt es eine halbe bis zwei Stunden Fahrt entfernt.', more_tasks:'Weitere Aufgaben folgen.', next:'Weiter', back:'Zurück', menu:'Hauptmenü',
+ su_start:'Startplatz', su_wx:'Wetter', wx_real:'Aktuell vor Ort', wx_sim:'Simulation', su_level:'Stufe', lv_easy:'Einfach', lv_mid:'Mittel', lv_hard:'Schwer', su_task:'Aufgabe', task_target:'Ziellanden', task_target_d:'Lande so nah wie möglich am Ziel. Je nach Stufe liegt es näher oder weiter weg.', more_tasks:'Weitere Aufgaben folgen.', next:'Weiter', back:'Zurück', menu:'Hauptmenü',
  st_map:'Auf der Karte wählen', st_gps:'Mein Standort (GPS)', st_bitt:'Bitterfeld', st_name_def:'Ballonstartplatz Bitterfeld', st_name_map:'Wunschort', st_name_gps:'Mein Standort', st_tap:'Tippe auf die Karte, um den Startplatz zu setzen.', st_wait:'Warte auf GPS', st_avg:'Mittle den Standort, noch {n} s', st_err:'Kein Standort verfügbar. Bitte den Startplatz auf der Karte wählen.', st_ok:'Startplatz gesetzt',
  busy_wx:'Wetter wird geladen …', busy_target:'Ziel wird berechnet …', wx_fail:'Das Wetter konnte nicht geladen werden. Es wird die Simulation verwendet.', wx_cached:'Kein Netz: Es wird das zuletzt geladene Wetter verwendet.',
  sw_title:'Neue Fahrt', sw_target:'Ziel', sw_start:'Start', sw_wx:'Wetter', sw_bal:'Ballon', sw_sand:'Sand', sw_go:'Fahrt beginnen', sw_target_none:'Kein Ziel: freie Fahrt.', sw_target_val:'{dist} km in Richtung {brg} ({card}), Stufe {lvl}. Die Vergleichsfahrt dauert {min} Minuten.', sw_lowshear:'Heute gibt es wenig Windscherung, die Winde der Höhen unterscheiden sich kaum.', sw_notarget:'Es ließ sich kein Ziel berechnen. Bitte den Ballon oder das Wetter ändern.',
@@ -774,10 +808,10 @@ de:{ brand:'Gasballon', speed:'Zeitraffer', settings:'Einstellungen', close:'Sch
  s_balloon:'Ballon', c_vol:'Hüllenvolumen (m³)', c_rust:'Rüstmasse: Korb und Ballon (kg)', c_env:'davon Hülle (kg)', c_equip:'Ausrüstung (kg)', c_pax:'Personen', c_paxkg:'Masse je Person (kg)', cfg_apply:'Übernehmen und neu starten', cfg_reset:'Standardwerte', calc:'Auftrieb {lift} kg · Trimmballast {trim} kg · {sacks} Säcke und {mulde} kg in der Sandmulde', calc_bad:'Auftrieb {lift} kg: zu wenig für Rüstmasse, Ausrüstung und Personen ({load} kg).',
  s_view:'Anzeige', v_map:'Karte', dark:'Dunkel', light:'Hell', v_unit:'Windgeschwindigkeit', v_gas:'Gasvolumen und Gastemperatur anzeigen (Hilfe)', v_snd:'Ton', off:'Aus', on:'An',
  s_about:'Hinweise', about1:'Dies ist ein Spiel. Es ist weder Flugplanung noch Navigation noch ein Warnsystem.', about2:'Wetterdaten: Open-Meteo (CC BY 4.0). Karte: © OpenStreetMap-Mitwirkende.', ver:'Version', reload:'Neueste Version laden',
- cf_restart:'Neu starten? Die laufende Fahrt geht verloren.', cf_restart_ok:'Neu starten', cf_menu:'Zum Hauptmenü? Die laufende Fahrt geht verloren.', cf_menu_ok:'Zum Hauptmenü', cancel:'Abbrechen', toast_newver:'Neue Version geladen', v_music:'Musik im Hauptmenü', rope:'Tau', rope_a:'Schlepptau auslegen oder einholen', pause_a:'Pause oder weiter', paused:'Pause', pl_pitch:'Sportplatz', pl_zone:'Landezone', sw_unchecked:'Der Zielort konnte ohne Netz nicht geprüft werden.', busy_place:'Zielort wird gesucht …', toast_valve:'Ventil gezogen: Zeit läuft 1×' },
+ cf_restart:'Neu starten? Die laufende Fahrt geht verloren.', cf_restart_ok:'Neu starten', cf_menu:'Zum Hauptmenü? Die laufende Fahrt geht verloren.', cf_menu_ok:'Zum Hauptmenü', cancel:'Abbrechen', toast_newver:'Neue Version geladen', v_music:'Musik im Hauptmenü', rope:'Tau', rope_a:'Schlepptau auslegen oder einholen', pause_a:'Pause oder weiter', paused:'Pause', pl_pitch:'Sportplatz', pl_zone:'Landezone', sw_unchecked:'Der Zielort konnte ohne Netz nicht geprüft werden.', busy_place:'Zielort wird gesucht …', m_score:'Bestenliste', m_score_d:'Die besten Fahrten auf diesem Gerät', name_lbl:'Name', name_ph:'Dein Name', sc_empty:'Noch keine gewerteten Fahrten.', sc_sand:'Restballast', r_rank:'Platz in der Bestenliste', lg_title:'Farben im Vertikalprofil', lg_inv:'Rot: Inversion, die Temperatur nimmt mit der Höhe zu', lg_stable:'Gelb: sehr stabile Schicht, die Temperatur nimmt kaum ab', lg_normal:'Grau: gewöhnliche Schichtung', lg_labile:'Blau: labile Schicht, die Temperatur nimmt stark ab', lg_temp:'Weiße Linie: Temperatur', lg_wind:'Windfähnchen: Der Schaft zeigt dorthin, woher der Wind kommt; kurzer Strich 5 kt, langer Strich 10 kt', lg_balloon:'Orange: Höhe des Ballons; braun: Gelände; sandfarben: Schlepptau', toast_valve:'Ventil gezogen: Zeit läuft 1×' },
 en:{ brand:'Gas balloon', speed:'Time lapse', settings:'Settings', close:'Close', lang:'Language',
  m_free:'Free flight', m_free_d:'Choose launch site and weather and take off', m_chal:'Challenge', m_chal_d:'Solve tasks, first: target landing', m_comp:'Competition', m_comp_d:'Compete with others and compare results', m_champ:'Championship', m_champ_d:'Real-time race in the style of the Gordon Bennett Cup', soon:'coming later',
- su_start:'Launch site', su_wx:'Weather', wx_real:'Current, local', wx_sim:'Simulation', su_level:'Level', lv_easy:'Easy', lv_mid:'Medium', lv_hard:'Hard', su_task:'Task', task_target:'Target landing', task_target_d:'Land as close to the target as you can. Depending on the level it is half an hour to two hours of flight away.', more_tasks:'More tasks will follow.', next:'Continue', back:'Back', menu:'Main menu',
+ su_start:'Launch site', su_wx:'Weather', wx_real:'Current, local', wx_sim:'Simulation', su_level:'Level', lv_easy:'Easy', lv_mid:'Medium', lv_hard:'Hard', su_task:'Task', task_target:'Target landing', task_target_d:'Land as close to the target as you can. Depending on the level it is nearer or farther away.', more_tasks:'More tasks will follow.', next:'Continue', back:'Back', menu:'Main menu',
  st_map:'Choose on the map', st_gps:'My location (GPS)', st_bitt:'Bitterfeld', st_name_def:'Bitterfeld balloon field', st_name_map:'Chosen place', st_name_gps:'My location', st_tap:'Tap the map to set the launch site.', st_wait:'Waiting for GPS', st_avg:'Averaging the position, {n} s left', st_err:'No location available. Please choose the launch site on the map.', st_ok:'Launch site set',
  busy_wx:'Loading weather …', busy_target:'Computing target …', wx_fail:'The weather could not be loaded. The simulation is used instead.', wx_cached:'No network: using the weather loaded last.',
  sw_title:'New flight', sw_target:'Target', sw_start:'Launch', sw_wx:'Weather', sw_bal:'Balloon', sw_sand:'Sand', sw_go:'Begin flight', sw_target_none:'No target: free flight.', sw_target_val:'{dist} km towards {brg} ({card}), level {lvl}. The reference flight takes {min} minutes.', sw_lowshear:'There is little wind shear today; the winds at different heights hardly differ.', sw_notarget:'No target could be computed. Please change the balloon or the weather.',
@@ -788,10 +822,10 @@ en:{ brand:'Gas balloon', speed:'Time lapse', settings:'Settings', close:'Close'
  s_balloon:'Balloon', c_vol:'Envelope volume (m³)', c_rust:'Empty mass: basket and balloon (kg)', c_env:'of which envelope (kg)', c_equip:'Equipment (kg)', c_pax:'People', c_paxkg:'Mass per person (kg)', cfg_apply:'Apply and restart', cfg_reset:'Defaults', calc:'Lift {lift} kg · trim ballast {trim} kg · {sacks} bags and {mulde} kg in the sand trough', calc_bad:'Lift {lift} kg: not enough for empty mass, equipment and people ({load} kg).',
  s_view:'Display', v_map:'Map', dark:'Dark', light:'Light', v_unit:'Wind speed', v_gas:'Show gas volume and gas temperature (aid)', v_snd:'Sound', off:'Off', on:'On',
  s_about:'Notes', about1:'This is a game. It is not flight planning, navigation or a warning system.', about2:'Weather data: Open-Meteo (CC BY 4.0). Map: © OpenStreetMap contributors.', ver:'Version', reload:'Load latest version',
- cf_restart:'Restart? The current flight will be lost.', cf_restart_ok:'Restart', cf_menu:'Go to the main menu? The current flight will be lost.', cf_menu_ok:'Main menu', cancel:'Cancel', toast_newver:'New version loaded', v_music:'Music in the main menu', rope:'Rope', rope_a:'Deploy or haul in the trail rope', pause_a:'Pause or resume', paused:'Paused', pl_pitch:'Sports field', pl_zone:'Landing zone', sw_unchecked:'The target site could not be checked without a network.', busy_place:'Looking for a target site …', toast_valve:'Valve pulled: time runs at 1×' },
+ cf_restart:'Restart? The current flight will be lost.', cf_restart_ok:'Restart', cf_menu:'Go to the main menu? The current flight will be lost.', cf_menu_ok:'Main menu', cancel:'Cancel', toast_newver:'New version loaded', v_music:'Music in the main menu', rope:'Rope', rope_a:'Deploy or haul in the trail rope', pause_a:'Pause or resume', paused:'Paused', pl_pitch:'Sports field', pl_zone:'Landing zone', sw_unchecked:'The target site could not be checked without a network.', busy_place:'Looking for a target site …', m_score:'High scores', m_score_d:'The best flights on this device', name_lbl:'Name', name_ph:'Your name', sc_empty:'No scored flights yet.', sc_sand:'Ballast left', r_rank:'Rank in the high scores', lg_title:'Colours in the vertical profile', lg_inv:'Red: inversion, temperature rises with height', lg_stable:'Yellow: very stable layer, temperature hardly falls', lg_normal:'Grey: ordinary layering', lg_labile:'Blue: unstable layer, temperature falls sharply', lg_temp:'White line: temperature', lg_wind:'Wind barbs: the staff points to where the wind comes from; short stroke 5 kt, long stroke 10 kt', lg_balloon:'Orange: balloon height; brown: terrain; sand-coloured: trail rope', toast_valve:'Valve pulled: time runs at 1×' },
 fr:{ brand:'Ballon à gaz', speed:'Accéléré', settings:'Réglages', close:'Fermer', lang:'Langue',
  m_free:'Vol libre', m_free_d:'Choisir le lieu de départ et la météo, puis décoller', m_chal:'Défi', m_chal_d:'Réussir des épreuves, d’abord : atterrissage sur cible', m_comp:'Compétition', m_comp_d:'Se mesurer aux autres et comparer les résultats', m_champ:'Championnat', m_champ_d:'Course en temps réel à la manière de la Coupe Gordon Bennett', soon:'à venir',
- su_start:'Lieu de départ', su_wx:'Météo', wx_real:'Actuelle, sur place', wx_sim:'Simulation', su_level:'Niveau', lv_easy:'Facile', lv_mid:'Moyen', lv_hard:'Difficile', su_task:'Épreuve', task_target:'Atterrissage sur cible', task_target_d:'Atterrissez le plus près possible de la cible. Selon le niveau, elle se trouve à une demi-heure à deux heures de vol.', more_tasks:'D’autres épreuves suivront.', next:'Continuer', back:'Retour', menu:'Menu principal',
+ su_start:'Lieu de départ', su_wx:'Météo', wx_real:'Actuelle, sur place', wx_sim:'Simulation', su_level:'Niveau', lv_easy:'Facile', lv_mid:'Moyen', lv_hard:'Difficile', su_task:'Épreuve', task_target:'Atterrissage sur cible', task_target_d:'Atterrissez le plus près possible de la cible. Selon le niveau, elle est plus proche ou plus éloignée.', more_tasks:'D’autres épreuves suivront.', next:'Continuer', back:'Retour', menu:'Menu principal',
  st_map:'Choisir sur la carte', st_gps:'Ma position (GPS)', st_bitt:'Bitterfeld', st_name_def:'Terrain de ballons de Bitterfeld', st_name_map:'Lieu choisi', st_name_gps:'Ma position', st_tap:'Touchez la carte pour placer le lieu de départ.', st_wait:'En attente du GPS', st_avg:'Moyenne de la position, encore {n} s', st_err:'Position indisponible. Choisissez le lieu de départ sur la carte.', st_ok:'Lieu de départ défini',
  busy_wx:'Chargement de la météo …', busy_target:'Calcul de la cible …', wx_fail:'La météo n’a pas pu être chargée. La simulation est utilisée.', wx_cached:'Pas de réseau : la dernière météo chargée est utilisée.',
  sw_title:'Nouveau vol', sw_target:'Cible', sw_start:'Départ', sw_wx:'Météo', sw_bal:'Ballon', sw_sand:'Sable', sw_go:'Commencer le vol', sw_target_none:'Pas de cible : vol libre.', sw_target_val:'{dist} km en direction {brg} ({card}), niveau {lvl}. Le vol de référence dure {min} minutes.', sw_lowshear:'Peu de cisaillement aujourd’hui : les vents diffèrent à peine selon l’altitude.', sw_notarget:'Aucune cible n’a pu être calculée. Modifiez le ballon ou la météo.',
@@ -802,10 +836,10 @@ fr:{ brand:'Ballon à gaz', speed:'Accéléré', settings:'Réglages', close:'Fe
  s_balloon:'Ballon', c_vol:'Volume de l’enveloppe (m³)', c_rust:'Masse à vide : nacelle et ballon (kg)', c_env:'dont enveloppe (kg)', c_equip:'Équipement (kg)', c_pax:'Personnes', c_paxkg:'Masse par personne (kg)', cfg_apply:'Appliquer et redémarrer', cfg_reset:'Valeurs par défaut', calc:'Portance {lift} kg · lest d’équilibrage {trim} kg · {sacks} sacs et {mulde} kg dans le bac à sable', calc_bad:'Portance {lift} kg : insuffisante pour la masse à vide, l’équipement et les personnes ({load} kg).',
  s_view:'Affichage', v_map:'Carte', dark:'Sombre', light:'Claire', v_unit:'Vitesse du vent', v_gas:'Afficher volume et température du gaz (aide)', v_snd:'Son', off:'Non', on:'Oui',
  s_about:'Remarques', about1:'Ceci est un jeu. Ce n’est ni une préparation de vol, ni une aide à la navigation, ni un système d’alerte.', about2:'Données météo : Open-Meteo (CC BY 4.0). Carte : © les contributeurs d’OpenStreetMap.', ver:'Version', reload:'Charger la dernière version',
- cf_restart:'Redémarrer ? Le vol en cours sera perdu.', cf_restart_ok:'Redémarrer', cf_menu:'Retour au menu principal ? Le vol en cours sera perdu.', cf_menu_ok:'Menu principal', cancel:'Annuler', toast_newver:'Nouvelle version chargée', v_music:'Musique du menu principal', rope:'Corde', rope_a:'Déployer ou remonter le guiderope', pause_a:'Pause ou reprise', paused:'Pause', pl_pitch:'Terrain de sport', pl_zone:'Zone d’atterrissage', sw_unchecked:'Le lieu cible n’a pas pu être vérifié sans réseau.', busy_place:'Recherche du lieu cible …', toast_valve:'Soupape tirée : le temps passe à 1×' },
+ cf_restart:'Redémarrer ? Le vol en cours sera perdu.', cf_restart_ok:'Redémarrer', cf_menu:'Retour au menu principal ? Le vol en cours sera perdu.', cf_menu_ok:'Menu principal', cancel:'Annuler', toast_newver:'Nouvelle version chargée', v_music:'Musique du menu principal', rope:'Corde', rope_a:'Déployer ou remonter le guiderope', pause_a:'Pause ou reprise', paused:'Pause', pl_pitch:'Terrain de sport', pl_zone:'Zone d’atterrissage', sw_unchecked:'Le lieu cible n’a pas pu être vérifié sans réseau.', busy_place:'Recherche du lieu cible …', m_score:'Meilleurs scores', m_score_d:'Les meilleurs vols sur cet appareil', name_lbl:'Nom', name_ph:'Votre nom', sc_empty:'Aucun vol noté pour l’instant.', sc_sand:'Lest restant', r_rank:'Rang au classement', lg_title:'Couleurs du profil vertical', lg_inv:'Rouge : inversion, la température augmente avec l’altitude', lg_stable:'Jaune : couche très stable, la température baisse à peine', lg_normal:'Gris : stratification ordinaire', lg_labile:'Bleu : couche instable, la température baisse fortement', lg_temp:'Ligne blanche : température', lg_wind:'Barbules de vent : la hampe pointe vers l’origine du vent ; trait court 5 kt, trait long 10 kt', lg_balloon:'Orange : altitude du ballon ; brun : relief ; sable : guiderope', toast_valve:'Soupape tirée : le temps passe à 1×' },
 pl:{ brand:'Balon gazowy', speed:'Przyspieszenie', settings:'Ustawienia', close:'Zamknij', lang:'Język',
  m_free:'Lot swobodny', m_free_d:'Wybierz miejsce startu i pogodę i leć', m_chal:'Wyzwanie', m_chal_d:'Wykonuj zadania, na początek: lądowanie na celu', m_comp:'Zawody', m_comp_d:'Rywalizuj z innymi i porównuj wyniki', m_champ:'Mistrzostwa', m_champ_d:'Wyścig w czasie rzeczywistym na wzór Pucharu Gordona Bennetta', soon:'wkrótce',
- su_start:'Miejsce startu', su_wx:'Pogoda', wx_real:'Aktualna, na miejscu', wx_sim:'Symulacja', su_level:'Poziom', lv_easy:'Łatwy', lv_mid:'Średni', lv_hard:'Trudny', su_task:'Zadanie', task_target:'Lądowanie na celu', task_target_d:'Wyląduj jak najbliżej celu. Zależnie od poziomu leży on od pół godziny do dwóch godzin lotu stąd.', more_tasks:'Kolejne zadania pojawią się później.', next:'Dalej', back:'Wstecz', menu:'Menu główne',
+ su_start:'Miejsce startu', su_wx:'Pogoda', wx_real:'Aktualna, na miejscu', wx_sim:'Symulacja', su_level:'Poziom', lv_easy:'Łatwy', lv_mid:'Średni', lv_hard:'Trudny', su_task:'Zadanie', task_target:'Lądowanie na celu', task_target_d:'Wyląduj jak najbliżej celu. Zależnie od poziomu leży on bliżej lub dalej.', more_tasks:'Kolejne zadania pojawią się później.', next:'Dalej', back:'Wstecz', menu:'Menu główne',
  st_map:'Wybierz na mapie', st_gps:'Moja pozycja (GPS)', st_bitt:'Bitterfeld', st_name_def:'Startowisko balonów w Bitterfeld', st_name_map:'Wybrane miejsce', st_name_gps:'Moja pozycja', st_tap:'Dotknij mapy, aby ustawić miejsce startu.', st_wait:'Czekam na GPS', st_avg:'Uśredniam pozycję, jeszcze {n} s', st_err:'Brak pozycji. Wybierz miejsce startu na mapie.', st_ok:'Miejsce startu ustawione',
  busy_wx:'Wczytywanie pogody …', busy_target:'Obliczanie celu …', wx_fail:'Nie udało się wczytać pogody. Używana jest symulacja.', wx_cached:'Brak sieci: używana jest ostatnio wczytana pogoda.',
  sw_title:'Nowy lot', sw_target:'Cel', sw_start:'Start', sw_wx:'Pogoda', sw_bal:'Balon', sw_sand:'Piasek', sw_go:'Rozpocznij lot', sw_target_none:'Bez celu: lot swobodny.', sw_target_val:'{dist} km w kierunku {brg} ({card}), poziom {lvl}. Lot wzorcowy trwa {min} minut.', sw_lowshear:'Dziś uskok wiatru jest niewielki: wiatry na różnych wysokościach prawie się nie różnią.', sw_notarget:'Nie udało się obliczyć celu. Zmień balon lub pogodę.',
@@ -816,10 +850,10 @@ pl:{ brand:'Balon gazowy', speed:'Przyspieszenie', settings:'Ustawienia', close:
  s_balloon:'Balon', c_vol:'Objętość powłoki (m³)', c_rust:'Masa własna: kosz i balon (kg)', c_env:'w tym powłoka (kg)', c_equip:'Wyposażenie (kg)', c_pax:'Osoby', c_paxkg:'Masa jednej osoby (kg)', cfg_apply:'Zastosuj i zacznij od nowa', cfg_reset:'Wartości domyślne', calc:'Siła nośna {lift} kg · balast wyważający {trim} kg · {sacks} worków i {mulde} kg w skrzyni z piaskiem', calc_bad:'Siła nośna {lift} kg: za mało na masę własną, wyposażenie i osoby ({load} kg).',
  s_view:'Wyświetlanie', v_map:'Mapa', dark:'Ciemna', light:'Jasna', v_unit:'Prędkość wiatru', v_gas:'Pokaż objętość i temperaturę gazu (pomoc)', v_snd:'Dźwięk', off:'Wył.', on:'Wł.',
  s_about:'Uwagi', about1:'To jest gra. Nie służy do planowania lotu, nawigacji ani ostrzegania.', about2:'Dane pogodowe: Open-Meteo (CC BY 4.0). Mapa: © autorzy OpenStreetMap.', ver:'Wersja', reload:'Wczytaj najnowszą wersję',
- cf_restart:'Zacząć od nowa? Bieżący lot zostanie utracony.', cf_restart_ok:'Zacznij od nowa', cf_menu:'Przejść do menu głównego? Bieżący lot zostanie utracony.', cf_menu_ok:'Menu główne', cancel:'Anuluj', toast_newver:'Wczytano nową wersję', v_music:'Muzyka w menu głównym', rope:'Lina', rope_a:'Wypuść lub wciągnij linę wleczną', pause_a:'Pauza lub wznowienie', paused:'Pauza', pl_pitch:'Boisko', pl_zone:'Strefa lądowania', sw_unchecked:'Bez sieci nie udało się sprawdzić miejsca celu.', busy_place:'Szukanie miejsca celu …', toast_valve:'Zawór otwarty: czas biegnie 1×' },
+ cf_restart:'Zacząć od nowa? Bieżący lot zostanie utracony.', cf_restart_ok:'Zacznij od nowa', cf_menu:'Przejść do menu głównego? Bieżący lot zostanie utracony.', cf_menu_ok:'Menu główne', cancel:'Anuluj', toast_newver:'Wczytano nową wersję', v_music:'Muzyka w menu głównym', rope:'Lina', rope_a:'Wypuść lub wciągnij linę wleczną', pause_a:'Pauza lub wznowienie', paused:'Pauza', pl_pitch:'Boisko', pl_zone:'Strefa lądowania', sw_unchecked:'Bez sieci nie udało się sprawdzić miejsca celu.', busy_place:'Szukanie miejsca celu …', m_score:'Najlepsze wyniki', m_score_d:'Najlepsze loty na tym urządzeniu', name_lbl:'Imię', name_ph:'Twoje imię', sc_empty:'Brak ocenionych lotów.', sc_sand:'Pozostały balast', r_rank:'Miejsce w tabeli wyników', lg_title:'Kolory w profilu pionowym', lg_inv:'Czerwony: inwersja, temperatura rośnie z wysokością', lg_stable:'Żółty: warstwa bardzo stabilna, temperatura prawie nie spada', lg_normal:'Szary: zwykłe uwarstwienie', lg_labile:'Niebieski: warstwa chwiejna, temperatura szybko spada', lg_temp:'Biała linia: temperatura', lg_wind:'Chorągiewki wiatru: drzewce wskazuje, skąd wieje wiatr; krótka kreska 5 kt, długa 10 kt', lg_balloon:'Pomarańczowy: wysokość balonu; brązowy: teren; piaskowy: lina wleczna', toast_valve:'Zawór otwarty: czas biegnie 1×' },
 cs:{ brand:'Plynový balón', speed:'Zrychlení', settings:'Nastavení', close:'Zavřít', lang:'Jazyk',
  m_free:'Volný let', m_free_d:'Zvolte místo startu a počasí a vzlétněte', m_chal:'Výzva', m_chal_d:'Plňte úkoly, nejprve: přistání na cíl', m_comp:'Soutěž', m_comp_d:'Změřte síly s ostatními a porovnejte výsledky', m_champ:'Mistrovství', m_champ_d:'Závod v reálném čase po vzoru Poháru Gordona Bennetta', soon:'připravujeme',
- su_start:'Místo startu', su_wx:'Počasí', wx_real:'Aktuální, v místě', wx_sim:'Simulace', su_level:'Obtížnost', lv_easy:'Lehká', lv_mid:'Střední', lv_hard:'Těžká', su_task:'Úkol', task_target:'Přistání na cíl', task_target_d:'Přistaňte co nejblíže cíli. Podle obtížnosti leží půl hodiny až dvě hodiny letu daleko.', more_tasks:'Další úkoly budou následovat.', next:'Pokračovat', back:'Zpět', menu:'Hlavní nabídka',
+ su_start:'Místo startu', su_wx:'Počasí', wx_real:'Aktuální, v místě', wx_sim:'Simulace', su_level:'Obtížnost', lv_easy:'Lehká', lv_mid:'Střední', lv_hard:'Těžká', su_task:'Úkol', task_target:'Přistání na cíl', task_target_d:'Přistaňte co nejblíže cíli. Podle obtížnosti leží blíž nebo dál.', more_tasks:'Další úkoly budou následovat.', next:'Pokračovat', back:'Zpět', menu:'Hlavní nabídka',
  st_map:'Zvolit na mapě', st_gps:'Moje poloha (GPS)', st_bitt:'Bitterfeld', st_name_def:'Balónové startoviště Bitterfeld', st_name_map:'Zvolené místo', st_name_gps:'Moje poloha', st_tap:'Klepněte na mapu a určete místo startu.', st_wait:'Čekám na GPS', st_avg:'Průměruji polohu, ještě {n} s', st_err:'Poloha není k dispozici. Zvolte místo startu na mapě.', st_ok:'Místo startu nastaveno',
  busy_wx:'Načítám počasí …', busy_target:'Počítám cíl …', wx_fail:'Počasí se nepodařilo načíst. Použije se simulace.', wx_cached:'Bez připojení: použije se naposledy načtené počasí.',
  sw_title:'Nový let', sw_target:'Cíl', sw_start:'Start', sw_wx:'Počasí', sw_bal:'Balón', sw_sand:'Písek', sw_go:'Zahájit let', sw_target_none:'Bez cíle: volný let.', sw_target_val:'{dist} km směrem {brg} ({card}), obtížnost {lvl}. Srovnávací let trvá {min} minut.', sw_lowshear:'Dnes je střih větru malý: větry v různých výškách se téměř neliší.', sw_notarget:'Cíl se nepodařilo spočítat. Změňte balón nebo počasí.',
@@ -830,10 +864,10 @@ cs:{ brand:'Plynový balón', speed:'Zrychlení', settings:'Nastavení', close:'
  s_balloon:'Balón', c_vol:'Objem obalu (m³)', c_rust:'Prázdná hmotnost: koš a balón (kg)', c_env:'z toho obal (kg)', c_equip:'Výstroj (kg)', c_pax:'Osoby', c_paxkg:'Hmotnost jedné osoby (kg)', cfg_apply:'Použít a začít znovu', cfg_reset:'Výchozí hodnoty', calc:'Vztlak {lift} kg · vyvažovací přítěž {trim} kg · {sacks} pytlů a {mulde} kg v truhlíku s pískem', calc_bad:'Vztlak {lift} kg: nestačí na prázdnou hmotnost, výstroj a osoby ({load} kg).',
  s_view:'Zobrazení', v_map:'Mapa', dark:'Tmavá', light:'Světlá', v_unit:'Rychlost větru', v_gas:'Zobrazit objem a teplotu plynu (pomůcka)', v_snd:'Zvuk', off:'Vyp.', on:'Zap.',
  s_about:'Upozornění', about1:'Toto je hra. Neslouží k plánování letu, navigaci ani jako výstražný systém.', about2:'Data o počasí: Open-Meteo (CC BY 4.0). Mapa: © přispěvatelé OpenStreetMap.', ver:'Verze', reload:'Načíst nejnovější verzi',
- cf_restart:'Začít znovu? Probíhající let bude ztracen.', cf_restart_ok:'Začít znovu', cf_menu:'Do hlavní nabídky? Probíhající let bude ztracen.', cf_menu_ok:'Hlavní nabídka', cancel:'Zrušit', toast_newver:'Načtena nová verze', v_music:'Hudba v hlavní nabídce', rope:'Lano', rope_a:'Spustit nebo vytáhnout vlečné lano', pause_a:'Pauza nebo pokračovat', paused:'Pauza', pl_pitch:'Hřiště', pl_zone:'Přistávací zóna', sw_unchecked:'Cílové místo se bez sítě nepodařilo ověřit.', busy_place:'Hledá se cílové místo …', toast_valve:'Ventil otevřen: čas běží 1×' },
+ cf_restart:'Začít znovu? Probíhající let bude ztracen.', cf_restart_ok:'Začít znovu', cf_menu:'Do hlavní nabídky? Probíhající let bude ztracen.', cf_menu_ok:'Hlavní nabídka', cancel:'Zrušit', toast_newver:'Načtena nová verze', v_music:'Hudba v hlavní nabídce', rope:'Lano', rope_a:'Spustit nebo vytáhnout vlečné lano', pause_a:'Pauza nebo pokračovat', paused:'Pauza', pl_pitch:'Hřiště', pl_zone:'Přistávací zóna', sw_unchecked:'Cílové místo se bez sítě nepodařilo ověřit.', busy_place:'Hledá se cílové místo …', m_score:'Nejlepší výsledky', m_score_d:'Nejlepší lety na tomto zařízení', name_lbl:'Jméno', name_ph:'Vaše jméno', sc_empty:'Zatím žádné hodnocené lety.', sc_sand:'Zbylá zátěž', r_rank:'Pořadí v tabulce výsledků', lg_title:'Barvy ve vertikálním profilu', lg_inv:'Červená: inverze, teplota s výškou roste', lg_stable:'Žlutá: velmi stabilní vrstva, teplota téměř neklesá', lg_normal:'Šedá: běžné zvrstvení', lg_labile:'Modrá: labilní vrstva, teplota rychle klesá', lg_temp:'Bílá čára: teplota', lg_wind:'Větrné praporky: dřík ukazuje, odkud vítr vane; krátká čárka 5 kt, dlouhá 10 kt', lg_balloon:'Oranžová: výška balonu; hnědá: terén; písková: vlečné lano', toast_valve:'Ventil otevřen: čas běží 1×' },
 'zh-TW':{ brand:'氣體氣球', speed:'時間加速', settings:'設定', close:'關閉', lang:'語言',
  m_free:'自由飛行', m_free_d:'選擇起飛地點與天氣後出發', m_chal:'挑戰', m_chal_d:'完成任務，第一項：定點降落', m_comp:'競賽', m_comp_d:'與其他玩家較量並比較成績', m_champ:'錦標賽', m_champ_d:'仿照戈登·貝內特盃的即時競賽', soon:'即將推出',
- su_start:'起飛地點', su_wx:'天氣', wx_real:'當地即時天氣', wx_sim:'模擬', su_level:'難度', lv_easy:'簡單', lv_mid:'中等', lv_hard:'困難', su_task:'任務', task_target:'定點降落', task_target_d:'盡量降落在目標附近。依難度不同，目標距離約半小時至兩小時的飛行時間。', more_tasks:'更多任務即將推出。', next:'繼續', back:'返回', menu:'主選單',
+ su_start:'起飛地點', su_wx:'天氣', wx_real:'當地即時天氣', wx_sim:'模擬', su_level:'難度', lv_easy:'簡單', lv_mid:'中等', lv_hard:'困難', su_task:'任務', task_target:'定點降落', task_target_d:'盡量降落在目標附近。依難度不同，目標較近或較遠。', more_tasks:'更多任務即將推出。', next:'繼續', back:'返回', menu:'主選單',
  st_map:'在地圖上選擇', st_gps:'我的位置（GPS）', st_bitt:'比特費爾德', st_name_def:'比特費爾德氣球起飛場', st_name_map:'自選地點', st_name_gps:'我的位置', st_tap:'點一下地圖以設定起飛地點。', st_wait:'等待 GPS', st_avg:'正在平均位置，還需 {n} 秒', st_err:'無法取得位置。請在地圖上選擇起飛地點。', st_ok:'已設定起飛地點',
  busy_wx:'正在載入天氣 …', busy_target:'正在計算目標 …', wx_fail:'無法載入天氣，改用模擬。', wx_cached:'沒有網路：使用上次載入的天氣。',
  sw_title:'新的飛行', sw_target:'目標', sw_start:'起飛', sw_wx:'天氣', sw_bal:'氣球', sw_sand:'沙', sw_go:'開始飛行', sw_target_none:'沒有目標：自由飛行。', sw_target_val:'距離 {dist} 公里，方向 {brg}（{card}），難度：{lvl}。參考飛行需時 {min} 分鐘。', sw_lowshear:'今天風切很小，各高度的風向幾乎相同。', sw_notarget:'無法計算目標。請更改氣球或天氣。',
@@ -844,10 +878,10 @@ cs:{ brand:'Plynový balón', speed:'Zrychlení', settings:'Nastavení', close:'
  s_balloon:'氣球', c_vol:'氣囊容積（m³）', c_rust:'空重：吊籃與氣球（公斤）', c_env:'其中氣囊（公斤）', c_equip:'裝備（公斤）', c_pax:'人數', c_paxkg:'每人質量（公斤）', cfg_apply:'套用並重新開始', cfg_reset:'預設值', calc:'浮力 {lift} 公斤 · 配平壓艙沙 {trim} 公斤 · {sacks} 袋，沙槽 {mulde} 公斤', calc_bad:'浮力 {lift} 公斤：不足以承載空重、裝備與人員（{load} 公斤）。',
  s_view:'顯示', v_map:'地圖', dark:'深色', light:'淺色', v_unit:'風速', v_gas:'顯示氣體體積與溫度（輔助）', v_snd:'音效', off:'關', on:'開',
  s_about:'注意事項', about1:'這是一款遊戲，不可用於飛行計畫、導航或警示。', about2:'天氣資料：Open-Meteo（CC BY 4.0）。地圖：© OpenStreetMap 貢獻者。', ver:'版本', reload:'載入最新版本',
- cf_restart:'要重新開始嗎？目前的飛行將會遺失。', cf_restart_ok:'重新開始', cf_menu:'要回到主選單嗎？目前的飛行將會遺失。', cf_menu_ok:'主選單', cancel:'取消', toast_newver:'已載入新版本', v_music:'主選單音樂', rope:'拖繩', rope_a:'放下或收回拖繩', pause_a:'暫停或繼續', paused:'暫停', pl_pitch:'運動場', pl_zone:'降落區', sw_unchecked:'沒有網路，無法檢查目標地點。', busy_place:'正在尋找目標地點…', toast_valve:'已拉開排氣閥：時間以 1× 進行' },
+ cf_restart:'要重新開始嗎？目前的飛行將會遺失。', cf_restart_ok:'重新開始', cf_menu:'要回到主選單嗎？目前的飛行將會遺失。', cf_menu_ok:'主選單', cancel:'取消', toast_newver:'已載入新版本', v_music:'主選單音樂', rope:'拖繩', rope_a:'放下或收回拖繩', pause_a:'暫停或繼續', paused:'暫停', pl_pitch:'運動場', pl_zone:'降落區', sw_unchecked:'沒有網路，無法檢查目標地點。', busy_place:'正在尋找目標地點…', m_score:'排行榜', m_score_d:'此裝置上的最佳飛行', name_lbl:'名字', name_ph:'你的名字', sc_empty:'尚無計分的飛行。', sc_sand:'剩餘壓艙物', r_rank:'排行榜名次', lg_title:'垂直剖面的顏色', lg_inv:'紅色：逆溫，溫度隨高度上升', lg_stable:'黃色：非常穩定的氣層，溫度幾乎不下降', lg_normal:'灰色：一般層結', lg_labile:'藍色：不穩定氣層，溫度下降很快', lg_temp:'白線：溫度', lg_wind:'風羽：桿指向風的來向；短劃 5 節，長劃 10 節', lg_balloon:'橘色：氣球高度；棕色：地形；沙色：拖繩', toast_valve:'已拉開排氣閥：時間以 1× 進行' },
 es:{ brand:'Globo de gas', speed:'Cámara rápida', settings:'Ajustes', close:'Cerrar', lang:'Idioma',
  m_free:'Vuelo libre', m_free_d:'Elige el lugar de salida y el tiempo y despega', m_chal:'Desafío', m_chal_d:'Supera pruebas; la primera: aterrizaje de precisión', m_comp:'Competición', m_comp_d:'Compite con otros y compara resultados', m_champ:'Campeonato', m_champ_d:'Carrera en tiempo real al estilo de la Copa Gordon Bennett', soon:'próximamente',
- su_start:'Lugar de salida', su_wx:'Tiempo', wx_real:'Actual, local', wx_sim:'Simulación', su_level:'Nivel', lv_easy:'Fácil', lv_mid:'Medio', lv_hard:'Difícil', su_task:'Prueba', task_target:'Aterrizaje de precisión', task_target_d:'Aterriza lo más cerca posible del objetivo. Según el nivel, está a entre media hora y dos horas de vuelo.', more_tasks:'Habrá más pruebas.', next:'Continuar', back:'Atrás', menu:'Menú principal',
+ su_start:'Lugar de salida', su_wx:'Tiempo', wx_real:'Actual, local', wx_sim:'Simulación', su_level:'Nivel', lv_easy:'Fácil', lv_mid:'Medio', lv_hard:'Difícil', su_task:'Prueba', task_target:'Aterrizaje de precisión', task_target_d:'Aterriza lo más cerca posible del objetivo. Según el nivel, está más cerca o más lejos.', more_tasks:'Habrá más pruebas.', next:'Continuar', back:'Atrás', menu:'Menú principal',
  st_map:'Elegir en el mapa', st_gps:'Mi ubicación (GPS)', st_bitt:'Bitterfeld', st_name_def:'Campo de globos de Bitterfeld', st_name_map:'Lugar elegido', st_name_gps:'Mi ubicación', st_tap:'Toca el mapa para fijar el lugar de salida.', st_wait:'Esperando el GPS', st_avg:'Promediando la posición, faltan {n} s', st_err:'Ubicación no disponible. Elige el lugar de salida en el mapa.', st_ok:'Lugar de salida fijado',
  busy_wx:'Cargando el tiempo …', busy_target:'Calculando el objetivo …', wx_fail:'No se pudo cargar el tiempo. Se usa la simulación.', wx_cached:'Sin red: se usa el último tiempo cargado.',
  sw_title:'Nuevo vuelo', sw_target:'Objetivo', sw_start:'Salida', sw_wx:'Tiempo', sw_bal:'Globo', sw_sand:'Arena', sw_go:'Comenzar el vuelo', sw_target_none:'Sin objetivo: vuelo libre.', sw_target_val:'{dist} km en dirección {brg} ({card}), nivel {lvl}. El vuelo de referencia dura {min} minutos.', sw_lowshear:'Hoy hay poca cizalladura: los vientos apenas cambian con la altura.', sw_notarget:'No se pudo calcular un objetivo. Cambia el globo o el tiempo.',
@@ -858,13 +892,13 @@ es:{ brand:'Globo de gas', speed:'Cámara rápida', settings:'Ajustes', close:'C
  s_balloon:'Globo', c_vol:'Volumen de la envoltura (m³)', c_rust:'Masa en vacío: barquilla y globo (kg)', c_env:'de ella, la envoltura (kg)', c_equip:'Equipo (kg)', c_pax:'Personas', c_paxkg:'Masa por persona (kg)', cfg_apply:'Aplicar y reiniciar', cfg_reset:'Valores por defecto', calc:'Sustentación {lift} kg · lastre de equilibrio {trim} kg · {sacks} sacos y {mulde} kg en el cajón de arena', calc_bad:'Sustentación {lift} kg: insuficiente para la masa en vacío, el equipo y las personas ({load} kg).',
  s_view:'Pantalla', v_map:'Mapa', dark:'Oscuro', light:'Claro', v_unit:'Velocidad del viento', v_gas:'Mostrar volumen y temperatura del gas (ayuda)', v_snd:'Sonido', off:'No', on:'Sí',
  s_about:'Avisos', about1:'Esto es un juego. No sirve para planificar vuelos, navegar ni como sistema de alerta.', about2:'Datos meteorológicos: Open-Meteo (CC BY 4.0). Mapa: © colaboradores de OpenStreetMap.', ver:'Versión', reload:'Cargar la última versión',
- cf_restart:'¿Reiniciar? Se perderá el vuelo en curso.', cf_restart_ok:'Reiniciar', cf_menu:'¿Ir al menú principal? Se perderá el vuelo en curso.', cf_menu_ok:'Menú principal', cancel:'Cancelar', toast_newver:'Nueva versión cargada', v_music:'Música del menú principal', rope:'Cuerda', rope_a:'Soltar o recoger la cuerda guía', pause_a:'Pausa o continuar', paused:'Pausa', pl_pitch:'Campo deportivo', pl_zone:'Zona de aterrizaje', sw_unchecked:'No se pudo comprobar el lugar del objetivo sin red.', busy_place:'Buscando el lugar del objetivo …', toast_valve:'Válvula abierta: el tiempo corre a 1×' }
+ cf_restart:'¿Reiniciar? Se perderá el vuelo en curso.', cf_restart_ok:'Reiniciar', cf_menu:'¿Ir al menú principal? Se perderá el vuelo en curso.', cf_menu_ok:'Menú principal', cancel:'Cancelar', toast_newver:'Nueva versión cargada', v_music:'Música del menú principal', rope:'Cuerda', rope_a:'Soltar o recoger la cuerda guía', pause_a:'Pausa o continuar', paused:'Pausa', pl_pitch:'Campo deportivo', pl_zone:'Zona de aterrizaje', sw_unchecked:'No se pudo comprobar el lugar del objetivo sin red.', busy_place:'Buscando el lugar del objetivo …', m_score:'Mejores puntuaciones', m_score_d:'Los mejores vuelos en este dispositivo', name_lbl:'Nombre', name_ph:'Tu nombre', sc_empty:'Aún no hay vuelos puntuados.', sc_sand:'Lastre restante', r_rank:'Puesto en la clasificación', lg_title:'Colores del perfil vertical', lg_inv:'Rojo: inversión, la temperatura aumenta con la altura', lg_stable:'Amarillo: capa muy estable, la temperatura apenas baja', lg_normal:'Gris: estratificación normal', lg_labile:'Azul: capa inestable, la temperatura baja mucho', lg_temp:'Línea blanca: temperatura', lg_wind:'Barbas de viento: el asta apunta hacia donde viene el viento; trazo corto 5 kt, trazo largo 10 kt', lg_balloon:'Naranja: altura del globo; marrón: terreno; color arena: cuerda guía', toast_valve:'Válvula abierta: el tiempo corre a 1×' }
 };
 
 /* =====================================================================
    Oberfläche
    ===================================================================== */
-const BUILD = '2026-10-08.6';
+const BUILD = '2026-10-08.7';
 const $ = id => document.getElementById(id);
 const store = { get(k, d){ try{ const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
 const pause = ms => new Promise(r => setTimeout(r, ms));
@@ -952,10 +986,9 @@ const SND = (() => {
       return;
     }
     if (mus) { if (ctx.state === 'suspended') ctx.resume(); return; }
-    if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;   // der Browser erlaubt Ton erst nach der ersten Berührung
     if (!audio()) return;
     mus = {g: ctx.createGain(), S: 60 / SONG.bpm / 4, i: 0, next: ctx.currentTime + 0.1};
-    mus.g.gain.value = 0.8; mus.g.connect(master);
+    mus.g.gain.value = 0.42; mus.g.connect(master);            // leiser als die Geräusche der Fahrt
     mus.timer = setInterval(() => {
       if (!mus) return;
       if (ctx.state !== 'running'){ mus.next = ctx.currentTime + 0.1; return; }
@@ -963,8 +996,32 @@ const SND = (() => {
       while (mus.next < ctx.currentTime + 0.3){ mStep(mus.i++, mus.next); mus.next += mus.S; }
     }, 90);
   }
+  let drag = null;
   return {
     music,
+    drag(x){  // Schlepptau schleift über den Boden: dumpfes Rauschen mit Knistern, lauter mit mehr Tau am Boden und mehr Fahrt
+      if (!UI.sound) x = 0;
+      if (!drag){
+        if (x <= 0) return; const c = ensure(); if (!c) return;
+        const src = c.createBufferSource(); src.buffer = buf; src.loop = true;
+        const lo = c.createBiquadFilter(); lo.type = 'lowpass'; lo.frequency.value = 280; const g1 = c.createGain(); g1.gain.value = 1.6;
+        const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1500; bp.Q.value = 1.4;
+        const am = c.createGain(); am.gain.value = 0.5; const lfo = c.createOscillator(); lfo.type = 'sawtooth'; lfo.frequency.value = 9; const dp = c.createGain(); dp.gain.value = 0.5; lfo.connect(dp); dp.connect(am.gain);
+        const g = c.createGain(); g.gain.value = 0;
+        src.connect(lo); lo.connect(g1); g1.connect(g); src.connect(bp); bp.connect(am); am.connect(g); g.connect(master); src.start(0, 0.7); lfo.start();
+        drag = {g, lfo};
+      }
+      const t = ctx.currentTime; drag.g.gain.setTargetAtTime(Math.min(1, Math.max(0, x)) * 0.5, t, 0.15); drag.lfo.frequency.setTargetAtTime(6 + 10 * Math.min(1, x), t, 0.2);
+    },
+    cheer(q){ // nach der Landung: kurze Siegesmelodie und Jubel einer Menschenmenge mit Klatschen und Pfiffen; q = 0 bis 1 (wie gut die Fahrt war)
+      const c = ensure(); if (!c) return; q = Math.min(1, Math.max(0, q)); const t0 = 0.45;
+      [[523.25, 0, .12], [659.25, .13, .12], [783.99, .26, .12], [1046.5, .39, .26], [783.99, .68, .12], [1046.5, .82, .6]].forEach(n => { tone({type: 'square', f0: n[0], dur: n[2] + 0.05, peak: 0.10, at: t0 + n[1]}); tone({type: 'triangle', f0: n[0] * 0.75, dur: n[2] + 0.05, peak: 0.09, at: t0 + n[1]}); });
+      const len = 3.2 + 1.6 * q, vol = 0.10 + 0.20 * q;
+      noise({type: 'bandpass', f0: 750, f1: 1100, q: 0.7, dur: len, peak: vol, attack: 0.5, at: t0 + 0.2});            // Stimmengewirr
+      noise({type: 'bandpass', f0: 2100, f1: 1700, q: 0.9, dur: len * 0.9, peak: vol * 0.6, attack: 0.7, at: t0 + 0.3});
+      for (let i = 0, n = Math.round(30 + 60 * q); i < n; i++) noise({type: 'highpass', f0: 1500 + Math.random() * 1500, dur: 0.035, peak: 0.05 + 0.08 * Math.random(), attack: 0.002, at: t0 + 0.5 + Math.random() * (len - 0.9)});   // Klatschen
+      for (let i = 0, n = Math.round(1 + 3 * q); i < n; i++){ const f = 1500 + Math.random() * 600; tone({f0: f, f1: f * 1.5, dur: 0.28, peak: 0.035, attack: 0.03, at: t0 + 0.8 + Math.random() * (len - 1.6)}); }   // Pfiffe
+    },
     rope(){   // Tau läuft aus oder wird eingeholt
       noise({f0: 500, f1: 1400, dur: 0.45, peak: 0.12, attack: 0.12});
       noise({type: 'bandpass', f0: 1800, f1: 900, q: 1.2, dur: 0.35, peak: 0.05, attack: 0.08, at: 0.12});
@@ -994,7 +1051,7 @@ const SND = (() => {
         src.start(); lfo.start();
         hiss = {f, g, fg, lfo, ff};
       } else if (v > 0) ensure();
-      const t = ctx.currentTime, fl = Math.max(0, (v - 0.3) / 0.7);
+      const t = ctx.currentTime, fl = Math.max(0, (v - 0.2) / 0.8);      // Flattern beginnt bei 20 % Öffnung
       hiss.g.gain.setTargetAtTime(v > 0 ? (0.04 + 0.42 * v * v) * (1 - fl) * (1 - fl * fl) : 0, t, v > 0 ? 0.04 : 0.09);   // das Zischen geht zur vollen Öffnung hin im Flattern unter
       hiss.f.frequency.setTargetAtTime(1300 + 3400 * v, t, 0.05);
       hiss.fg.gain.setTargetAtTime(fl > 0 ? 0.06 + 1.15 * fl * fl : 0, t, 0.06);
@@ -1010,7 +1067,6 @@ const SND = (() => {
       } else if (v <= LAND_SOFT){   // sanfte Landung
         tone({f0: 110, f1: 70, dur: 0.18, peak: 0.28});
         noise({f0: 500, f1: 220, dur: 0.2, peak: 0.10, attack: 0.03});
-        [[659.25, 0.18], [830.61, 0.33], [987.77, 0.48]].forEach(n => { tone({type: 'triangle', f0: n[0], dur: 0.7, peak: 0.20, at: n[1]}); tone({f0: n[0] * 2, dur: 0.5, peak: 0.05, at: n[1]}); });
       } else {
         tone({f0: 105, f1: 48, dur: 0.3, peak: 0.6});
         noise({f0: 800, f1: 200, dur: 0.25, peak: 0.3});
@@ -1030,8 +1086,9 @@ let STATE = 'menu';                                       // menu, setup, pick, 
 let valve = 0, follow = true, pathPts = [], lastPathE = 0, lastPathN = 0, shown = false;
 const KLAT = 111320, klon = () => 111320 * Math.cos(START.lat * Math.PI / 180);
 const ll = (e, n) => [START.lat + n / KLAT, START.lon + e / klon()];
-const musicWanted = () => !!UI.music && ['menu', 'setup', 'pick', 'busy', 'brief'].includes(STATE) && document.visibilityState !== 'hidden';
-function setState(s){ STATE = s; $('app').classList.toggle('playing', s === 'play' || s === 'done'); $('app').classList.toggle('inmenu', s !== 'brief' && s !== 'play' && s !== 'done'); $('menu').hidden = s !== 'menu'; $('setup').hidden = s !== 'setup'; $('startwin').hidden = s !== 'brief'; $('busy').hidden = s !== 'busy'; if (s !== 'play'){ SND.valve(0); setPaused(false); } SND.music(musicWanted()); }
+let menuAt = 0;
+const musicWanted = () => !!UI.music && ['menu', 'setup', 'pick', 'busy', 'brief', 'scores'].includes(STATE) && document.visibilityState !== 'hidden' && performance.now() - menuAt > 2500;   // erst nach dem Einblenden des Menüs
+function setState(s){ STATE = s; $('app').classList.toggle('playing', s === 'play' || s === 'done'); $('app').classList.toggle('inmenu', s !== 'brief' && s !== 'play' && s !== 'done'); $('menu').hidden = s !== 'menu' && s !== 'scores'; $('setup').hidden = s !== 'setup'; $('startwin').hidden = s !== 'brief'; $('busy').hidden = s !== 'busy'; $('scores').hidden = s !== 'scores'; if (s !== 'play'){ SND.valve(0); SND.drag(0); setPaused(false); } SND.music(musicWanted()); }
 ['pointerup', 'touchend', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, () => SND.music(musicWanted()), true));   // erste Berührung schaltet den Ton frei; auf dem Handy zählt erst das Loslassen
 document.addEventListener('visibilitychange', () => { SND.music(musicWanted()); if (document.visibilityState === 'hidden' && STATE === 'play' && B.air) setPaused(true); });
 let PAUSED = false;
@@ -1040,7 +1097,7 @@ function setPaused(p){
   const b = $('btn-pause'); b.classList.toggle('on', PAUSED); b.setAttribute('aria-pressed', PAUSED ? 'true' : 'false');
   $('pause-ic').setAttribute('d', PAUSED ? 'M2 1l9 6-9 6z' : 'M1 1h3.5v12H1zM7.5 1H11v12H7.5z');
   $('paused').hidden = !PAUSED; document.querySelector('.panel').classList.toggle('off', PAUSED);
-  if (PAUSED){ valve = 0; SND.valve(0); }
+  if (PAUSED){ valve = 0; SND.valve(0); SND.drag(0); }
 }
 $('btn-pause').addEventListener('click', () => setPaused(!PAUSED));
 
@@ -1055,16 +1112,17 @@ const flagSVGmap = '<svg viewBox="0 0 30 36" width="30" height="36"><path d="M6 
 const startMk = L.circleMarker([START.lat, START.lon], {radius: 7, color: '#0a1019', weight: 2, fillColor: '#eef3fa', fillOpacity: 1}).addTo(map).bindTooltip(tr('launch'), {permanent: true, direction: 'bottom', offset: [0, 8], className: 'ptip'});
 const bestLine = L.polyline([], {color: '#4cc9ff', weight: 2.5, opacity: .9, dashArray: '6 7'}).addTo(map);
 const pathLine = L.polyline([], {color: '#ff9f1c', weight: 3, opacity: .9}).addTo(map);
-const tgtRing = L.circle([START.lat, START.lon], {radius: 1000, color: '#5fe3a1', weight: 1.5, dashArray: '6 6', fill: false, interactive: false});
-const tgtCore = L.circle([START.lat, START.lon], {radius: 150, color: '#5fe3a1', weight: 1.5, fillColor: '#5fe3a1', fillOpacity: .2, interactive: false});
+const tgtRing0 = L.circle([START.lat, START.lon], {radius: 1000, color: '#0a1019', weight: 8, opacity: .7, fill: false, interactive: false});          // dunkler Rand unter dem Punktekreis
+const tgtRing = L.circle([START.lat, START.lon], {radius: 1000, color: '#ffe14d', weight: 4, opacity: 1, dashArray: '12 9', fill: false, interactive: false});
+const tgtCore = L.circle([START.lat, START.lon], {radius: 150, color: '#5fe3a1', weight: 3, fillColor: '#5fe3a1', fillOpacity: .2, interactive: false});
 const tgtMk = L.marker([START.lat, START.lon], {keyboard: false, interactive: false, zIndexOffset: 300, icon: L.divIcon({className: 'mk', iconSize: [30, 36], iconAnchor: [6, 33], html: flagSVGmap})}).bindTooltip(tr('target'), {permanent: true, direction: 'right', offset: [18, -22], className: 'ptip'});
 const balMk = L.marker([START.lat, START.lon], {keyboard: false, interactive: false, zIndexOffset: 500, icon: L.divIcon({className: 'mk', iconSize: [44, 54], iconAnchor: [22, 51], html: balloonSVG('#ff9f1c')})}).addTo(map);
 map.on('dragstart', () => { follow = false; introUntil = 0; if (STATE === 'play') $('follow').hidden = false; });
 $('follow').addEventListener('click', () => { follow = true; introUntil = 0; $('follow').hidden = true; map.panTo(balMk.getLatLng()); });
 function drawTarget(){
-  [tgtRing, tgtCore, tgtMk].forEach(x => map.removeLayer(x)); bestLine.setLatLngs([]);
+  [tgtRing0, tgtRing, tgtCore, tgtMk].forEach(x => map.removeLayer(x)); bestLine.setLatLngs([]);
   if (!TARGET) return;
-  const p = ll(TARGET.e, TARGET.n); tgtRing.setRadius(scoreRadius(TARGET.dist)); tgtRing.setLatLng(p).addTo(map); tgtCore.setLatLng(p).addTo(map); tgtMk.setLatLng(p).addTo(map); tgtMk.setTooltipContent(placeName());
+  const p = ll(TARGET.e, TARGET.n); tgtRing0.setRadius(scoreRadius(TARGET.dist)); tgtRing0.setLatLng(p).addTo(map); tgtRing.setRadius(scoreRadius(TARGET.dist)); tgtRing.setLatLng(p).addTo(map); tgtCore.setLatLng(p).addTo(map); tgtMk.setLatLng(p).addTo(map); tgtMk.setTooltipContent(placeName());
   map.fitBounds([ll(0, 0), p], {padding: [50, 50]});
 }
 
@@ -1192,7 +1250,7 @@ async function placeTarget(){
   for (let attempt = 0; attempt < 3; attempt++){
     const p = ll(TARGET.e, TARGET.n); let els;
     try{ els = await osmFetch(p[0], p[1]); }catch(e){ TARGET.place = {kind: 'zone', name: null, unchecked: true}; return; }
-    const r = pickPlace(els, p[0], p[1]);
+    const r = pickPlace(els, p[0], p[1], Math.max(300, Math.min(OSM.rPlace, 0.25 * TARGET.dist)));
     if (r.blocked && attempt < 2){ const t2 = makeTarget(CFG, ATM, UI.level); if (t2){ TARGET = t2; continue; } }   // Landepunkt liegt an einem gesperrten Ort: anderes Ziel rechnen
     const de = (r.lon - p[1]) * klon(), dn = (r.lat - p[0]) * KLAT;
     TARGET.refMiss = Math.hypot(de, dn); TARGET.e += de; TARGET.n += dn;
@@ -1254,6 +1312,7 @@ $('sw-back').addEventListener('click', () => openSetup(UI.mode));
 function showMenu(){
   $('result').hidden = true; $('hint').hidden = true; $('follow').hidden = true;
   const m = document.querySelector('.mcard'); m.classList.remove('boot'); void m.offsetWidth; m.classList.add('boot');   // Menü neu einblenden
+  menuAt = performance.now(); setTimeout(() => SND.music(musicWanted()), 2600);          // die Musik setzt nach dem Einblenden ein
   RETRO.reset(); setState('menu');
 }
 function openSetup(mode){
@@ -1263,6 +1322,10 @@ function openSetup(mode){
 }
 $('m-free').addEventListener('click', () => openSetup('free'));
 $('m-chal').addEventListener('click', () => openSetup('challenge'));
+$('m-score').addEventListener('click', showScores);
+$('sc-back').addEventListener('click', () => setState('menu'));
+$('m-name').value = UI.name || '';
+$('m-name').addEventListener('input', () => { UI.name = $('m-name').value.slice(0, 16); saveUI(); });
 $('su-back').addEventListener('click', showMenu);
 $('su-go').addEventListener('click', prepareRun);
 
@@ -1270,7 +1333,7 @@ $('su-go').addEventListener('click', prepareRun);
 function stShow(msg){ $('st-info').textContent = msg || tr('st_name_' + (START.kind || 'map')) + ' (' + START.lat.toFixed(5) + ', ' + START.lon.toFixed(5) + ')'; }
 function stSet(s){ START = s; groundAlt = s.alt; store.set('gb-start', s); startMk.setLatLng(ll(0, 0)); balMk.setLatLng(ll(0, 0)); pathLine.setLatLngs([]); map.setView(ll(0, 0), 13); stShow(); toast(tr('st_ok')); }
 let stWatch = null;
-$('st-map').addEventListener('click', () => { [tgtRing, tgtCore, tgtMk].forEach(x => map.removeLayer(x)); bestLine.setLatLngs([]); pathLine.setLatLngs([]); map.setView(ll(0, 0), 12); setState('pick'); toast(tr('st_tap')); });
+$('st-map').addEventListener('click', () => { [tgtRing0, tgtRing, tgtCore, tgtMk].forEach(x => map.removeLayer(x)); bestLine.setLatLngs([]); pathLine.setLatLngs([]); map.setView(ll(0, 0), 12); setState('pick'); toast(tr('st_tap')); });
 map.on('click', e => { if (STATE !== 'pick') return; stSet({lat: e.latlng.lat, lon: e.latlng.lng, alt: null, kind: 'map'}); setState('setup'); });
 $('st-def').addEventListener('click', () => stSet(BITTERFELD));
 $('st-gps').addEventListener('click', () => {
@@ -1416,6 +1479,7 @@ function updInst(){
   const moving = agl > 0 && !B.landed, sp = B.ropeOn > 0 ? (B.gs || 0) : Math.hypot(a.u, a.v);
   $('i-track').textContent = moving ? deg3(dirTo(a.u, a.v)) + ' ' + spd(sp) : '–';
   const rb = $('rope'); rb.classList.toggle('on', !!B.rope); rb.setAttribute('aria-pressed', B.rope ? 'true' : 'false'); rb.disabled = B.landed || !B.ok;
+  if (STATE === 'play' && !PAUSED) SND.drag(B.ropeOn > 0 && !B.landed ? B.ropeOn / (CFG.ropeKgM * CFG.ropeLen) * Math.min(1, 0.2 + (B.gs || 0) / 2.5) : 0);
   $('n-rope').textContent = B.rope ? (B.ropeOn > 0.05 ? '−' + nf(B.ropeOn, 1) + ' kg' : nf(CFG.ropeLen) + ' m') : '';
   if (TARGET){ const de = TARGET.e - B.e, dn = TARGET.n - B.n; $('i-tdist').textContent = fmtD(Math.hypot(de, dn)); $('i-tbrg').textContent = deg3((Math.atan2(de, dn) * 180 / Math.PI + 360) % 360); }
   $('i-time').textContent = fmtT(B.t); $('i-dist').textContent = fmtD(B.dist);
@@ -1428,16 +1492,38 @@ function updInst(){
   else if (agl <= 0 && !B.air && !B.landed){ hint.hidden = false; hint.textContent = tr('hint_start'); }
   else hint.hidden = true;
 }
+/* ---------- Bestenliste (PUN-07): auf diesem Gerät gespeichert; bei gleicher Punktzahl liegt vorn, wer mehr Sand übrig hat (PUN-06) ---------- */
+const scoreList = () => { const a = store.get('gb-scores', []); return Array.isArray(a) ? a : []; };
+function scoreAdd(e){
+  const a = scoreList(); a.push(e); a.sort((x, y) => y.p - x.p || y.s - x.s || x.at - y.at);
+  const rank = a.indexOf(e) + 1; store.set('gb-scores', a.slice(0, 100)); return rank <= 100 ? rank : 0;
+}
+function showScores(){
+  const a = scoreList(), lv = ['lv_easy', 'lv_mid', 'lv_hard'], box = $('sc-list'); box.textContent = '';
+  if (!a.length){ const q = document.createElement('p'); q.className = 'note'; q.textContent = tr('sc_empty'); box.appendChild(q); }
+  else {
+    const tb = document.createElement('table'); tb.className = 'sc';
+    const row = (cells, tag) => { const r = document.createElement('tr'); cells.forEach(c => { const x = document.createElement(tag); x.textContent = c; r.appendChild(x); }); tb.appendChild(r); };
+    row(['#', tr('name_lbl'), tr('r_pts'), tr('su_level'), tr('sc_sand')], 'th');
+    a.forEach((e, i) => row([i + 1, e.n, e.p, tr(lv[e.l] || 'lv_easy'), nf(e.s, 1) + ' kg'], 'td'));
+    box.appendChild(tb);
+  }
+  setState('scores');
+}
+let cheerQ = 0.5;
 function showResult(){
+  cheerQ = 0.5;
   $('r-sink').textContent = nf(B.vLand, 1) + ' m/s'; $('r-time').textContent = fmtT(B.t); $('r-dist').textContent = fmtD(B.dist);
   $('r-line').textContent = fmtD(Math.hypot(B.e, B.n)); $('r-max').textContent = nf(Math.round(B.maxH)) + ' m'; $('r-sand').textContent = nf(sandKg(B, CFG), 1) + ' kg'; $('r-gas').textContent = nf(B.gas / B.gas0 * 100) + ' %';
   document.querySelectorAll('.tgtres').forEach(el => { el.hidden = !TARGET; });
   if (TARGET){
     const d = Math.hypot(TARGET.e - B.e, TARGET.n - B.n);
-    $('r-tdist').textContent = fmtD(d); $('r-pts').textContent = scoreLanding(d, B.vLand, TARGET.dist);
+    const pts = scoreLanding(d, B.vLand, TARGET.dist); $('r-tdist').textContent = fmtD(d); $('r-pts').textContent = pts;
+    const rank = pts > 0 ? scoreAdd({n: (UI.name || '').trim() || 'Pilot', p: pts, l: TARGET.level, s: Math.round(sandKg(B, CFG) * 10) / 10, d: Math.round(d), t: Math.round(B.t), at: Date.now()}) : 0;
+    $('r-rank').textContent = rank ? rank + '.' : '–'; cheerQ = pts / 100;
     bestLine.setLatLngs(TARGET.path.map(p => ll(p[0], p[1])));                // Vergleichsfahrt zeigen (SPI-06)
   }
-  $('result').hidden = false; valve = 0; setState('done'); SND.land(B.vLand); renderSand(true);
+  $('result').hidden = false; valve = 0; setState('done'); SND.land(B.vLand); if (B.vLand < LAND_HARD) SND.cheer(cheerQ); renderSand(true);
 }
 $('again').addEventListener('click', prepareRun);
 $('r-menu').addEventListener('click', showMenu);
@@ -1479,7 +1565,7 @@ const RETRO = (() => {
 let lastTs = 0;
 function frame(ts){
   const real = Math.min(0.1, (ts - lastTs) / 1000 || 0); lastTs = ts;
-  if (STATE === 'menu'){ RETRO.tick(real); requestAnimationFrame(frame); return; }
+  if (STATE === 'menu' || STATE === 'scores'){ RETRO.tick(real); requestAnimationFrame(frame); return; }
   if (STATE === 'play' && !PAUSED && !B.landed && B.ok){
     B.gnd = terAt(B.e, B.n); terCheck(); wxTick();
     let simDt = real * (valve > 0 ? 1 : UI.speed);                    // solange das Ventil gezogen ist, läuft die Zeit 1×
@@ -1542,12 +1628,14 @@ function applyLang(){
   document.documentElement.lang = UI.lang;
   document.querySelectorAll('[data-i]').forEach(el => { el.textContent = tr(el.dataset.i); });
   document.querySelectorAll('[data-ia]').forEach(el => el.setAttribute('aria-label', tr(el.dataset.ia)));
+  document.querySelectorAll('[data-ip]').forEach(el => el.setAttribute('placeholder', tr(el.dataset.ip)));
   $('lang-btn').innerHTML = flagSVG(UI.lang) + CHEV;
   document.querySelectorAll('#lang-list .lopt').forEach(o => { const on = o.dataset.c === UI.lang; o.classList.toggle('on', on); o.setAttribute('aria-selected', on ? 'true' : 'false'); });
   startMk.setTooltipContent(tr('launch')); tgtMk.setTooltipContent(placeName());
   renderSand(true); cfgCalc(); stShow();
   if (STATE === 'setup') $('su-title').textContent = tr(UI.mode === 'challenge' ? 'm_chal' : 'm_free');
   if (STATE === 'brief') showStart();
+  if (STATE === 'scores') showScores();
 }
 (function initLang(){
   const list = $('lang-list'), btn = $('lang-btn'), close = () => { list.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
