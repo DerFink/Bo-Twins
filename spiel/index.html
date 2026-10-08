@@ -2,14 +2,13 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0a1019">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Gasballon">
 <title>Gasballon-Simulator</title>
 
@@ -37,7 +36,7 @@ button,select,input{font-family:inherit;color:inherit}
 button{cursor:pointer}
 button:focus-visible,input:focus-visible{outline:2px solid var(--base);outline-offset:2px}
 
-#app{position:relative;width:100%;height:100vh;height:100dvh;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#app{position:relative;width:100%;height:100vh;height:100dvh;height:var(--apph,100dvh);background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
 .num{font-family:var(--num);font-variant-numeric:tabular-nums;letter-spacing:.01em}
 .lbl{font-size:12px;color:var(--mut);line-height:1.15}
 
@@ -186,6 +185,9 @@ button.pri2{background:var(--orb);border-color:var(--orb);color:#0a1019;font-wei
 .lopt.on{background:var(--pan2);font-weight:600}
 .lopt.on::after{content:"\2713";margin-left:auto;color:#ffc83d}
 #app.inmenu #seg-speed{visibility:hidden}
+#app.home #btn-menu{display:none}
+#app:not(.home) .brand svg{display:none}
+@media (max-width:440px){#app:not(.home) .brand{display:none}}
 
 /* Fenster über der Bühne: Hauptmenü, Vorbereitung, Startfenster, Rückfrage */
 .stage{position:relative}
@@ -260,6 +262,7 @@ table.sc td:nth-child(3){font-weight:700;color:var(--orb)}
 
   <header class="hdr">
     <div class="hrow" style="min-width:0">
+      <button class="iconbtn" id="btn-menu" data-ia="menu" aria-label="Hauptmenü"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11.5L12 4l8.5 7.5M6 10v9.5h4.2V14h3.6v5.5H18V10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       <div class="brand">
         <svg width="22" height="28" viewBox="0 0 44 54" aria-hidden="true"><path d="M22 2C11 2 4 10 4 20c0 8 6 14.5 13 19h10c7-4.5 13-11 13-19C40 10 33 2 22 2z" fill="#ff9f1c"/><path d="M17 39l3 6M27 39l-3 6" stroke="#eef3fa" stroke-width="2"/><rect x="18" y="45" width="8" height="6" rx="1.5" fill="#eef3fa"/></svg>
         <span data-i="brand">Gasballon</span>
@@ -1077,7 +1080,7 @@ es:{ brand:'Globo de gas', speed:'Cámara rápida', settings:'Ajustes', close:'C
 /* =====================================================================
    Oberfläche
    ===================================================================== */
-const BUILD = '2026-10-08.12';
+const BUILD = '2026-10-08.13';
 const ACC_FULL = 0.25;   // m/s², Vertikalbeschleunigung, bei der der Balken am Vario voll ausschlägt (ein Sack von 15 kg ergibt rund 0,08)
 const $ = id => document.getElementById(id);
 const store = { get(k, d){ try{ const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
@@ -1281,7 +1284,7 @@ const KLAT = 111320, klon = () => 111320 * Math.cos(START.lat * Math.PI / 180);
 const ll = (e, n) => [START.lat + n / KLAT, START.lon + e / klon()];
 let menuAt = 0;
 const musicWanted = () => !!UI.music && ['menu', 'chal', 'setup', 'pick', 'busy', 'brief', 'scores'].includes(STATE) && document.visibilityState !== 'hidden' && performance.now() - menuAt > 1700;   // erst nach dem Einblenden des Menüs
-function setState(s){ STATE = s; $('app').classList.toggle('playing', s === 'play' || s === 'done'); $('app').classList.toggle('inmenu', s !== 'brief' && s !== 'play' && s !== 'done'); $('menu').hidden = s !== 'menu' && s !== 'scores' && s !== 'chal'; $('chal').hidden = s !== 'chal'; $('setup').hidden = s !== 'setup'; $('startwin').hidden = s !== 'brief'; $('busy').hidden = s !== 'busy'; $('scores').hidden = s !== 'scores'; if (s !== 'play'){ SND.valve(0); SND.drag(0); setPaused(false); } SND.music(musicWanted()); if (typeof INSTALL !== 'undefined') INSTALL.show(); }
+function setState(s){ STATE = s; $('app').classList.toggle('home', s === 'menu'); $('app').classList.toggle('playing', s === 'play' || s === 'done'); $('app').classList.toggle('inmenu', s !== 'brief' && s !== 'play' && s !== 'done'); $('menu').hidden = s !== 'menu' && s !== 'scores' && s !== 'chal'; $('chal').hidden = s !== 'chal'; $('setup').hidden = s !== 'setup'; $('startwin').hidden = s !== 'brief'; $('busy').hidden = s !== 'busy'; $('scores').hidden = s !== 'scores'; if (s !== 'play'){ SND.valve(0); SND.drag(0); setPaused(false); } SND.music(musicWanted()); if (typeof INSTALL !== 'undefined') INSTALL.show(); }
 ['pointerup', 'touchend', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, () => SND.music(musicWanted()), true));   // erste Berührung schaltet den Ton frei; auf dem Handy zählt erst das Loslassen
 document.addEventListener('visibilitychange', () => { SND.music(musicWanted()); if (document.visibilityState === 'hidden' && STATE === 'play' && B.air) setPaused(true); });
 let PAUSED = false;
@@ -1894,10 +1897,14 @@ function frame(ts){
 const openSheet = o => { $('sheet').classList.toggle('open', o); $('sheet').setAttribute('aria-hidden', o ? 'false' : 'true'); if (o) cfgFill(); };
 $('btn-set').addEventListener('click', () => openSheet(!$('sheet').classList.contains('open')));
 $('set-close').addEventListener('click', () => openSheet(false));
-$('set-menu').addEventListener('click', async () => {
-  if (STATE === 'play' && B.air && !(await confirmBox(tr('cf_menu'), tr('cf_menu_ok')))) return;
-  openSheet(false); showMenu();
-});
+async function goMenu(){                                   // Fahrt abbrechen und zurück ins Hauptmenü; in der Luft mit Rückfrage
+  if (STATE === 'menu') return;
+  if (STATE === 'play' && B.air && !B.landed && !(await confirmBox(tr('cf_menu'), tr('cf_menu_ok')))) return;
+  if (typeof gpsStop === 'function') gpsStop();
+  openSheet(false); $('result').hidden = true; showMenu();
+}
+$('set-menu').addEventListener('click', goMenu);
+$('btn-menu').addEventListener('click', goMenu);
 function bindSeg(id, cur, onPick){ const el = $(id); const mark = v => el.querySelectorAll('button[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === String(v))); mark(cur); el.querySelectorAll('button[data-v]').forEach(b => b.addEventListener('click', () => { mark(b.dataset.v); onPick(b.dataset.v); })); }
 bindSeg('seg-speed', UI.speed, v => { UI.speed = +v; });
 bindSeg('seg-map', UI.map, v => { UI.map = v; saveUI(); applyTiles(); });
@@ -1969,6 +1976,10 @@ $('reload').addEventListener('click', async () => {
        if (window.caches){ for (const k of await caches.keys()) if (k.startsWith('gb-shell')) await caches.delete(k); } }catch(e){}
   location.reload();
 });
+/* Höhe der App = sichtbare Höhe des Fensters, damit unten nichts hinter den Systemtasten oder der Adressleiste liegt */
+function fitApp(){ const h = (window.visualViewport && visualViewport.height) || window.innerHeight; if (h > 100) document.documentElement.style.setProperty('--apph', Math.floor(Math.min(h, window.innerHeight || h)) + 'px'); if (typeof map !== 'undefined' && map.invalidateSize) map.invalidateSize(); }
+fitApp(); window.addEventListener('resize', fitApp); window.addEventListener('orientationchange', () => setTimeout(fitApp, 300)); if (window.visualViewport) visualViewport.addEventListener('resize', fitApp);
+
 /* ---------- Installation als App (INS-04) ----------
    Android und Chrome am Rechner melden mit beforeinstallprompt, dass sich die App installieren lässt; „Installieren“ öffnet dann den Dialog des Browsers.
    iPhone und iPad kennen das nicht: Dort zeigt der Hinweis die Schritte in Safari. „Später“ blendet den Hinweis für 7 Tage aus. In der installierten App erscheint er nicht. */
