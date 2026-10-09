@@ -3,7 +3,7 @@
    - Bibliotheken (Leaflet, Schriften): einmal laden, dann aus dem Zwischenspeicher
    - Kartenkacheln: nur was angezeigt wurde, wird gespeichert und beim nächsten Mal nicht erneut geladen
    Vorlage: Service Worker der Tracker-App (v6) */
-const VER = 'v28';
+const VER = 'v29';
 const SHELL = 'gb-shell-' + VER;
 const LIBS = 'gb-libs-' + VER;
 const TILES = 'gb-tiles-' + VER;
