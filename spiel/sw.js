@@ -3,7 +3,7 @@
    - Bibliotheken (Leaflet, Schriften): einmal laden, dann aus dem Zwischenspeicher
    - Kartenkacheln: nur was angezeigt wurde, wird gespeichert und beim nächsten Mal nicht erneut geladen
    Vorlage: Service Worker der Tracker-App (v6) */
-const VER = 'v25';
+const VER = 'v26';
 const SHELL = 'gb-shell-' + VER;
 const LIBS = 'gb-libs-' + VER;
 const TILES = 'gb-tiles-' + VER;
@@ -16,7 +16,7 @@ const LIB_URLS = [
   'https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap'
 ];
 const TILE_HOST = /(^|\.)(tile\.openstreetmap\.org)$/;
-const LIB_HOST = /(^|\.)(cdnjs\.cloudflare\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)$/;
+const LIB_HOST = /(^|\.)(cdnjs\.cloudflare\.com|fonts\.googleapis\.com|fonts\.gstatic\.com|cdn\.jsdelivr\.net)$/;   // jsdelivr: Ländergrenzen für die Sperrzonen der Meisterschaft
 
 self.addEventListener('install', e => {
   e.waitUntil((async () => {
