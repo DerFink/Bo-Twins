@@ -3,7 +3,7 @@
    - Bibliotheken (Leaflet, Schriften): einmal laden, dann aus dem Zwischenspeicher
    - Kartenkacheln: nur was angezeigt wurde, wird gespeichert und beim nächsten Mal nicht erneut geladen
    Vorlage: Service Worker der Tracker-App (v6) */
-const VER = 'v31';
+const VER = 'v35';
 const SHELL = 'gb-shell-' + VER;
 const LIBS = 'gb-libs-' + VER;
 const TILES = 'gb-tiles-' + VER;
@@ -16,6 +16,8 @@ const LIB_URLS = [
   'https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap'
 ];
 const TILE_HOST = /(^|\.)(tile\.openstreetmap\.org)$/;
+const OFM_HOST = /(^|\.)(newaydata\.com)$/;                   // open flightmaps: Luftfahrtdaten dürfen nicht lange veralten
+const ofmName = () => 'gb-ofm-' + Math.floor(Date.now() / (14 * 864e5));   // alle 14 Tage ein neuer Zwischenspeicher
 const LIB_HOST = /(^|\.)(cdnjs\.cloudflare\.com|fonts\.googleapis\.com|fonts\.gstatic\.com|cdn\.jsdelivr\.net)$/;   // jsdelivr: Ländergrenzen für die Sperrzonen der Meisterschaft
 
 self.addEventListener('install', e => {
@@ -33,7 +35,7 @@ self.addEventListener('install', e => {
 
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
-    for (const k of await caches.keys()) if (k.startsWith('gb-') && ![SHELL, LIBS, TILES].includes(k)) await caches.delete(k);
+    for (const k of await caches.keys()) if (k.startsWith('gb-') && ![SHELL, LIBS, TILES, ofmName()].includes(k)) await caches.delete(k);
     await self.clients.claim();
   })());
 });
@@ -43,6 +45,8 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (TILE_HOST.test(url.hostname)) { e.respondWith(tile(req)); return; }
+  if (OFM_HOST.test(url.hostname)) { e.respondWith(ofmTile(req)); return; }
+  if (url.origin === location.origin && url.pathname.includes('/api/')) return;   // Dienst für die Bestenliste: immer direkt ins Netz, nie aus dem Zwischenspeicher
   if (url.origin === location.origin) { e.respondWith(shell(req)); return; }
   if (LIB_HOST.test(url.hostname)) { e.respondWith(lib(req)); return; }
   // alles andere (später Wetter, Orte, Routing) geht direkt ins Netz
@@ -76,6 +80,21 @@ async function trim(cache) {
 }
 async function tile(req) {
   const cache = await caches.open(TILES);
+  const hit = await cache.match(req.url);
+  if (hit) return hit;
+  try {
+    const res = await fetch(req.url, {mode: 'cors', credentials: 'omit'});
+    if (res.ok) cache.put(req.url, res.clone()).then(() => trim(cache));
+    return res;
+  } catch (err) {
+    try { return await fetch(req); } catch (e2) { return Response.error(); }
+  }
+}
+
+async function ofmTile(req) {                       // Lufträume: eigener Zwischenspeicher je 14 Tage; ältere werden gelöscht
+  const name = ofmName();
+  caches.keys().then(ks => ks.forEach(k => { if (k.startsWith('gb-ofm-') && k !== name) caches.delete(k); }));
+  const cache = await caches.open(name);
   const hit = await cache.match(req.url);
   if (hit) return hit;
   try {
