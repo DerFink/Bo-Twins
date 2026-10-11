@@ -1434,7 +1434,7 @@ es:{ brand:'Globo de gas', speed:'Cámara rápida', settings:'Ajustes', close:'C
 /* =====================================================================
    Oberfläche
    ===================================================================== */
-const BUILD = '2026-10-11.4';
+const BUILD = '2026-10-11.5';
 const ACC_FULL = 0.25;   // m/s², Vertikalbeschleunigung, bei der der Balken am Vario voll ausschlägt (ein Sack von 15 kg ergibt rund 0,08)
 const $ = id => document.getElementById(id);
 const store = { get(k, d){ try{ const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
@@ -1664,12 +1664,15 @@ const map = L.map('map', {zoomControl: false, attributionControl: true, zoomSnap
 let tiles = null;
 function applyTiles(){ if (tiles) map.removeLayer(tiles); tiles = L.tileLayer(OSM_URL, UI.map === 'dark' ? {maxZoom: 19, className: 'tiles-dark', attribution: OSM_ATTR} : {maxZoom: 19, attribution: OSM_ATTR}).addTo(map); tiles.bringToBack(); }
 /* Ballonsymbol der Karte. f: Füllgrad 0 bis 1. Prall ist die Hülle rund; verliert sie Gas, sammelt es sich oben, und der untere Teil hängt schmal und schlaff (STE-29). */
-// Form der Hülle nach Füllgrad, in Einheiten des Radius der vollen Hülle. Das Gas sammelt sich oben in einer Blase (Radius rb), darunter hängt der Stoff
-// als Schlauch (halbe Breite wt). q läuft von der Öffnung unten (0) zum Scheitel (1), w ist die halbe Breite, a das Maß für das Flattern (ab 45 % abwärts).
-function hullProf(f, Lr, n){ f = Math.max(0, Math.min(1, f == null ? 1 : f)); const wt = 0.21, rb = wt + (1 - wt) * Math.pow(f, 0.55), qc = Math.max(0.05, 1 - rb / Lr), p = 0.9 + 5 * (1 - f), amp = Math.pow(Math.max(0, Math.min(1, (0.45 - f) / 0.37)), 1.5), out = [];
-  for (let i = 0; i <= n; i++){ const q = i / n, x = (q - qc) / (1 - qc); out.push({q, w: q >= qc ? rb * Math.sqrt(Math.max(0, 1 - x * x)) : wt + (rb - wt) * Math.pow(Math.sin(Math.PI / 2 * q / qc), p), a: amp * q}); }
-  return out; }
-const balloonSVG = (c, f) => { const P = hullProf(f, 37 / 18, 16), r = x => x.toFixed(1), side = (sg, k) => P.map(p => r(22 + Math.sin(p.q * 7 + 1) * 5 * p.a + sg * k * p.w * 18) + ' ' + r(39 - p.q * 37)), m = 0.21 * 18;
+// Form der Hülle nach Füllgrad (Wahl des Nutzers 11.10.2026, „Version C“), in Einheiten des Radius der vollen Hülle.
+// Bis 50 % Pilzform: oben volle Breite, unten zieht das Netz die Hülle schmal. Darunter wird sie auch oben schmaler (Faktor k, zuerst langsam)
+// und geht unter 20 % in die schlaffe, flatternde Hülle über. q läuft von der Öffnung unten (0) zum Scheitel (1), w ist die halbe Breite, a das Maß für das Flattern.
+function hullProf(f){ f = Math.max(0, Math.min(1, f == null ? 1 : f)); const bz = (a, b, c, d, t) => { const u = 1 - t; return u * u * u * a + 3 * u * u * t * b + 3 * u * t * t * c + t * t * t * d; };
+  const s = Math.min(1, Math.pow(1 - Math.max(f, 0.5), 0.7) + (f < 0.5 ? (0.5 - f) * 0.5 : 0)), nw = 5 - 3.2 * s, k = f >= 0.5 ? 1 : 0.15 + 0.85 * Math.pow(Math.sin(Math.PI / 2 * Math.min(1, f / 0.5 * 1.15)), 0.9), amp = Math.pow(Math.max(0, Math.min(1, (0.3 - f) / 0.25)), 1.5), R = [];
+  for (let i = 0; i <= 10; i++){ const t = i / 10; R.push([bz(0, 11, 18, 18, t), bz(2, 2, 10, 20, t)]); }
+  for (let i = 1; i <= 12; i++){ const t = i / 12; R.push([bz(18, 18 - 15 * s, 12 - 9 * s, nw, t), bz(20, 28 - 2 * s, 34.5, 39, t)]); }
+  return R.reverse().map(p => { const q = (39 - p[1]) / 37; return {q, w: Math.max(k * p[0], Math.min(p[0], 2.3)) / 18, a: amp * q}; }); }
+const balloonSVG = (c, f) => { const P = hullProf(f), r = x => x.toFixed(1), side = (sg, k) => P.map(p => r(22 + Math.sin(p.q * 7 + 1) * 5 * p.a + sg * k * p.w * 18) + ' ' + r(39 - p.q * 37)), m = P[0].w * 18;
   return `<svg viewBox="0 0 44 54" width="44" height="54"><path d="M${side(-1, 1).join('L')}L${side(1, 1).reverse().join('L')}z" fill="${c}" stroke="#0a1019" stroke-width="2" stroke-linejoin="round"/><path d="M${side(-1, 0.45).join('L')}M${side(1, 0.45).join('L')}" fill="none" stroke="#0a1019" stroke-opacity=".35" stroke-width="1.6" stroke-linejoin="round"/><path d="M${r(22 - m)} 39L20 45M${r(22 + m)} 39L24 45" stroke="#eef3fa" stroke-width="1.4"/><rect x="18" y="45" width="8" height="6" rx="1.5" fill="#eef3fa" stroke="#0a1019" stroke-width="1.5"/></svg>`; };
 const flagSVGmap = '<svg viewBox="0 0 30 36" width="30" height="36"><path d="M6 34V3" stroke="#eef3fa" stroke-width="2.5" stroke-linecap="round"/><path d="M7 4h18l-5 6 5 6H7z" fill="#5fe3a1" stroke="#0a1019" stroke-width="1.5" stroke-linejoin="round"/><circle cx="6" cy="33" r="3" fill="#5fe3a1" stroke="#0a1019" stroke-width="1.5"/></svg>';
 const startMk = L.circleMarker([START.lat, START.lon], {radius: 7, color: '#0a1019', weight: 2, fillColor: '#eef3fa', fillOpacity: 1}).addTo(map).bindTooltip(tr('launch'), {permanent: true, direction: 'bottom', offset: [0, 8], className: 'ptip'});
@@ -3110,11 +3113,11 @@ function sideDraw(){
   c.strokeStyle = '#5fe3a1'; c.lineWidth = 1.5; c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.stroke();
   // Ballon: Größe maßstäblich, aber nie kleiner als ein Symbol; die Form folgt dem Füllgrad
   const fI = fillNow(), Dm = Math.cbrt(6 * CFG.vol / Math.PI), r = Math.max(9, Dm * m / 2), yBask = yOf(B.h), bh = Math.max(4, 1.3 * m), bw = Math.max(5, 1.5 * m), cy = yBask - bh - r * 1.55;
-  { const yM = yBask - bh - 0.55 * r * Math.sqrt(fI), yT = yBask - bh - 2.55 * r, Lh = yM - yT, tt = performance.now() / 1000, HP = hullProf(fI, Lh / r, 24), hx = p => bx + Math.sin(tt * 11 + p.q * 7) * r * 0.28 * p.a, hy = p => yM - p.q * Lh, g = HP[6];
-    SIDE.top = [hx(HP[24]), yT];                                                // Scheitel mit dem Ventil: dort tritt das Gas aus
+  { const yM = yBask - bh - 0.55 * r * Math.sqrt(fI), yT = yBask - bh - 2.55 * r, Lh = yM - yT, tt = performance.now() / 1000, HP = hullProf(fI), nH = HP.length - 1, hx = p => bx + Math.sin(tt * 11 + p.q * 7) * r * 0.28 * p.a, hy = p => yM - p.q * Lh, g = HP[5];
+    SIDE.top = [hx(HP[nH]), yT];                                                // Scheitel mit dem Ventil: dort tritt das Gas aus
     c.strokeStyle = '#c9d6e8'; c.lineWidth = 1; c.beginPath(); c.moveTo(hx(g) - g.w * r * 0.9, hy(g)); c.lineTo(bx - bw / 2, yBask - bh); c.moveTo(hx(g) + g.w * r * 0.9, hy(g)); c.lineTo(bx + bw / 2, yBask - bh); c.stroke();
-    c.fillStyle = '#f4f1ea'; c.strokeStyle = '#0a1019'; c.lineWidth = 1.2; c.lineJoin = 'round'; c.beginPath(); HP.forEach((p, i) => { const X = hx(p) - Math.max(1.5, p.w * r) * (i === 24 ? 0 : 1); i ? c.lineTo(X, hy(p)) : c.moveTo(X, hy(p)); });
-    for (let i = 23; i >= 0; i--){ const p = HP[i]; c.lineTo(hx(p) + Math.max(1.5, p.w * r), hy(p)); } c.closePath(); c.fill(); c.stroke(); }
+    c.fillStyle = '#f4f1ea'; c.strokeStyle = '#0a1019'; c.lineWidth = 1.2; c.lineJoin = 'round'; c.beginPath(); HP.forEach((p, i) => { const X = hx(p) - Math.max(1.5, p.w * r) * (i === nH ? 0 : 1); i ? c.lineTo(X, hy(p)) : c.moveTo(X, hy(p)); });
+    for (let i = nH - 1; i >= 0; i--){ const p = HP[i]; c.lineTo(hx(p) + Math.max(1.5, p.w * r), hy(p)); } c.closePath(); c.fill(); c.stroke(); }
   c.fillStyle = '#b98a4a'; c.fillRect(bx - bw / 2, yBask - bh, bw, bh); c.strokeRect(bx - bw / 2, yBask - bh, bw, bh);
   // Schlepptau: hängt bis zum Boden, der Rest liegt hinter dem Ballon auf
   if (B.rope){ const hang = Math.min(CFG.ropeLen, agl), lie = CFG.ropeLen - hang; c.strokeStyle = '#d9b36c'; c.lineWidth = Math.max(1.5, 0.25 * m); c.lineCap = 'round'; c.beginPath(); c.moveTo(bx + bw / 2, yBask - 1);
@@ -3181,6 +3184,8 @@ foldApply(false);
 
 /* ---------- Was ist neu (INS-06): kurze Texte je Build für die Nutzer, der neueste zuerst. Deutsch und Englisch; andere Sprachen zeigen Englisch. ---------- */
 const NEWS = [
+ {b: '2026-10-11.5', de: ['Füllgrad an der Hülle ablesen: Bis 50 % wird der Ballon pilzförmig, oben breit und unten vom Netz schmal gezogen. Darunter wird er auch oben schmaler, unter 20 % hängt er als flatternde Hülle am Korb.'],
+  en: ['Read the fill from the envelope: down to 50 % the balloon turns mushroom-shaped, wide at the top and pulled narrow by the net below. Under that it narrows at the top as well, below 20 % it hangs from the basket as a fluttering envelope.']},
  {b: '2026-10-11.4', de: ['Ist die Hülle leer, zischt das Ventil nicht mehr, und in der Seitenansicht tritt kein Gas mehr aus.'],
   en: ['With an empty envelope the valve no longer hisses, and the side view shows no more gas escaping.']},
  {b: '2026-10-11.3', de: ['Die Hülle wird mit sinkendem Füllgrad gleichmäßig schmaler, auch oben, und beginnt unter etwa 45 % zu flattern. Der Übergang zur schlaffen Hülle kommt nicht mehr plötzlich.', 'Meisterschaft, Vorflug „KI-optimiert“: neue Route tief über die Ostsee bis nach Finnland.'],
