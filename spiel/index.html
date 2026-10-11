@@ -714,7 +714,7 @@ table.sc td:nth-child(3){font-weight:700;color:var(--orb)}
     <div class="row"><span data-i="v_map"></span><div class="seg" id="seg-map"><button data-v="dark" data-i="dark"></button><button data-v="light" data-i="light"></button></div></div>
     <div class="row"><span data-i="v_ofm"></span><div class="seg" id="seg-ofm"><button data-v="0" data-i="off"></button><button data-v="1" data-i="on"></button></div></div>
     <div class="row"><span data-i="v_side"></span><div class="seg" id="seg-side"><button data-v="auto" data-i="side_auto"></button><button data-v="off" data-i="off"></button></div></div>
-    <div class="btns" style="margin:6px 0 8px"><button class="sm" id="in-btn" data-i="in_title"></button><button class="sm" id="nw-btn" data-i="news_title"></button><button class="sm" id="sx-btn" data-i="sx_title" hidden></button></div>
+    <div class="btns" style="margin:6px 0 8px"><button class="sm" id="in-btn" data-i="in_title"></button><button class="sm" id="sx-btn" data-i="sx_title" hidden></button></div>
     <div class="row"><span data-i="v_unit"></span><div class="seg" id="seg-unit"><button data-v="kmh">km/h</button><button data-v="kt">kt</button><button data-v="ms">m/s</button></div></div>
     <div class="row"><span data-i="v_gas"></span><div class="seg" id="seg-gas"><button data-v="0" data-i="off"></button><button data-v="1" data-i="on"></button></div></div>
     <div class="row"><span data-i="v_snd"></span><div class="seg" id="seg-snd"><button data-v="0" data-i="off"></button><button data-v="1" data-i="on"></button></div></div>
@@ -735,8 +735,8 @@ table.sc td:nth-child(3){font-weight:700;color:var(--orb)}
     <p class="note" data-i="about1"></p>
     <p class="note" data-i="about3"></p>
     <p class="note" data-i="about2"></p>
-    <p class="note"><span data-i="ver"></span> <span id="ver"></span> · <button class="sm" id="reload" data-i="reload"></button> <button class="sm" id="inst-set" data-i="inst_set" hidden></button></p>
-    <p class="note"><button class="sm" id="wxp-btn" data-i="wxp_btn"></button> <span id="wxp-info"></span></p>
+    <p class="note"><span data-i="ver"></span> <span id="ver"></span> · <button class="sm" id="reload" data-i="reload"></button> <button class="sm" id="nw-btn" data-i="news_title"></button> <button class="sm" id="inst-set" data-i="inst_set" hidden></button></p>
+    <p class="note" hidden><button class="sm" id="wxp-btn" data-i="wxp_btn"></button> <span id="wxp-info"></span></p>   <!-- Wetterpaket für die Routenrechnung: ausgeblendet (Vorgabe Nutzer 11.10.2026), die Funktion bleibt erhalten -->
   </div>
 
   <!-- Rückfrage -->
@@ -1060,7 +1060,8 @@ function wxUrl(lat, lon, lite, hist){                     // hist: Zeitpunkt in 
   if (!lite) h.push('precipitation', 'cloud_cover', 'cloud_cover_low', 'cloud_cover_mid', 'cloud_cover_high', 'relative_humidity_2m');
   WX_LEVELS.forEach(L => ['temperature', 'wind_speed', 'wind_direction', 'geopotential_height'].concat(lite ? [] : ['cloud_cover', 'relative_humidity']).forEach(v => h.push(v + '_' + L + 'hPa')));
   const day = ms => new Date(ms).toISOString().slice(0, 10);
-  return (hist ? 'https://historical-forecast-api.open-meteo.com' : 'https://api.open-meteo.com') + '/v1/forecast?latitude=' + lat.toFixed(4) + '&longitude=' + lon.toFixed(4) + '&hourly=' + h.join(',') + '&wind_speed_unit=ms&timezone=UTC' +
+  return (hist ? 'https://historical-forecast-api.open-meteo.com' : 'https://api.open-meteo.com') + '/v1/forecast?latitude=' + lat.toFixed(2) + '&longitude=' + lon.toFixed(2) +   // auf zwei Nachkommastellen gerundet, rund 1 km: Der genaue Standort verlässt das Gerät dafür nicht (REC-04)
+    '&hourly=' + h.join(',') + '&wind_speed_unit=ms&timezone=UTC' +
     (hist ? '&start_date=' + day(hist) + '&end_date=' + day(hist + 2 * 864e5) : '&forecast_days=3');
 }
 const dewK = (Tc, rh) => { if (rh == null || !(rh > 0)) return null; const g = Math.log(Math.min(100, rh) / 100) + 17.625 * Tc / (243.04 + Tc); return 243.04 * g / (17.625 - g) + 273.15; };   // Taupunkt nach Magnus
@@ -1433,7 +1434,7 @@ es:{ brand:'Globo de gas', speed:'Cámara rápida', settings:'Ajustes', close:'C
 /* =====================================================================
    Oberfläche
    ===================================================================== */
-const BUILD = '2026-10-11.1';
+const BUILD = '2026-10-11.2';
 const ACC_FULL = 0.25;   // m/s², Vertikalbeschleunigung, bei der der Balken am Vario voll ausschlägt (ein Sack von 15 kg ergibt rund 0,08)
 const $ = id => document.getElementById(id);
 const store = { get(k, d){ try{ const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
@@ -1663,6 +1664,7 @@ let tiles = null;
 function applyTiles(){ if (tiles) map.removeLayer(tiles); tiles = L.tileLayer(OSM_URL, UI.map === 'dark' ? {maxZoom: 19, className: 'tiles-dark', attribution: OSM_ATTR} : {maxZoom: 19, attribution: OSM_ATTR}).addTo(map); tiles.bringToBack(); }
 /* Ballonsymbol der Karte. f: Füllgrad 0 bis 1. Prall ist die Hülle rund; verliert sie Gas, sammelt es sich oben, und der untere Teil hängt schmal und schlaff (STE-29). */
 const balloonSVG = (c, f) => { const s = Math.pow(1 - Math.max(0, Math.min(1, f == null ? 1 : f)), 0.7), nw = 5 - 3.2 * s, r = x => x.toFixed(1);
+  if ((f == null ? 1 : f) < 0.08) return `<svg viewBox="0 0 44 54" width="44" height="54"><path d="M19 4C13 11 26 15 19.5 23C14.5 30 25 33 20.5 39L23.5 39C29 33 18.5 30 24.5 23C31 15 18 11 24 4z" fill="${c}" stroke="#0a1019" stroke-width="2" stroke-linejoin="round"/><path d="M20.5 39L20 45M23.5 39L24 45" stroke="#eef3fa" stroke-width="1.4"/><rect x="18" y="45" width="8" height="6" rx="1.5" fill="#eef3fa" stroke="#0a1019" stroke-width="1.5"/></svg>`;
   return `<svg viewBox="0 0 44 54" width="44" height="54"><path d="M4 20C4 10 11 2 22 2C33 2 40 10 40 20C${r(40 - 15 * s)} ${r(28 - 2 * s)} ${r(34 - 9 * s)} 34.5 ${r(22 + nw)} 39L${r(22 - nw)} 39C${r(10 + 9 * s)} 34.5 ${r(4 + 15 * s)} ${r(28 - 2 * s)} 4 20z" fill="${c}" stroke="#0a1019" stroke-width="2" stroke-linejoin="round"/><path d="M22 2C16 7 ${r(14 + 5 * s)} 16 ${r(22 - nw)} 39M22 2C28 7 ${r(30 - 5 * s)} 16 ${r(22 + nw)} 39" fill="none" stroke="#0a1019" stroke-opacity=".35" stroke-width="1.6"/><path d="M${r(22 - nw)} 39L20 45M${r(22 + nw)} 39L24 45" stroke="#eef3fa" stroke-width="1.4"/><rect x="18" y="45" width="8" height="6" rx="1.5" fill="#eef3fa" stroke="#0a1019" stroke-width="1.5"/></svg>`; };
 const flagSVGmap = '<svg viewBox="0 0 30 36" width="30" height="36"><path d="M6 34V3" stroke="#eef3fa" stroke-width="2.5" stroke-linecap="round"/><path d="M7 4h18l-5 6 5 6H7z" fill="#5fe3a1" stroke="#0a1019" stroke-width="1.5" stroke-linejoin="round"/><circle cx="6" cy="33" r="3" fill="#5fe3a1" stroke="#0a1019" stroke-width="1.5"/></svg>';
 const startMk = L.circleMarker([START.lat, START.lon], {radius: 7, color: '#0a1019', weight: 2, fillColor: '#eef3fa', fillOpacity: 1}).addTo(map).bindTooltip(tr('launch'), {permanent: true, direction: 'bottom', offset: [0, 8], className: 'ptip'});
@@ -1836,7 +1838,8 @@ async function prepareRun(){
   if (B.ok){
     if (k === 'target'){
       busy(tr('busy_target')); await pause(40); TARGET = makeTarget(CFG, ATM, UI.level);
-      if (TARGET){ busy(tr('busy_place')); await placeTarget(); }
+      if (TARGET){ TARGET.place = {kind: 'zone', name: null, unchecked: true, pending: true}; const run = ++PLACE.run, still = () => run === PLACE.run && STATE === 'brief' && !!TARGET;
+        placeTarget(still).then(ok => { if (ok && still()){ drawGoals(); showStart(); } else if (TARGET && TARGET.place && TARGET.place.pending) TARGET.place.pending = false; }); }
     } else if (k === 'wz'){
       busy(tr('busy_target')); await pause(40); const w = makeCrosses(CFG, ATM);
       if (w){ WZ = {crosses: w.crosses, drops: [], path: w.path}; B.marks = w.crosses.length; B.mU = Math.max(0, B.mU - Math.round(B.marks * CFG.markKg * 10)); renderSand(true); }   // Säckchen an Bord, dafür etwas weniger Sand
@@ -1858,21 +1861,25 @@ async function osmFetch(lat, lon, rP){
     const els = (await r.json()).elements || []; osmSeen.set(key, els); return els;
   } finally { clearTimeout(to); }
 }
-async function placeTarget(){
+const PLACE = {run: 0};
+async function placeTarget(still){                         // still(): gilt die Suche noch? Wenn der Spieler schon losgefahren ist, bleibt das Ziel, wie es ist
   for (let attempt = 0; attempt < 2; attempt++){
     const p = ll(TARGET.e, TARGET.n), rP = Math.max(250, Math.min(OSM.rPlace, 0.15 * TARGET.dist)); let els;
-    try{ els = await osmFetch(p[0], p[1], rP); }catch(e){ TARGET.place = {kind: 'zone', name: null, unchecked: true}; return; }
+    try{ els = await osmFetch(p[0], p[1], rP); }catch(e){ if (still && !still()) return false; TARGET.place = {kind: 'zone', name: null, unchecked: true}; return true; }
+    if (still && !still()) return false;
     const r = pickPlace(els, p[0], p[1], rP);
     if (r.blocked && attempt < 1){ const t2 = makeTarget(CFG, ATM, UI.level); if (t2){ TARGET = t2; continue; } }   // Landepunkt liegt an einem gesperrten Ort: einmal ein anderes Ziel rechnen
     const de = (r.lon - p[1]) * klon(), dn = (r.lat - p[0]) * KLAT;
     TARGET.refMiss = Math.hypot(de, dn); TARGET.e += de; TARGET.n += dn;
     TARGET.dist = Math.hypot(TARGET.e, TARGET.n); TARGET.brg = (Math.atan2(TARGET.e, TARGET.n) * 180 / Math.PI + 360) % 360;
     TARGET.place = {kind: r.kind, name: r.name, unchecked: !r.clear};
-    return;
+    return true;
   }
+  return true;
 }
 const placeName = () => TARGET && TARGET.place ? (TARGET.place.name || tr(TARGET.place.kind === 'pitch' ? 'pl_pitch' : 'pl_zone')) : tr('target');
 function resetRun(){
+  if (typeof PLACE !== 'undefined') PLACE.run++;
   if (typeof SIDE !== 'undefined'){ SIDE.user = null; SIDE.lastSand = null; SIDE.sand.length = 0; SIDE.puff.length = 0; }
   B = newBalloon(CFG, ATM); valve = 0; shown = false; SND.valve(0); recReset();
   pathPts = [ll(0, 0)]; lastPathE = lastPathN = 0; pathLine.setLatLngs(pathPts); bestLine.setLatLngs([]);
@@ -1891,7 +1898,7 @@ function showStart(){
   const lv = ['lv_easy', 'lv_mid', 'lv_hard'];
   let tg = tr('sw_target_none'), ok = B.ok;
   if (k === 'target'){
-    tg = TARGET ? (TARGET.place ? placeName() + '. ' : '') + tr('sw_target_val', {dist: nf(TARGET.dist / 1000, 1), brg: deg3(TARGET.brg), card: card(TARGET.brg), lvl: tr(lv[TARGET.level]), min: Math.round(TARGET.t / 60)}) + (TARGET.lowShear ? ' ' + tr('sw_lowshear') : '') + (TARGET.place && TARGET.place.unchecked ? ' ' + tr('sw_unchecked') : '') : tr('sw_notarget');
+    tg = TARGET ? (TARGET.place ? placeName() + '. ' : '') + tr('sw_target_val', {dist: nf(TARGET.dist / 1000, 1), brg: deg3(TARGET.brg), card: card(TARGET.brg), lvl: tr(lv[TARGET.level]), min: Math.round(TARGET.t / 60)}) + (TARGET.lowShear ? ' ' + tr('sw_lowshear') : '') + (TARGET.place && TARGET.place.pending ? ' ' + tr('busy_place') : TARGET.place && TARGET.place.unchecked ? ' ' + tr('sw_unchecked') : '') : tr('sw_notarget');
     ok = ok && !!TARGET;
   } else if (k === 'wz'){
     if (WZ){ const c = WZ.crosses[0], brg = (Math.atan2(c.e, c.n) * 180 / Math.PI + 360) % 360; tg = tr('sw_wz', {n: WZ.crosses.length, dist: nf(Math.hypot(c.e, c.n) / 1000, 1), brg: deg3(brg), card: card(brg)}); }
@@ -2551,16 +2558,25 @@ function gbDraw(){
   gbUndraw(); if (!GB.rend && L.canvas) GB.rend = L.canvas({padding: 0.3});
   const add = x => { GB.layers.push(x.addTo(map)); return x; }, S = [GB.start.lat, GB.start.lon];
   (GB.ban || []).forEach(P => add(L.polygon(P.rings.map(r => r.map(p => [p[1], p[0]])), {renderer: GB.rend, color: '#ff3b30', weight: 1.5, opacity: .8, dashArray: '5 5', fillColor: '#ff3b30', fillOpacity: .22, interactive: false})));
-  GB.strips = [];                                                               // Streifen entlang der Grenzen: 10 km Abstand und 1 km Reserve, Breite je nach Zoom und Breitengrad
-  (GB.ban || []).forEach(P => { if (P.box[3] < 30 || P.box[1] > 83 || P.box[2] < -15 || P.box[0] > 70) return; P.rings.forEach(r => { for (let i = 0; i < r.length - 1; i += 60){ const seg = r.slice(i, i + 61); if (i + 61 >= r.length) seg.push(r[0]); const lat = seg.reduce((s, p) => s + p[1], 0) / seg.length; if (lat < 30 || lat > 83) continue; if (seg[0][0] > 75 && seg[seg.length - 1][0] > 75) continue; GB.strips.push({lat, ln: add(L.polyline(seg.map(p => [p[1], p[0]]), {renderer: GB.rend, color: '#ff3b30', opacity: .22, weight: 2, lineCap: 'round', lineJoin: 'round', interactive: false}))}); } }); });
+  GB.strips = []; GB.segs = [];                                                 // Streifen entlang der Grenzen: 10 km Abstand, Breite je nach Zoom und Breitengrad
+  (GB.ban || []).forEach(P => { if (P.box[3] < 30 || P.box[1] > 83 || P.box[2] < -15 || P.box[0] > 70) return; P.rings.forEach(r => { for (let i = 0; i < r.length - 1; i += 60){ const seg = r.slice(i, i + 61); if (i + 61 >= r.length) seg.push(r[0]); const lat = seg.reduce((s, p) => s + p[1], 0) / seg.length, lon = seg.reduce((s, p) => s + p[0], 0) / seg.length; if (lat < 30 || lat > 83) continue; if (seg[0][0] > 75 && seg[seg.length - 1][0] > 75) continue; GB.segs.push({lat, lon, pts: seg.map(p => [p[1], p[0]]), ln: null}); } }); });
+  gbNear();
   gbStrips();
   GB_TEAMS.forEach((t, i) => {
     add(L.circleMarker([t[5], t[6]], {radius: 4, color: '#0a1019', weight: 1.5, fillColor: i < 3 ? '#ffe14d' : '#9aabc4', fillOpacity: 1, interactive: false}).bindTooltip((i + 1) + ' ' + t[0], {permanent: true, direction: 'right', offset: [6, 0], className: 'ptip gbtip'}));
   });
 }
+/* Nur die Streifen im Umkreis von 450 km um den Ballon liegen auf der Karte. Die sehr breiten Linien aller Grenzen bei jedem Bild neu zu zeichnen, ließ die Karte ruckeln. */
+function gbNear(){
+  if (!GB.segs) return; const p = (typeof B !== 'undefined' && B && STATE !== 'menu') ? gbPos() : [GB.start.lat, GB.start.lon], kx = Math.cos(p[0] * Math.PI / 180); let ch = false;
+  GB.segs.forEach(s => { const near = Math.hypot((s.lat - p[0]) * 111.3, (s.lon - p[1]) * 111.3 * kx) < 450;
+    if (near && !s.ln){ s.ln = L.polyline(s.pts, {renderer: GB.rend, color: '#ff3b30', opacity: .22, weight: 2, lineCap: 'round', lineJoin: 'round', interactive: false}).addTo(map); GB.layers.push(s.ln); ch = true; }
+    else if (!near && s.ln){ map.removeLayer(s.ln); GB.layers = GB.layers.filter(x => x !== s.ln); s.ln = null; ch = true; } });
+  GB.strips = GB.segs.filter(s => s.ln); if (ch) gbStrips();
+}
 function gbStrips(){ if (!GB.strips || !GB.strips.length) return; const z = map.getZoom(); GB.strips.forEach(s => s.ln.setStyle({weight: Math.max(2, 2 * (GB.buffer + GB.margin) / (156543.03392 * Math.cos(s.lat * Math.PI / 180) / Math.pow(2, z)))})); }
 map.on('zoomend', gbStrips);
-function gbUndraw(){ GB.strips = []; GB.layers.forEach(x => map.removeLayer(x)); GB.layers = []; }
+function gbUndraw(){ GB.strips = []; GB.segs = null; GB.layers.forEach(x => map.removeLayer(x)); GB.layers = []; }
 function gbEnter(cfg){ if (!GB.cfgSaved) GB.cfgSaved = CFG; CFG = Object.assign({}, GB.cfgSaved, cfg || GB.cfg); }
 function gbLeave(){ if (GB.cfgSaved){ CFG = GB.cfgSaved; GB.cfgSaved = null; } gbUndraw(); GB.hold = false; GB.dq = null; GB.zone = null; }
 const gbPos = () => ll(B.e, B.n);
@@ -2583,7 +2599,7 @@ async function gbPrepare(){
 }
 /* Bezugspunkt der Karte auf den Ballon nachziehen: Die ebene Rechnung um den Startplatz wäre nach 1000 km und 9 Breitengraden um Hunderte km falsch. */
 function gbAnchor(){
-  const p = gbPos(), de = B.e, dn = B.n;
+  const p = gbPos(), de = B.e, dn = B.n; GB.nearN = (GB.nearN || 0) + 1; if (GB.nearN % 3 === 0) setTimeout(gbNear, 0);   // alle 60 km die Randstreifen nachziehen
   START = {lat: p[0], lon: p[1], alt: START.alt, kind: 'gb'};
   [TER.grid, TER.fine].forEach(g => { if (g){ g.e0 -= de; g.n0 -= dn; } });
   WXRUN.e -= de; WXRUN.n -= dn; lastPathE -= de; lastPathN -= dn; B.e = 0; B.n = 0; B.lat0 = p[0]; B.lon0 = p[1];
@@ -3089,9 +3105,15 @@ function sideDraw(){
   c.strokeStyle = '#5fe3a1'; c.lineWidth = 1.5; c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.stroke();
   // Ballon: Größe maßstäblich, aber nie kleiner als ein Symbol; die Form folgt dem Füllgrad
   const fI = fillNow(), Dm = Math.cbrt(6 * CFG.vol / Math.PI), r = Math.max(9, Dm * m / 2), yBask = yOf(B.h), bh = Math.max(4, 1.3 * m), bw = Math.max(5, 1.5 * m), cy = yBask - bh - r * 1.55;
+  if (fI < 0.08){                                                             // fast leer: eine schlaffe Wurst, die im Fahrtwind flattert
+    const tt = performance.now() / 1000, pts = []; for (let i = 0; i <= 12; i++){ const q = i / 12; pts.push([bx + Math.sin(tt * 11 + q * 7) * r * 0.28 * q, yBask - bh - q * r * 2.5]); }
+    c.lineCap = 'round'; c.lineJoin = 'round'; c.strokeStyle = '#0a1019'; c.lineWidth = Math.max(5, r * 0.42) + 2.4; c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.stroke();
+    c.strokeStyle = '#f4f1ea'; c.lineWidth = Math.max(5, r * 0.42); c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.stroke(); c.lineCap = 'butt';
+  } else {
   c.strokeStyle = '#c9d6e8'; c.lineWidth = 1; c.beginPath(); c.moveTo(bx - r * 0.72, cy + r * 0.7); c.lineTo(bx - bw / 2, yBask - bh); c.moveTo(bx + r * 0.72, cy + r * 0.7); c.lineTo(bx + bw / 2, yBask - bh); c.stroke();
   const slack = 1 - fI, wB = r * (1 - 0.75 * slack), yB = cy + r * (1 + 0.25 * slack);          // schlaffe Hülle: unten schmal und etwas länger
   c.fillStyle = '#f4f1ea'; c.strokeStyle = '#0a1019'; c.lineWidth = 1.2; c.beginPath(); c.arc(bx, cy, r, Math.PI, 0); c.bezierCurveTo(bx + r, cy + r * 0.6, bx + wB, cy + r * (0.9 - 0.3 * slack), bx + Math.max(1.5, wB * 0.25), yB); c.lineTo(bx - Math.max(1.5, wB * 0.25), yB); c.bezierCurveTo(bx - wB, cy + r * (0.9 - 0.3 * slack), bx - r, cy + r * 0.6, bx - r, cy); c.closePath(); c.fill(); c.stroke();
+  }
   c.fillStyle = '#b98a4a'; c.fillRect(bx - bw / 2, yBask - bh, bw, bh); c.strokeRect(bx - bw / 2, yBask - bh, bw, bh);
   // Schlepptau: hängt bis zum Boden, der Rest liegt hinter dem Ballon auf
   if (B.rope){ const hang = Math.min(CFG.ropeLen, agl), lie = CFG.ropeLen - hang; c.strokeStyle = '#d9b36c'; c.lineWidth = Math.max(1.5, 0.25 * m); c.lineCap = 'round'; c.beginPath(); c.moveTo(bx + bw / 2, yBask - 1);
@@ -3100,7 +3122,7 @@ function sideDraw(){
     c.stroke(); }
   // Sand rieselt, Gas tritt am Ventil aus
   c.fillStyle = '#ffe14d'; SIDE.sand.forEach(p => { if (p.t < 0) return; const fall = p.v * p.t + 4.9 * p.t * p.t, Y = yBask + Math.min(fall * Math.max(m, 0.8), yOf(B.gnd) - yBask); c.fillRect(bx - bw / 2 - 2 + p.x, Y, 1.6, 1.6); });
-  SIDE.puff.forEach(p => { c.strokeStyle = 'rgba(127,216,255,' + (0.9 - p.t / 1.6).toFixed(2) + ')'; c.lineWidth = 1.4; c.beginPath(); c.arc(bx + p.x * (1 + p.t * 2), cy - r - 3 - p.t * 14 * p.s, 2 + p.t * 5, 0, 7); c.stroke(); });
+  if (fI >= 0.08) SIDE.puff.forEach(p => { c.strokeStyle = 'rgba(127,216,255,' + (0.9 - p.t / 1.6).toFixed(2) + ')'; c.lineWidth = 1.4; c.beginPath(); c.arc(bx + p.x * (1 + p.t * 2), cy - r - 3 - p.t * 14 * p.s, 2 + p.t * 5, 0, 7); c.stroke(); });
   // Höhe über Grund und Maßstab
   c.strokeStyle = 'rgba(238,243,250,.55)'; c.lineWidth = 1; c.setLineDash([2, 3]); c.beginPath(); c.moveTo(bx + bw / 2 + 9, yBask); c.lineTo(bx + bw / 2 + 9, yOf(B.gnd)); c.stroke(); c.setLineDash([]);
   c.font = '600 15px "Barlow Condensed","Arial Narrow",sans-serif'; c.fillStyle = '#eef3fa'; c.textAlign = 'left'; c.textBaseline = 'middle'; if (agl > 1.5) c.fillText(nf(Math.round(agl)) + ' m', bx + bw / 2 + 13, Math.min(H - 26, (yBask + yOf(B.gnd)) / 2));
@@ -3157,6 +3179,8 @@ foldApply(false);
 
 /* ---------- Was ist neu (INS-06): kurze Texte je Build für die Nutzer, der neueste zuerst. Deutsch und Englisch; andere Sprachen zeigen Englisch. ---------- */
 const NEWS = [
+ {b: '2026-10-11.2', de: ['Zielfahren startet schneller: Das Startfenster erscheint sofort, der Ort des Ziels wird währenddessen gesucht.', 'Meisterschaft: Die Karte läuft flüssiger, weil nur noch die Sperrzonen in der Nähe gezeichnet werden.', 'Ein fast leerer Ballon hängt jetzt als flatternde Hülle am Korb, auf der Karte und in der Seitenansicht.', 'Der Wetterdienst erhält den Standort nur noch auf rund 1 km gerundet.', '„Was ist neu“ steht jetzt unten in den Einstellungen neben „Neueste Version laden“.'],
+  en: ['Target flight starts faster: the start window appears at once while the place of the target is being looked up.', 'Championship: the map runs more smoothly because only the no-fly zones nearby are drawn.', 'An almost empty balloon now hangs as a fluttering envelope from the basket, on the map and in the side view.', 'The weather service now receives the location rounded to about 1 km.', '“What’s new” is now at the bottom of the settings next to “Load newest version”.']},
  {b: '2026-10-11.1', de: ['Mehr Platz für die Karte: Vertikalprofil, Anzeigen und Bedienfeld lassen sich über die kleinen Griffe am Rand ein- und ausfahren. Die Anzeigen haben drei Längen; die kürzeste zeigt nur Höhe und Vario.', 'Das Ballonsymbol auf der Karte zeigt jetzt den Füllgrad: Verliert der Ballon Gas, wird die Hülle unten schmal.', 'Behoben: In langen Fenstern sprang der Inhalt beim Rollen.', 'Neu: diese Seite.'],
   en: ['More room for the map: the vertical profile, the instruments and the control panel fold away with the small handles at the edge. The instruments have three lengths; the shortest shows only height and vario.', 'The balloon symbol on the map now shows the fill: when the balloon loses gas, the envelope narrows at the bottom.', 'Fixed: in long windows the content jumped while scrolling.', 'New: this page.']},
  {b: '2026-10-10.7', de: ['Erste Fassung auf dem Server: gemeinsame Bestenliste mit Namen und Statistik in den Einstellungen, sobald der Dienst des Servers läuft.', 'Tutorial „Erste Fahrt“, neue Startseite mit ruhiger Melodie.', 'Temp-Diagramm mit Taupunkt unter dem Vertikalprofil, Seitenansicht mit Gelände, Lufträume als Schalter unter den Anzeigen.', 'Der Füllgrad der Hülle bestimmt den Luftwiderstand: Ein leerer Ballon fällt schnell.', 'Nach der Landung lässt sich der Weg auf der Karte ansehen.'],
