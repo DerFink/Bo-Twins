@@ -331,6 +331,37 @@ main{position:relative;flex:1;min-height:0}
 .demo-wm[hidden]{display:none}
 .demo-wm b{font-size:min(26vw,120px);line-height:1;letter-spacing:.04em}
 .demo-wm span{font-size:min(7vw,34px);font-weight:600}
+
+/* Version .4 */
+.fl{padding:6px 10px 2px}
+.dash.full,.dash.full.exp{width:148px;padding:6px 9px}
+.dash .dbig{font-size:34px}
+.dash .dnn b{font-size:15px}.dash .dnn{margin:1px 0 4px}
+.dash .pc-v{height:38px}.dash .pc-bar{height:38px;width:30px}.dash .pc-v b{font-size:26px}
+.dex{display:block;margin-top:6px;padding-top:5px}
+.dex .it{display:flex;justify-content:space-between;align-items:baseline;gap:6px;padding:2px 0}
+.dex .it .lbl{font-size:10px}
+.dex .it b{display:flex;align-items:center;gap:4px;font-size:14px;font-weight:700;font-family:var(--num)}
+.dex .it b small{font-size:10px}
+.dex .d-mush svg{width:15px;height:19px}
+.dex .full-w .lbl{font-size:9px;line-height:1.25}
+.dex .d-fsub{display:block;font-size:9px;text-align:right}
+.dash.flight .frow1{display:flex;gap:8px;align-items:center}
+.dash.flight .dbig{font-size:30px}
+.dash.flight .pc-v{flex:0 0 112px;height:44px}.dash.flight .pc-bar{width:16px;height:44px}.dash.flight .pc-v b{font-size:26px}
+.dash.flight .fsm{display:flex;flex-direction:column;gap:2px;min-width:0}
+.dash.flight .fsm .lbl{font-size:8.5px;display:block}
+.dash.flight .fsm b{display:block;font-family:var(--num);font-size:13px;font-weight:700;white-space:nowrap;line-height:1.1}
+.dash.flight .fsm b small{font-size:10px;margin-left:2px}
+.nav button{margin:3px 8px;border-radius:14px}
+.nav button.active{background:#26364f;color:var(--tx);font-weight:700}
+.nav button.active::before{display:none!important}
+#o-status{font-size:13px;padding:7px 10px;border-radius:12px;font-weight:600}
+.dex .it{flex-wrap:wrap}
+.dex .it .lbl{font-size:9px;white-space:nowrap}
+.dex .it b{font-size:13px;white-space:nowrap}
+.dex .it .d-fsub{flex:0 0 100%;font-size:9px;text-align:right;white-space:normal}
+.dex .full-w .lbl{white-space:normal}
 </style>
 </head>
 
@@ -390,10 +421,6 @@ main{position:relative;flex:1;min-height:0}
       <div class="fl">
         <div class="fl-top"><div id="dash-f"></div><button class="sm" id="btn-sheet" data-i="details">Details</button></div>
         <div class="fl-chart card2">
-          <div class="fl-ctl">
-            <div class="seg" id="seg-mx"><button data-v="T" class="on" data-i="x_temp">Temperatur</button><button data-v="G" data-i="x_grad">Gradient</button></div>
-            <div class="seg" id="seg-my"><button data-v="nn" class="on" data-i="y_nn">NN</button><button data-v="agl" data-i="y_agl">Grund</button></div>
-          </div>
           <div class="fl-cv">
             <canvas id="met-canvas"></canvas>
             <div id="met-nolib" data-i="nolib" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--mut)">Chart.js konnte nicht geladen werden. Für das Profil ist eine Internetverbindung nötig.</div>
@@ -405,6 +432,11 @@ main{position:relative;flex:1;min-height:0}
 
       <div class="sheet" id="sheet" role="dialog" aria-modal="true">
         <div class="sh-h"><b data-i="sh_title">Schichtung und Gewichtung</b><button id="btn-sheet-x" class="iconbtn" data-ia="close" aria-label="Schließen" style="font-size:22px;line-height:1">×</button></div>
+
+        <div class="card2 mb">
+          <div class="rw"><span data-i="s_xaxis">Profil: Achse unten</span><div class="seg" id="seg-mx"><button data-v="T" class="on" data-i="x_temp">Temperatur</button><button data-v="G" data-i="x_grad">Gradient</button></div></div>
+          <div class="rw"><span data-i="s_yaxis">Profil: Höhenbezug</span><div class="seg" id="seg-my"><button data-v="nn" class="on" data-i="y_nn">NN</button><button data-v="agl" data-i="y_agl">Grund</button></div></div>
+        </div>
 
         <div class="card2 mb">
           <div class="rw"><span data-i="w_unit">Windeinheit</span><div class="seg" id="seg-unit"><button data-v="kt" class="on">kt</button><button data-v="kmh">km/h</button><button data-v="ms">m/s</button></div></div>
@@ -461,10 +493,10 @@ main{position:relative;flex:1;min-height:0}
       <div class="orb">
         <div class="orb-map">
           <div id="map3" class="map"></div>
-          <div class="ov" style="left:8px;right:8px;top:8px"><div id="o-status">–</div></div>
-          <div class="ov" id="dash-o" style="left:8px;top:62px"></div>
+          <div class="ov" style="left:164px;right:8px;top:8px"><div id="o-status" hidden></div></div>
+          <div class="ov" id="dash-o" style="left:8px;top:8px"></div>
           <div class="ov" id="ofm3-note" hidden style="right:8px;bottom:26px;background:rgba(10,16,25,.92);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:12px;color:var(--mut)" data-i="ofm3_err">Aktuelle Flugkarte nicht ladbar</div>
-          <div class="ov" id="ogn-note" hidden style="right:8px;top:62px;background:rgba(10,16,25,.92);border:1px solid var(--line);border-radius:10px;padding:5px 9px;font-size:12px;color:var(--mut)" data-i="ogn_off_n">OGN-Anmeldung aus</div>
+          <div class="ov" id="ogn-note" hidden style="right:8px;bottom:62px;background:rgba(10,16,25,.92);border:1px solid var(--line);border-radius:10px;padding:5px 9px;font-size:12px;color:var(--mut)" data-i="ogn_off_n">OGN-Anmeldung aus</div>
           <div class="ov" style="left:8px;bottom:26px" id="rangebar">
             <div class="seg" style="background:rgba(10,16,25,.92)"><button data-r="2">2 km</button><button data-r="5" class="on">5 km</button><button data-r="10">10 km</button></div>
           </div>
@@ -778,6 +810,12 @@ const TX = {
  upd_now:["Jetzt","Now","Maintenant","Teraz","Nyní","現在","Ahora"],
  upd_later:["Später","Later","Plus tard","Później","Později","稍後","Más tarde"],
  upd_fly:["Update {v} bereit. Es wird erst nach der Landung angeboten.","Update {v} ready. It is offered after landing.","Mise à jour {v} prête. Proposée après l’atterrissage.","Aktualizacja {v} gotowa. Zostanie zaproponowana po lądowaniu.","Aktualizace {v} je připravena. Nabídne se po přistání.","更新 {v} 已就緒，將於降落後提示。","Actualización {v} lista. Se ofrecerá tras el aterrizaje."],
+ src:["Quelle","Source","Source","Źródło","Zdroj","來源","Fuente"],
+ src_own:["eigene Messung bis {z} m","own measurement up to {z} m","mesure propre jusqu’à {z} m","własny pomiar do {z} m","vlastní měření do {z} m","自測至 {z} m","medición propia hasta {z} m"],
+ s_xaxis:["Profil: Achse unten","Profile: bottom axis","Profil : axe inférieur","Profil: oś dolna","Profil: spodní osa","剖面：底部軸","Perfil: eje inferior"],
+ s_yaxis:["Profil: Höhenbezug","Profile: height reference","Profil : référence de hauteur","Profil: odniesienie wysokości","Profil: výškový základ","剖面：高度基準","Perfil: referencia de altura"],
+ ds_dew:["Taupunkt","Dew point","Point de rosée","Punkt rosy","Rosný bod","露點","Punto de rocío"],
+ cl_base:["Wolkenbasis ca. {z} m","Cloud base approx. {z} m","Base des nuages env. {z} m","Podstawa chmur ok. {z} m","Základna oblačnosti cca {z} m","雲底約 {z} 公尺","Base de nubes aprox. {z} m"],
  nav_fold:["Leiste ein-/ausklappen","Fold/unfold bar","Replier/déplier la barre","Zwiń/rozwiń pasek","Sbalit/rozbalit lištu","收合／展開列","Plegar/desplegar barra"],
  src_start:["Höhe über Grund: Bezug Startplatz","Height above ground: relative to launch site","Hauteur sol : référence site de départ","Wysokość nad gruntem: wzgl. miejsca startu","Výška nad zemí: vůči místu startu","離地高度：以起飛點為基準","Altura sobre el suelo: respecto al despegue"],
  ofm3_err:["Aktuelle Flugkarte nicht ladbar","Current aeronautical chart cannot be loaded","Carte aéronautique actuelle indisponible","Nie można załadować aktualnej mapy lotniczej","Aktuální letecká mapa se nenačetla","無法載入最新航空圖","No se puede cargar la carta aeronáutica"],
@@ -937,8 +975,8 @@ function mushSVG(f){ const cid='mclip'+(++mushN);
 let mushK=-1;
 let DASH_EXP=false; try{ DASH_EXP=localStorage.getItem('bt-dash')==='1'; }catch(e){}
 function dashHTML(kind){
-  if(kind==='flight') return `<div class="dash flight"><div class="frow1"><div><span class="lbl" data-i="agl">über Grund</span><b class="dbig d-agl">–</b><div class="dnn" style="margin:0"><span class="lbl">NN</span><b class="d-nn">–</b></div></div><div class="pc-v"><div class="pc-tint d-tint"></div><div class="pc-bar"><div class="pc-mid"></div><div class="d-fillbar" style="position:absolute;left:0;right:0"></div></div><span class="lbl">m/s</span><b class="d-var">+0,0</b></div></div>
-    <div class="frow2"><div><span class="lbl" data-i="crs">Kurs / Fahrt</span><b class="d-crs">–</b></div><div><span class="lbl" data-i="clock">Uhrzeit</span><b class="d-clk">–</b></div><div class="d-windbox"><span class="lbl" data-i="wind">Wind</span><b class="d-wind">–</b></div></div></div>`;
+  if(kind==='flight') return `<div class="dash flight"><div class="frow1"><div><span class="lbl" data-i="agl">über Grund</span><b class="dbig d-agl">–</b><div class="dnn"><span class="lbl">NN</span><b class="d-nn">–</b></div></div><div class="pc-v"><div class="pc-tint d-tint"></div><div class="pc-bar"><div class="pc-mid"></div><div class="d-fillbar" style="position:absolute;left:0;right:0"></div></div><span class="lbl">m/s</span><b class="d-var">+0,0</b></div>
+    <div class="fsm"><div><span class="lbl" data-i="crs">Kurs / Fahrt</span><b class="d-crs">–</b></div><div><span class="lbl" data-i="clock">Uhrzeit</span><b class="d-clk">–</b></div><div class="d-windbox"><span class="lbl" data-i="wind">Wind</span><b class="d-wind">–</b></div></div></div></div>`;
   return `<div class="dash full"><span class="dchev">▾</span><span class="lbl" data-i="agl">über Grund</span><b class="dbig d-agl">–</b><div class="dnn"><span class="lbl">NN</span><b class="d-nn">–</b></div>
     <div class="pc-v"><div class="pc-tint d-tint"></div><div class="pc-bar"><div class="pc-mid"></div><div class="d-fillbar" style="position:absolute;left:0;right:0"></div></div><span class="lbl">m/s</span><b class="d-var">+0,0</b></div>
     <div class="dex" hidden><div class="it"><span class="lbl" data-i="crs">Kurs / Fahrt</span><b class="d-crs">–</b></div><div class="it"><span class="lbl" data-i="clock">Uhrzeit</span><b class="d-clk">–</b></div>
@@ -953,7 +991,7 @@ function updDash(){
   q('d-agl',e=>e.innerHTML=Math.round(o.alt-g)+'<small>m</small>');
   q('d-nn',e=>e.innerHTML=Math.round(o.alt)+'<small>m</small>');
   q('d-var',e=>{ e.textContent=fmtV(o.vario); e.style.color=amp?col:vcol(o.vario); });
-  q('d-fillbar',e=>{ e.style.height=px+'px'; e.style.background=col; if(a>0){e.style.bottom='50%';e.style.top='auto';} else {e.style.top='50%';e.style.bottom='auto';} });
+  q('d-fillbar',e=>{ const half=(e.parentElement.clientHeight||52)/2, px=amp?Math.max(2,Math.round(half*amp)):0; e.style.height=px+'px'; e.style.background=col; if(a>0){e.style.bottom='50%';e.style.top='auto';} else {e.style.top='50%';e.style.bottom='auto';} });
   q('d-tint',e=>{ e.style.background=col; e.style.opacity=(0.3*amp).toFixed(2); });
   q('d-crs',e=>e.innerHTML = sp<0.5 ? '–' : `${pad3(brg(o.ve,o.vn))}°<small>· ${Math.round(sp*1.94384)} kt</small>`);
   q('d-clk',e=>e.textContent=new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',hour12:false}));
@@ -972,7 +1010,9 @@ function recEvent(text){ const F=window.FLIGHT; if(!F||F.state==='ended') return
 const thetaOf = (T,z) => (T+273.15)*Math.pow(1000/pAt(z),0.2857);           // K
 const tOfTheta = (th,z) => th*Math.pow(pAt(z)/1000,0.2857)-273.15;          // °C
 // BME280-Messpunkt. Weit entfernte Messungen enthalten eine Luftmassen-Verzerrung (0,05 K je km ab 5 km).
-function metSample(t,alt,g,dist,src,ve=0,vn=0){
+const dewOf=(T,rh)=>{ const a=17.625,b=243.04, gm=Math.log(Math.max(1,rh)/100)+a*T/(b+T); return b*gm/(a-gm); };
+function metSample(t,alt,g,dist,src,ve=0,vn=0){ const m=metSample0(t,alt,g,dist,src,ve,vn); m.Td=dewOf(m.T,m.rh); return m; }
+function metSample0(t,alt,g,dist,src,ve=0,vn=0){
   const h=Math.max(0,alt-g);
   return {t,alt,g,d:dist,src,
     T:atmT(h,t+ATM_T0)+0.07*gauss()+0.05*Math.max(0,dist-5),
@@ -999,11 +1039,11 @@ function metCompute(){
     m.wt = MET.weighted ? Math.exp(-(now-m.t)/((m.tauM||MET.tau)*60)) : 1;
     m.wd = (MET.weighted && m.d>MET.d0) ? Math.exp(-Math.pow(m.d-MET.d0,2)/(2*(m.sigM||MET.sigma)*(m.sigM||MET.sigma))) : 1;
     m.w = m.wt*m.wd*(MET.weighted?(m.w0||1):1); if(m.w<0.5) nDamp++;
-    const k=Math.floor(m.alt/bs); let b=bins.get(k); if(!b){ b={k,sw:0,swT:0,sww:0,swu:0,swv:0}; bins.set(k,b); }
-    b.sw+=m.w; b.swT+=m.w*m.T;
+    const k=Math.floor(m.alt/bs); let b=bins.get(k); if(!b){ b={k,sw:0,swT:0,sww:0,swu:0,swv:0,swm:0,swd:0,swTd:0}; bins.set(k,b); }
+    b.sw+=m.w; b.swT+=m.w*m.T; if(m.src==='live'||m.src==='prior') b.swm+=m.w; if(m.Td!=null){ b.swd+=m.w; b.swTd+=m.w*m.Td; }
     if(m.wo){ b.sww+=m.w; b.swu+=m.w*m.ve; b.swv+=m.w*m.vn; }
   }
-  const prof=[...bins.values()].sort((a,b)=>a.k-b.k).filter(b=>b.sw>=0.3).map(b=>({k:b.k,z:(b.k+0.5)*bs,T:b.swT/b.sw,W:b.sw,g:null,cat:null,u:b.sww>=0.3?b.swu/b.sww:null,v:b.sww>=0.3?b.swv/b.sww:null}));
+  const prof=[...bins.values()].sort((a,b)=>a.k-b.k).filter(b=>b.sw>=0.3).map(b=>({k:b.k,z:(b.k+0.5)*bs,T:b.swT/b.sw,W:b.sw,g:null,cat:null,own:b.swm/b.sw,Td:b.swd>=0.3?b.swTd/b.swd:null,u:b.sww>=0.3?b.swu/b.sww:null,v:b.sww>=0.3?b.swv/b.sww:null}));
   for(let i=0;i<prof.length;i++){            // Gradient: gewichtete Regression über ±2 Höhenklassen
     let sw=0,sz=0,sT=0,szz=0,szT=0,n=0;
     for(let j=Math.max(0,i-3);j<=Math.min(prof.length-1,i+3);j++){
@@ -1023,9 +1063,10 @@ function metCompute(){
   for(const L of layers){ const P=merged[merged.length-1];
     if(L.n<2 && P && L.zStart-P.zEnd<=bs*1.5){ P.zEnd=L.zEnd; P.Tend=L.Tend; } else if(L.n>=2||!P) merged.push(L); }
   layers=merged.map(L=>({cat:L.cat,z0:L.zStart-bs/2,z1:L.zEnd+bs/2,g:L.gs/L.n,dT:L.Tend-L.Tstart}));
+  const clouds=[]; for(const p of prof){ if(p.Td!=null && p.T-p.Td<=1.0){ const C=clouds[clouds.length-1]; if(C && p.z-bs/2-C.z1<=bs*1.5) C.z1=p.z+bs/2; else clouds.push({z0:p.z-bs/2,z1:p.z+bs/2}); } }
   const inv=layers.find(L=>L.cat==='inv' && L.z0-GREF>60);
   const conf=prof.length?prof.reduce((s,p)=>s+(1-Math.exp(-p.W/2)),0)/prof.length:0;
-  return {prof,layers,mix:inv?inv.z0:null,conf,nDamp,n:S.met.length,zTop:prof.length?prof[prof.length-1].z:GREF};
+  return {prof,layers,clouds:clouds.filter(c=>c.z1-c.z0>=75),mix:inv?inv.z0:null,conf,nDamp,n:S.met.length,zTop:prof.length?prof[prof.length-1].z:GREF};
 }
 
 /* ---------------- Straßen-Routing für die Chaser (OSRM) ---------------- */
@@ -1230,8 +1271,8 @@ mkTargets();
 /* ---------------- Karten ---------------- */
 const OSM_URL  = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OSM_ATTR = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
-const tileDark  = () => L.tileLayer(OSM_URL,{maxZoom:19,className:'tiles-dark',attribution:OSM_ATTR});   // gleiche Kacheln, per CSS dunkel eingefärbt
-const tileLight = () => L.tileLayer(OSM_URL,{maxZoom:19,attribution:OSM_ATTR});
+const tileDark  = () => L.tileLayer(OSM_URL,{maxZoom:19,keepBuffer:4,updateWhenZooming:false,className:'tiles-dark',attribution:OSM_ATTR});   // gleiche Kacheln, per CSS dunkel eingefärbt
+const tileLight = () => L.tileLayer(OSM_URL,{maxZoom:19,keepBuffer:4,updateWhenZooming:false,attribution:OSM_ATTR});
 let tileErr=0, tileOk=0;
 function checkTiles(){
   if(tileOk>0){ $('net-note').style.display='none'; return; }
@@ -1382,6 +1423,7 @@ function renderPop(){
   } else { el.hidden=true; }
 }
 let lastFit=0;
+let zoomAt=0, roomSince=0;
 function updChaser(){
   const o=S.orbit,b=S.base, oc=ll(o.e,o.n), bc=ll(b.e,b.n);
   orbMk1.setLatLng(oc); baseMk1.setLatLng(bc);
@@ -1403,11 +1445,12 @@ function updChaser(){
   else if(S.follow==='both' && now-lastFit>1500){
     lastFit=now;
     const fb=[bc,oc,ll(o.e+o.ve*300,o.n+o.vn*300)]; if(S.o2.active) fb.push(ll(S.o2.e,S.o2.n)); if(S.fc.on) fb.push(ll(S.fc.e,S.fc.n));
-    const bb=L.latLngBounds(fb);
-    if(S.forceFit || !map1.getBounds().pad(-0.12).contains(bb)){   // nur anpassen, wenn nötig: spart Kachel-Nachladen
-      S.forceFit=false;
-      map1.fitBounds(bb,{paddingTopLeft:[24,70],paddingBottomRight:[24,90],maxZoom:15,animate:false});
-    }
+    const bb=L.latLngBounds(fb), inView=map1.getBounds().pad(-0.12).contains(bb), cz=map1.getZoom(), ctr=bb.getCenter();
+    const tz=Math.min(15,Math.floor(map1.getBoundsZoom(bb,false,L.point(48,160))));
+    if(S.forceFit){ S.forceFit=false; map1.setView(ctr,tz,{animate:false}); zoomAt=now; roomSince=0; }
+    else if(!inView){ roomSince=0; if(now-zoomAt>4000){ zoomAt=now; if(tz<cz) map1.setView(ctr,tz,{animate:false}); else map1.panTo(ctr,{animate:false}); } }   // heraus zoomen nur wenn nötig, sonst verschieben
+    else if(tz>cz){ if(!roomSince) roomSince=now; else if(now-roomSince>10000 && now-zoomAt>4000){ zoomAt=now; roomSince=0; map1.setView(ctr,cz+1,{animate:false}); } }   // hinein erst nach 10 ruhigen Sekunden
+    else roomSince=0;
   }
 }
 function updLora(){
@@ -1441,10 +1484,10 @@ function updOrbit(){
   alarmLine.setLatLngs(alarm?[c,ll(alarm.t.e,alarm.t.n)]:[]);
   const items=S.thr.filter(x=>x.d<=S.range*1000).sort((a,b)=>b.lvl-a.lvl||a.d-b.d);
   const mx=items.reduce((m,x)=>Math.max(m,x.lvl),0), st=$('o-status');
-  st.className = mx?('lv'+mx):'';
+  st.className = mx?('lv'+mx):''; st.hidden=!mx;
   if(mx===2){ const x=items.find(i=>i.lvl===2); st.textContent=tr('a_warn',{id:x.t.id,d:fmtD(x.d),dh:fmtDh(x.dh),s:Math.round(x.tc)}); }
   else if(mx===1){ const x=items.find(i=>i.lvl===1); st.textContent=tr('a_hint',{id:x.t.id,d:fmtD(x.dcpa)}); }
-  else st.textContent=tr('a_clear');
+  else st.textContent='';
   $('o-count').textContent=items.length===1?tr('a_count1',{r:S.range}):tr('a_count',{n:items.length,r:S.range});
   $('o-list').innerHTML = items.length ? items.map(x=>{
     const t=x.t, col=x.lvl===2?'#ffe14d':x.lvl===1?'#ffe14d':t0f(t);
@@ -1472,7 +1515,7 @@ function render(){
 const hexA=(h,a)=>{ const n=parseInt(h.slice(1),16); return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`; };
 const ys=v=>MET.y==='nn'?v:v-GREF;
 const fmtAge=q=>q<90?Math.round(q)+' s':Math.round(q/60)+' min';
-let metChart=null, metLineCol=[];
+let metChart=null, metLineCol=[], metOwn=[], metOwnD=[], hatchPat=null;
 
 // Windfähnchen: Schaft zeigt in die Richtung, aus der der Wind kommt; ganze Fahne 10 kt, halbe 5 kt, Dreieck 50 kt
 function drawBarb(ctx,x,y,fromDeg,kt,col){
@@ -1492,11 +1535,11 @@ const windPlugin={id:'windBarbs',afterDatasetsDraw(ch){
   if(MET.wind==='off') return;
   const R=MET.R; if(!R) return;
   const pr=R.prof.filter(p=>p.u!=null); if(!pr.length) return;
-  const {ctx,chartArea:a,scales:{y}}=ch, cx=a.right+30;
+  const {ctx,chartArea:a,scales:{y}}=ch, cx=a.right-50;
   let step=1000; for(const s of [50,100,200,250,500,1000]){ if(Math.abs(y.getPixelForValue(s)-y.getPixelForValue(0))>=34){ step=s; break; } }
   ctx.save();
   ctx.font='11px Barlow, system-ui, sans-serif'; ctx.fillStyle='#9aabc4'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
-  ctx.fillText(tr('wind')+(MET.wind==='barb'?' ('+({kt:'kt',kmh:'km/h',ms:'m/s'})[MET.unit]+')':''),cx,a.top-4);
+  ctx.fillText(tr('wind')+(MET.wind==='barb'?' ('+({kt:'kt',kmh:'km/h',ms:'m/s'})[MET.unit]+')':''),cx,a.top+12);
   for(let v=Math.ceil(y.min/step)*step; v<=y.max; v+=step){
     const nn=MET.y==='nn'?v:v+GREF; let best=null,bd=Infinity;
     for(const p of pr){ const d=Math.abs(p.z-nn); if(d<bd){bd=d;best=p;} }
@@ -1522,6 +1565,15 @@ const metPlugin={id:'metLayers',beforeDatasetsDraw(ch){
     const p0=y.getPixelForValue(ys(L.z0)), p1=y.getPixelForValue(ys(L.z1)), top=Math.min(p0,p1), h=Math.abs(p0-p1);
     ctx.fillStyle=hexA(CAT[L.cat].c,.13); ctx.fillRect(a.left,top,a.right-a.left,h);
     ctx.fillStyle=hexA(CAT[L.cat].c,.95); ctx.fillRect(a.right-8,top,8,h);
+  }
+  if(MET.x==='T' && R.clouds && R.clouds.length){
+    if(!hatchPat){ const c=document.createElement('canvas'); c.width=c.height=8; const g=c.getContext('2d'); g.strokeStyle='rgba(238,243,250,.4)'; g.lineWidth=2; g.beginPath(); g.moveTo(0,8); g.lineTo(8,0); g.moveTo(-2,2); g.lineTo(2,-2); g.moveTo(6,10); g.lineTo(10,6); g.stroke(); hatchPat=ctx.createPattern(c,'repeat'); }
+    for(const C of R.clouds){
+      const p0=y.getPixelForValue(ys(C.z0)), p1=y.getPixelForValue(ys(C.z1)), top=Math.min(p0,p1), h=Math.abs(p0-p1);
+      ctx.fillStyle=hatchPat; ctx.fillRect(a.left,top,a.right-a.left-8,h);
+      ctx.setLineDash([3,4]); ctx.strokeStyle='#eef3fa'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(a.left,p0); ctx.lineTo(a.right-8,p0); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle='#eef3fa'; ctx.font='12px Barlow, system-ui, sans-serif'; ctx.textAlign='left'; ctx.textBaseline='alphabetic'; ctx.fillText(tr('cl_base',{z:Math.round(ys(C.z0)/10)*10}),a.left+8,p0-5);
+    }
   }
   if(MET.x==='T'){   // Trockenadiabaten im Hintergrund: dünne grüne Linien, θ alle 2 K
     const zlo=MET.y==='nn'?y.min:y.min+GREF, zhi=MET.y==='nn'?y.max:y.max+GREF;
@@ -1557,11 +1609,12 @@ function initMetChart(){
     data:{datasets:[
       {label:tr('ds_pts'),data:[],pointRadius:3,hitRadius:7,hoverRadius:5,backgroundColor:[],borderWidth:0,order:4},
       {label:tr('ds_adia'),type:'line',data:[],borderColor:'rgba(95,227,161,.95)',borderDash:[5,4],borderWidth:1.8,pointRadius:0,hitRadius:0,order:3},
-      {label:tr('ds_prof'),type:'line',data:[],borderWidth:5,pointRadius:0,hitRadius:8,borderColor:'#ffc83d',tension:0,segment:{borderColor:c=>metLineCol[c.p1DataIndex]||'#ffc83d'},order:2},
-      {label:'Orbit',data:[],pointRadius:8,hoverRadius:9,backgroundColor:'#ff9f1c',borderColor:'#0a1019',borderWidth:3,order:1}
+      {label:tr('ds_prof'),type:'line',data:[],borderWidth:5,pointRadius:0,hitRadius:8,borderColor:'#ffc83d',tension:0,segment:{borderColor:c=>metLineCol[c.p1DataIndex]||'#ffc83d',borderDash:c=>metOwn[c.p1DataIndex]?[]:[9,6]},order:2},
+      {label:'Orbit',data:[],pointRadius:8,hoverRadius:9,backgroundColor:'#ff9f1c',borderColor:'#0a1019',borderWidth:3,order:1},
+      {label:tr('ds_dew'),type:'line',data:[],borderWidth:3.5,pointRadius:0,hitRadius:6,borderColor:'#4cc9ff',tension:0,segment:{borderDash:c=>metOwnD[c.p1DataIndex]?[]:[8,6]},order:2}
     ]},
     options:{animation:false,responsive:true,maintainAspectRatio:false,parsing:false,
-      interaction:{mode:'nearest',intersect:true},layout:{padding:{top:16,right:94,left:0,bottom:0}},
+      interaction:{mode:'nearest',intersect:true},layout:{padding:{top:4,right:6,left:0,bottom:0}},
       scales:{x:{type:'linear',grid:{color:grid},border,title:{display:true,text:''}},
               y:{type:'linear',grid:{color:grid},border,title:{display:true,text:''}}},
       plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(10,16,25,.95)',borderColor:'#28395a',borderWidth:1,padding:9,
@@ -1635,7 +1688,8 @@ function updMeteo(force){
     pts.push({x:m.T,y:ys(m.alt),m}); cols.push(m.src==='prior'?`rgba(201,184,255,${al})`:m.src==='model'?`rgba(94,234,212,${al})`:m.src==='assume'?`rgba(148,163,184,${al})`:`rgba(159,227,255,${al})`); rad2.push(2+2*m.w); }
   D[0].data=pts; D[0].backgroundColor=cols; D[0].pointRadius=rad2;
   const pp=R.prof.filter(p=>gm?p.g!=null:true);
-  D[2].data=pp.map(p=>({x:gm?p.g:p.T,y:ys(p.z),p})); metLineCol=pp.map(p=>p.cat?CAT[p.cat].c:'#9aabc4');
+  D[2].data=pp.map(p=>({x:gm?p.g:p.T,y:ys(p.z),p})); metLineCol=pp.map(p=>p.cat?CAT[p.cat].c:'#9aabc4'); metOwn=pp.map(p=>p.own>=0.5);
+  const pd=gm?[]:R.prof.filter(p=>p.Td!=null); D[4].data=pd.map(p=>({x:p.Td,y:ys(p.z),p})); metOwnD=pd.map(p=>p.own>=0.5); D[4].label=tr('ds_dew');
   const yLoNN=MET.y==='nn'?Math.floor((GREF-15)/10)*10:GREF-10, zOwn=S.met.reduce((a,q)=>((q.src==='live'||q.src==='prior')&&q.alt>a)?q.alt:a,0),   // Achse folgt den eigenen Messungen, nicht dem Modell bis 9 km
         yHiNN=Math.max(Math.ceil((GREF+1500)/100)*100,Math.ceil((Math.max(o.alt,zOwn)+60)/100)*100);
   if(!gm && R.prof.length){   // hervorgehobene Adiabate: θ der untersten Messschicht
@@ -1647,9 +1701,9 @@ function updMeteo(force){
   const sc=metChart.options.scales;
   sc.y.min=ys(yLoNN); sc.y.max=ys(yHiNN); sc.y.title.text=tr(MET.y==='nn'?'ax_alt_nn':'ax_alt_agl');
   if(gm){ sc.x.min=-2.5; sc.x.max=2.5; sc.x.ticks.stepSize=0.5; sc.x.title.text=tr('ax_grad'); }
-  else { let lo=Infinity,hi=-Infinity; for(const m of S.met){ if(m.alt>yHiNN) continue; lo=Math.min(lo,m.T); hi=Math.max(hi,m.T); }   // Temperaturbereich nur aus dem sichtbaren Höhenbereich if(!isFinite(lo)){lo=0;hi=15;}
+  else { let lo=Infinity,hi=-Infinity; for(const m of S.met){ if(m.alt>yHiNN) continue; lo=Math.min(lo,m.T,m.Td!=null?m.Td:m.T); hi=Math.max(hi,m.T); }   // Temperaturbereich nur aus dem sichtbaren Höhenbereich if(!isFinite(lo)){lo=0;hi=15;}
     sc.x.min=Math.floor(lo-0.5); sc.x.max=Math.ceil(hi+0.5); sc.x.ticks.stepSize=undefined; sc.x.title.text=tr('ax_temp'); }
-  metChart.options.layout = {padding:{top:16,right:MET.wind==='off'?6:(MET.wind==='barb'?94:58),left:0,bottom:0}};
+  metChart.options.layout = {padding:{top:4,right:6,left:0,bottom:0}};
   metChart.update('none');
 }
 function bindMeteo(){
@@ -1736,6 +1790,7 @@ $('btn-hunter').addEventListener('click',()=>{ const h=S.targets.find(t=>t.hunte
 $('btn-reset').addEventListener('click',()=>location.reload());
 /* Änderungen je Version (neueste oben); bei jeder neuen Version ergänzen */
 const CHANGES = [
+ {v:'2026-10-12.4', t:['Dashboard schmaler, klappt nur nach unten auf, Werte kleiner; auf dem Luftraum an derselben Stelle wie auf dem Chaser; Warnhinweise nur bei Bedarf, klein rechts daneben, nie permanent','Flug und Profil: Vario links mit schlankem Balken, Detailwerte klein rechts; Vertikalprofil bis zum unteren Rand; Umschalter Temperatur/Gradient und NN/Grund in die Details verlegt, Standard immer NN','Vertikalprofil: Windfähnchen im Diagramm; Taupunkt aus dem Modell (Open-Meteo), Wolkenschicht schraffiert mit Wolkenbasis; gestrichelt = Modell, durchgezogen = gemessen; Quelle wird immer angezeigt','Untere Leiste: aktive Seite hell auf Kapsel','Karte flackert weniger: Zoom höchstens alle 4 s in ganzen Stufen, heraus nur wenn nötig, hinein erst nach 10 ruhigen Sekunden']},
  {v:'2026-10-12.3', t:['Dashboard (Höhe über Grund, NN, Vario mit Beschleunigungsbalken) jetzt auch auf Chaser und Luftraum; dort antippen zum Aufklappen (Kurs, Fahrt in kt, Uhrzeit, Füllgrad, Wind, Quelle der Höhe); auf „Flug und Profil“ kompakt und ohne Füllgrad','Untere Leiste schmaler, alle Symbole gleichfarbig, per Griff bis auf einen dünnen Streifen einklappbar','Luftraum-Seite standardmäßig an, Luftfahrtkarte als Standard (Hinweis „Aktuelle Flugkarte nicht ladbar“ ohne Netz), Flugzeugliste einklappbar','Neuer Schalter „OGN-Anmeldung des Orbit“ (aus, wenn ein echter OGN-Tracker an Bord ist)','Warnungen nur noch gelb, kein Blinken; Demo mit nur einem Luftfahrzeug','Meldung „Prallhöhe erreicht“ wird eingeblendet und in der Aufzeichnung als Ereignis gespeichert (GPX-Wegpunkt, CSV-Zeile)','Update-Hinweise und Update-Knopf im Flug ausgeblendet']},
  {v:'2026-10-12.2', t:['Neu: Update-Knopf ganz unten in den Einstellungen neben der Versionsnummer: prüft beim Server, meldet „Version ist aktuell“ oder fragt „Jetzt neu laden?“','Beim Beantworten mit „Später“ fragt die App frühestens nach 8 Stunden von selbst wieder; nie während einer Fahrt']},
  {v:'2026-10-12.1', t:['Pilotenanzeige „Flug und Profil“ neu: Höhe über Grund groß, darunter Höhe NN, darunter Vario mit breitem Beschleunigungsbalken','Beschleunigungsbalken: Länge nach Wurzelskala (voll bei 0,25 m/s², je Richtung 26 px), Glättung 0,5 s, Totzone 0,01 m/s²; grün = nach oben, rot = nach unten; Vario-Feld färbt sich mit','Neu: Kurs und Fahrt in kt sowie Uhrzeit','Neu: errechneter Füllgrad mit Pilzsymbol und Hinweis, wenn die Prallhöhe erreicht ist; Startfüllung einstellbar (Standard 70 %), Annahme: ideales Gas, Standardatmosphäre, Ventilzüge nicht erfasst','Neu: Button „Änderungen“ bei der Version in den Einstellungen']},
@@ -1830,7 +1885,7 @@ $('btn-clear').addEventListener('click',async()=>{   // alles verwerfen und neu 
 });
 
 /* ---------------- Datenzähler und Service Worker ---------------- */
-const BUILD = '2026-10-12.3';
+const BUILD = '2026-10-12.4';
 
 // ---- Fahrt: Aufzeichnung auf dem Handy (IndexedDB), Stopp-Knopf und automatische Nachfrage nach der Landung
 window.FLIGHT=null;                                          // aktuelle Fahrt
@@ -1949,8 +2004,8 @@ addEventListener('pagehide',()=>flFlush(window.FLIGHT));
 // ---- Startprofil aus Modelldaten (MET-13): Open-Meteo, Temperatur und Wind auf Druckflächen für den Startplatz
 const MODEL = { levels:[1000,975,950,925,900,850,800,700,600,500,400,300], maxAgeH:6, stepM:25 };   // bis 300 hPa (rund 9000 m), damit auch Flüge bis 8000 m eine Windannahme haben
 function modelUrl(lat,lon){
-  const h=['temperature_2m','wind_speed_10m','wind_direction_10m'];
-  MODEL.levels.forEach(L=>['temperature','wind_speed','wind_direction','geopotential_height'].forEach(v=>h.push(v+'_'+L+'hPa')));
+  const h=['temperature_2m','relative_humidity_2m','wind_speed_10m','wind_direction_10m'];
+  MODEL.levels.forEach(L=>['temperature','relative_humidity','wind_speed','wind_direction','geopotential_height'].forEach(v=>h.push(v+'_'+L+'hPa')));
   return 'https://api.open-meteo.com/v1/forecast?latitude='+lat.toFixed(4)+'&longitude='+lon.toFixed(4)+'&hourly='+h.join(',')+'&wind_speed_unit=ms&timezone=UTC&forecast_days=2';
 }
 // Wind aus Richtung dir (Grad) mit Geschwindigkeit spd: Bewegung der Luft nach Osten (u) und Norden (v)
@@ -1960,9 +2015,9 @@ function modelParse(j,nowMs){
     const H=j.hourly, elev=+j.elevation||0, tt=H.time.map(t=>Date.parse(t+'Z'));
     let k=0; tt.forEach((t,i)=>{ if(Math.abs(t-nowMs)<Math.abs(tt[k]-nowMs)) k=i; });
     const rowsAt=i=>{ const rows=[], g=n=>H[n]&&H[n][i], R=(x,d)=>Math.round(x*d)/d;
-      if(g('temperature_2m')!=null && g('wind_speed_10m')!=null){ const [u,v]=windUV(g('wind_speed_10m'),g('wind_direction_10m')); rows.push({z:R(elev+10,1),T:R(g('temperature_2m'),10),u:R(u,100),v:R(v,100)}); }
+      if(g('temperature_2m')!=null && g('wind_speed_10m')!=null){ const [u,v]=windUV(g('wind_speed_10m'),g('wind_direction_10m')); rows.push({z:R(elev+10,1),T:R(g('temperature_2m'),10),h:g('relative_humidity_2m')==null?null:R(g('relative_humidity_2m'),1),u:R(u,100),v:R(v,100)}); }
       MODEL.levels.forEach(L=>{ const z=g('geopotential_height_'+L+'hPa'), T=g('temperature_'+L+'hPa'), s=g('wind_speed_'+L+'hPa'), d=g('wind_direction_'+L+'hPa');
-        if(z!=null&&T!=null&&s!=null&&d!=null&&z>elev+40){ const [u,v]=windUV(s,d); rows.push({z:R(z,1),T:R(T,10),u:R(u,100),v:R(v,100)}); } });   // Flächen unter dem Boden weglassen
+        if(z!=null&&T!=null&&s!=null&&d!=null&&z>elev+40){ const [u,v]=windUV(s,d); rows.push({z:R(z,1),T:R(T,10),h:g('relative_humidity_'+L+'hPa')==null?null:R(g('relative_humidity_'+L+'hPa'),1),u:R(u,100),v:R(v,100)}); } });   // Flächen unter dem Boden weglassen
       rows.sort((a,b)=>a.z-b.z); return rows; };
     const rows=rowsAt(k); if(rows.length<3) return null;
     const hours=[]; for(let i=k;i<Math.min(tt.length,k+13);i++){ const r=rowsAt(i); if(r.length>=3) hours.push({valid:tt[i],rows:r}); }   // die nächsten 12 Stunden für die Demo
@@ -1974,7 +2029,7 @@ function modelPoints(m,nowMs){
   for(let z=r[0].z; z<=top; z+=MODEL.stepM){
     let i=0; while(i<r.length-2 && r[i+1].z<z) i++;
     const a=r[i], b=r[i+1], f=b.z===a.z?0:(z-a.z)/(b.z-a.z), agl=z-m.elev, alt=GREF+agl;
-    pts.push({t:S.t-age,alt,g:GREF,d:m.dkm||0,tauM:MODEL_TAU_MIN,sigM:MODEL_SIGMA_KM,src:'model',T:a.T+(b.T-a.T)*f,p:pAt(alt),rh:60,w:1,wt:1,wd:1,ve:a.u+(b.u-a.u)*f,vn:a.v+(b.v-a.v)*f,wo:agl>WIND_MIN_AGL,w0:MODEL_W0});
+    pts.push({t:S.t-age,alt,g:GREF,d:m.dkm||0,tauM:MODEL_TAU_MIN,sigM:MODEL_SIGMA_KM,src:'model',T:a.T+(b.T-a.T)*f,p:pAt(alt),rh:60,Td:(a.h!=null&&b.h!=null)?dewOf(a.T+(b.T-a.T)*f,a.h+(b.h-a.h)*f):null,w:1,wt:1,wd:1,ve:a.u+(b.u-a.u)*f,vn:a.v+(b.v-a.v)*f,wo:agl>WIND_MIN_AGL,w0:MODEL_W0});
   }
   return pts;
 }
@@ -1985,13 +2040,21 @@ const distKm=(lat,lon)=>Math.hypot((lat-O.lat)*111.32,(lon-O.lon)*111.32*Math.co
 const bearingIdx=(lat,lon)=>{ const dy=lat-O.lat, dx=(lon-O.lon)*Math.cos(O.lat*Math.PI/180); return Math.round(((Math.atan2(dx,dy)*180/Math.PI+360)%360)/45)%8; };
 function updProfRef(){
   const el=$('prof-ref'); if(!el) return;
-  if(!MODELREF){ el.textContent=window.NOMODEL?tr('pr_none'):''; return; }
-  const m=MODELREF, ns=m.lat>=0?'N':'S', ew=m.lon>=0?'E':'W';
-  const t=new Date(m.valid).toISOString().slice(11,16), l=new Date(m.valid).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-  if((S.t-m.t0)>=3600){ el.textContent=tr('pr_ref0',{t,l}); return; }       // nach einer Stunde verschwindet der Ort
-  const dk=Math.round(m.dkm), cmp=tr('cmp').split(',')[bearingIdx(m.lat,m.lon)];
-  const nm=m.place||(Math.abs(m.lat).toFixed(2)+'° '+ns+' '+Math.abs(m.lon).toFixed(2)+'° '+ew);
-  el.textContent=tr('pr_ref',{p:nm+', '+(dk<1?tr('pr_off0'):tr('pr_off',{d:dk,c:cmp})),t,l});
+  const strip=t=>String(t).replace(/^[^:]+:\s*/,'');
+  let zOwn=0; for(const q of S.met){ if((q.src==='live'||q.src==='prior')&&q.alt>zOwn) zOwn=q.alt; }
+  const own = zOwn>0 ? tr('src_own',{z:Math.round(zOwn/10)*10}) : '';
+  let base='';
+  if(!MODELREF){ base=window.NOMODEL?strip(tr('pr_none')):''; }
+  else {
+    const m=MODELREF, ns=m.lat>=0?'N':'S', ew=m.lon>=0?'E':'W';
+    const t=new Date(m.valid).toISOString().slice(11,16), l=new Date(m.valid).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    if((S.t-m.t0)>=3600) base=strip(tr('pr_ref0',{t,l}));
+    else { const dk=Math.round(m.dkm), cmp=tr('cmp').split(',')[bearingIdx(m.lat,m.lon)];
+      const nm=m.place||(Math.abs(m.lat).toFixed(2)+'° '+ns+' '+Math.abs(m.lon).toFixed(2)+'° '+ew);
+      base=strip(tr('pr_ref',{p:nm+', '+(dk<1?tr('pr_off0'):tr('pr_off',{d:dk,c:cmp})),t,l})); }
+  }
+  const txt=[own,(own&&!MODELREF)?'':base].filter(Boolean).join(' · ');
+  el.textContent=txt?tr('src')+': '+txt:'';
 }
 async function geoName(lat,lon){                           // Ortsname des Gitterpunkts (OpenStreetMap Nominatim), einmal je Profil
   if(navigator.onLine===false) return null;
@@ -2018,7 +2081,7 @@ function activateDemoWx(m){
 }
 setTimeout(()=>{ if(S.wxWait) endWxWait(); },5000);
 async function loadModelProfile(){
-  const KEY='bt-model', now=Date.now(); let cached=null, m=null;
+  const KEY='bt-model2', now=Date.now(); let cached=null, m=null;
   try{ cached=JSON.parse(localStorage.getItem(KEY)||'null'); }catch(e){}
   const fresh=c=>c&&c.parsed&&c.parsed.rows&&(now-c.fetched)<MODEL.maxAgeH*3600e3;
   if(fresh(cached) && cached.parsed.hours && distKm(cached.parsed.lat,cached.parsed.lon)<=15) m=cached.parsed;           // gleicher Ort, jünger als 6 Stunden: kein neuer Abruf
