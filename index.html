@@ -129,12 +129,31 @@ main{position:relative;flex:1;min-height:0}
 
 /* Flug und Profil: das Vertikalprofil füllt fast den ganzen Bildschirm */
 .fl{position:absolute;inset:0;display:flex;flex-direction:column;gap:6px;padding:6px 10px 8px}
-.fl-top{flex:none;display:flex;align-items:flex-end;gap:14px;padding:0 4px}
+.fl-top{flex:none;display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;align-items:start;padding:0 4px}
+.pc-l,.pc-r{min-width:0}
+.pc-big{font-size:46px!important;line-height:1}
+.pc-nn{display:flex;align-items:baseline;gap:5px;margin:2px 0 6px}
+.pc-nn b{font-family:var(--num);font-size:20px;font-weight:600;color:var(--mut)}
+.pc-v{position:relative;display:flex;align-items:center;gap:8px;height:54px;border-radius:8px;overflow:hidden;padding-right:8px}
+.pc-tint{position:absolute;inset:0;opacity:0;pointer-events:none}
+.pc-bar{position:relative;flex:none;width:56px;height:54px;background:var(--pan);border:1px solid var(--line);border-radius:6px;overflow:hidden;z-index:1}
+.pc-mid{position:absolute;left:0;right:0;top:50%;height:1px;background:#fff;opacity:.55;z-index:2}
+#pc-fill{position:absolute;left:0;right:0}
+.pc-v .lbl{position:relative;z-index:1}
+.pc-v b{position:relative;z-index:1;margin-left:auto;font-family:var(--num);font-weight:700;font-size:34px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pc-r{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;align-content:start}
+.pc-r .rd1 b{font-size:22px}
+.pc-fl{display:flex;align-items:center;gap:6px}
+.pc-fl svg{flex:none}
+#pc-fsub{font-size:10px;opacity:.85}
+.pc-prall{grid-column:1/-1;background:var(--warn);color:#241c00;border-radius:8px;padding:6px 9px;font-weight:700;font-size:14px}
+.pc-prall small{display:block;font-weight:500;font-size:11px}
+.pc-r .sm{grid-column:1/-1;justify-self:start}
+.verrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
 .rd1{display:flex;flex-direction:column;min-width:0;line-height:1.05}
 .rd1 .lbl{font-size:11px}
 .rd1 b{font-family:var(--num);font-weight:700;font-size:26px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .rd1 b small{font-size:13px;font-weight:500;color:var(--mut);margin-left:3px}
-.fl-top .sm{margin-left:auto}
 .fl-chart{flex:1;min-height:0;display:flex;flex-direction:column;padding:6px 6px 4px}
 .fl-ctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 2px 6px}
 .fl-cv{position:relative;flex:1;min-height:0}
@@ -180,9 +199,8 @@ main{position:relative;flex:1;min-height:0}
 
 @container (orientation:landscape){
   .fl{flex-direction:row}
-  .fl-top{flex:0 0 30%;flex-direction:column;align-items:flex-start;justify-content:center;gap:12px}
-  .fl-top .sm{margin-left:0}
-  .rd1 b{font-size:34px}
+  .fl-top{flex:0 0 46%;align-content:center;overflow:hidden}
+  .pc-big{font-size:40px!important}
   .orb{grid-template-rows:1fr;grid-template-columns:minmax(0,58%) minmax(0,1fr)}
   .orb-list{border-top:0;border-left:1px solid var(--line)}
 }
@@ -330,10 +348,19 @@ main{position:relative;flex:1;min-height:0}
     <section id="s-flight" class="screen">
       <div class="fl">
         <div class="fl-top">
-          <div class="rd1"><span class="lbl" data-i="vario">Vario</span><b id="b-var">+0.0<small>m/s</small></b></div>
-          <div class="rd1"><span class="lbl" id="lb-alt" data-i="alt_nn">Höhe NN</span><b id="b-alt">–</b></div>
-          <div class="rd1 rdbtn" id="rd-wind" role="button" tabindex="0" data-it="wind_toggle_t" title="Antippen: Windeinheit wechseln"><span class="lbl" data-i="wind">Wind</span><b id="b-wind">–</b></div>
-          <button class="sm" id="btn-sheet" data-i="details">Details</button>
+          <div class="pc-l">
+            <div class="rd1"><span class="lbl" data-i="agl">über Grund</span><b id="b-agl" class="pc-big">–</b></div>
+            <div class="pc-nn"><span class="lbl">NN</span><b id="b-alt">–</b></div>
+            <div class="pc-v"><div class="pc-tint" id="pc-tint"></div><div class="pc-bar"><div class="pc-mid"></div><div id="pc-fill"></div></div><span class="lbl">m/s</span><b id="b-var">+0.0</b></div>
+          </div>
+          <div class="pc-r">
+            <div class="rd1"><span class="lbl" data-i="crs">Kurs / Fahrt</span><b id="b-crs">–</b></div>
+            <div class="rd1"><span class="lbl" data-i="clock">Uhrzeit</span><b id="b-clk">–</b></div>
+            <div class="rd1"><span class="lbl"><span data-i="fill">Füllgrad</span> <span id="pc-fsub"></span></span><b class="pc-fl"><span id="pc-mush"></span><span id="b-fill">–</span></b></div>
+            <div class="rd1 rdbtn" id="rd-wind" role="button" tabindex="0" data-it="wind_toggle_t" title="Antippen: Windeinheit wechseln"><span class="lbl" data-i="wind">Wind</span><b id="b-wind">–</b></div>
+            <div class="pc-prall" id="pc-prall" hidden><span data-i="fill_hit">Prallhöhe erreicht</span><small data-i="fill_hit2">Ballon voll, ab jetzt Gasverlust über das Ventil</small></div>
+            <button class="sm" id="btn-sheet" data-i="details">Details</button>
+          </div>
         </div>
         <div class="fl-chart card2">
           <div class="fl-ctl">
@@ -463,8 +490,9 @@ main{position:relative;flex:1;min-height:0}
       <div class="num" id="data-line" style="font-size:19px;font-weight:600;margin-top:2px">–</div>
       <div class="lbl" id="data-sub" style="margin-top:2px">–</div>
       <div class="lbl" id="tile-diag" style="margin-top:6px">–</div>
-      <div class="lbl" id="ver" style="margin-top:6px">–</div>
+      <div class="verrow"><span class="lbl" id="ver">–</span><button class="sm" id="btn-chg" data-i="chg">Änderungen</button></div>
     </div>
+    <div class="r"><span data-i="s_f0">Startfüllung Ballon (%)</span><input type="number" id="in-f0" min="10" max="100" step="5" value="70" style="width:78px;background:var(--pan);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit;text-align:right"></div>
     <div class="r"><span data-i="s_view">Ansicht</span><div class="seg" data-key="frame"><button data-v="auto" class="on" data-i="v_full">Voll</button><button data-v="portrait" data-i="v_port">Hoch</button><button data-v="land" data-i="v_land">Quer</button></div></div>
     <div style="border-top:1px solid var(--line);margin:4px 0 12px"></div>
     <div class="r"><span data-i="s_rate">Simulationstempo</span><div class="seg" data-key="speed"><button data-v="1">1×</button><button data-v="5">5×</button><button data-v="10" class="on">10×</button><button data-v="30">30×</button></div></div>
@@ -493,6 +521,7 @@ main{position:relative;flex:1;min-height:0}
     <div class="notice"><b data-i="notice_t">Hinweis</b><div class="txt" data-i="notice_x"></div></div>
   </div>
 </div>
+<div class="dlg" id="chg" hidden><div class="dlg-b card2" style="max-height:82vh;overflow:auto;width:min(420px,100%)"><div class="dlg-t" data-i="chg_t">Änderungen je Version</div><div id="chg-l"></div><div class="dlg-btns"><button class="sm pri" id="chg-x" data-ia="close">×</button></div></div></div>
 <div class="dlg" id="dlg" hidden><div class="dlg-b card2"><div class="dlg-t" id="dlg-t"></div><div class="dlg-x" id="dlg-x"></div><div class="dlg-btns" id="dlg-b"></div></div></div>
 <div class="demo-wm" id="demo-wm" hidden aria-hidden="true"></div>
 
@@ -721,6 +750,16 @@ const TX = {
  b_o2:["Orbit 2 jetzt starten","Start Orbit 2 now","Lancer Orbit 2 maintenant","Uruchom Orbit 2 teraz","Spustit Orbit 2 hned","立即啟動 Orbit 2","Iniciar Orbit 2 ahora"],
  b_clear:["Speicher leeren und neu laden","Clear cache and reload","Vider le cache et recharger","Wyczyść pamięć i przeładuj","Vymazat mezipaměť a znovu načíst","清除快取並重新載入","Borrar caché y recargar"],
  ver:["Version","Version","Version","Wersja","Verze","版本","Versión"],
+ chg:["Änderungen","Changes","Modifications","Zmiany","Změny","更新內容","Cambios"],
+ chg_t:["Änderungen je Version","Changes by version","Modifications par version","Zmiany w wersjach","Změny podle verzí","各版本更新內容","Cambios por versión"],
+ s_f0:["Startfüllung Ballon (%)","Balloon fill at launch (%)","Remplissage au départ (%)","Napełnienie przy starcie (%)","Naplnění při startu (%)","起飛時充氣量 (%)","Llenado al despegue (%)"],
+ fill:["Füllgrad","Fill level","Remplissage","Napełnienie","Naplnění","充氣度","Llenado"],
+ fill_hit:["Prallhöhe erreicht","Taut altitude reached","Altitude de gonflage max. atteinte","Osiągnięto wysokość pełnego napełnienia","Dosaženo výšky plného naplnění","已達滿脹高度","Altura de globo lleno alcanzada"],
+ fill_hit2:["Ballon voll, ab jetzt Gasverlust über das Ventil","Balloon full, gas now escapes through the valve","Ballon plein, le gaz s’échappe maintenant par la soupape","Balon pełny, gaz ucieka teraz przez zawór","Balón je plný, plyn nyní uniká ventilem","氣球已滿，氣體將由閥門排出","Globo lleno, el gas escapa ahora por la válvula"],
+ fill_prall:["prall ab","taut from","plein dès","pełny od","plný od","滿脹自","lleno desde"],
+ crs:["Kurs / Fahrt","Track / speed","Route / vitesse","Kurs / prędkość","Kurz / rychlost","航向／速度","Rumbo / velocidad"],
+ clock:["Uhrzeit","Time","Heure","Godzina","Čas","時間","Hora"],
+ toast_f0:["Startfüllung gilt ab dem nächsten Start (Neustart)","Launch fill applies from the next start (restart)","Le remplissage au départ s’applique au prochain démarrage","Napełnienie startowe obowiązuje od następnego startu","Startovní naplnění platí od příštího startu","起飛充氣量將於下次啟動時生效","El llenado inicial se aplica en el próximo inicio"],
  b_reset:["Neustart","Restart","Redémarrer","Uruchom ponownie","Restart","重新開始","Reiniciar"],
  // Hinweise
  toast_ready:["Orbit steht am Startplatz bereit","Orbit is ready at the launch site","L’Orbit est prêt sur le site de départ","Orbit czeka na miejscu startu","Orbit je připraven na místě startu","Orbit 已在起飛地點就緒","El Orbit está listo en el lugar de despegue"],
@@ -838,7 +877,29 @@ function atmT(h,ta){ if(DEMO_WX.ready) return wxAt(h,ta-ATM_T0).T;
   return T;
 }
 // Trockenadiabaten: Linien konstanter potentieller Temperatur θ, Druck aus der Standardatmosphäre
-const pAt = z => 1013.25*Math.pow(1-2.25577e-5*z,5.25588);                 // hPa, z in m NN
+const pAt = z => 1013.25*Math.pow(1-2.25577e-5*z,5.25588);
+/* Beschleunigung (aus dem Vario abgeleitet) und Füllgrad */
+const ACC = {tau:0.5, dead:0.01, full:0.25, px:26, a:0, v:null};   // Glättung in s, Totzone in m/s², Vollausschlag in m/s², Balkenlänge je Richtung in px
+function accStep(v,dt){ if(ACC.v===null||dt<=0||dt>20){ ACC.v=v; ACC.a=0; return; } const raw=(v-ACC.v)/dt; ACC.v=v; ACC.a+=(raw-ACC.a)*(1-Math.exp(-dt/ACC.tau)); }
+const isaT = z => 288.15-0.0065*z;
+const FILL = {f0:0.7, pRef:null, TRef:null, fRef:null, f:0.7, full:false, hPrall:null};
+function fillPrallH(z0){   // Höhe, in der der Ballon bei Startfüllung f0 prall wird (Standardatmosphäre)
+  const p0=pAt(z0), T0=isaT(z0), g=z=>FILL.f0*(p0/pAt(z))*(isaT(z)/T0);
+  if(FILL.f0>=1) return z0; let lo=z0, hi=z0+20000; if(g(hi)<1) return null;
+  for(let i=0;i<40;i++){ const m=(lo+hi)/2; if(g(m)<1) lo=m; else hi=m; } return (lo+hi)/2;
+}
+function fillStep(z){
+  const p=pAt(z), T=isaT(z);
+  if(FILL.pRef===null){ FILL.pRef=p; FILL.TRef=T; FILL.fRef=FILL.f0; FILL.hPrall=fillPrallH(z); }
+  let f=FILL.fRef*(FILL.pRef/p)*(T/FILL.TRef);
+  if(f>=1){ f=1; if(!FILL.full){ FILL.full=true; if(typeof toast==='function') toast(tr('fill_hit')); } } else FILL.full=false;
+  FILL.fRef=f; FILL.pRef=p; FILL.TRef=T; FILL.f=f;
+}
+function mushSVG(f){
+  const hull='M22 3C7 3 2 18 8 30C12 37 16 41 18 46L26 46C28 41 32 37 36 30C42 18 37 3 22 3Z', y=46-f*43;
+  return `<svg width="26" height="32" viewBox="0 0 44 54" aria-hidden="true"><defs><clipPath id="mclip"><path d="${hull}"/></clipPath></defs><rect x="0" y="${y.toFixed(1)}" width="44" height="${(f*43+1).toFixed(1)}" fill="var(--orb)" opacity=".85" clip-path="url(#mclip)"/><path d="${hull}" fill="none" stroke="var(--orb)" stroke-width="2.4"/><path d="M18 46L18 49M26 46L26 49" stroke="var(--orb)" stroke-width="2"/><rect x="18" y="49" width="8" height="5" rx="1" fill="var(--orb)"/></svg>`;
+}
+let mushK=-1;                 // hPa, z in m NN
 const thetaOf = (T,z) => (T+273.15)*Math.pow(1000/pAt(z),0.2857);           // K
 const tOfTheta = (th,z) => th*Math.pow(pAt(z)/1000,0.2857)-273.15;          // °C
 // BME280-Messpunkt. Weit entfernte Messungen enthalten eine Luftmassen-Verzerrung (0,05 K je km ab 5 km).
@@ -989,6 +1050,7 @@ function step(dt){
   if(S.t>=LAUNCH1){
     if(!S.launched1){ S.launched1=true; if(typeof toast==='function') toast(tr('toast_o1')); }
     stepBalloon(o,dt,S.t-LAUNCH1,S.mode);
+    accStep(o.vario,dt); fillStep(o.alt);
   }
   if(!q.active && S.t>=LAUNCH2) activateO2();
   if(q.active) stepBalloon(q,dt,S.t*1.15+900,'auto');
@@ -1296,9 +1358,19 @@ function updLora(){
 }
 function updFlight(){
   const o=S.orbit, g=ground(o.e,o.n), agl=MET.y==='agl';
-  const bv=$('b-var'); bv.innerHTML=fmtV(o.vario)+'<small>m/s</small>'; bv.style.color=vcol(o.vario);
-  $('lb-alt').textContent=tr(agl?'agl':'alt_nn');
-  $('b-alt').innerHTML=Math.round(agl?o.alt-g:o.alt)+'<small>m</small>';
+  const a=ACC.a, aa=Math.abs(a), amp=aa<ACC.dead?0:Math.min(1,Math.sqrt(aa/ACC.full)), px=amp?Math.max(2,Math.round(ACC.px*amp)):0, col=a>0?'var(--up)':'var(--dn)';
+  const bv=$('b-var'); bv.textContent=fmtV(o.vario); bv.style.color=amp?col:vcol(o.vario);
+  const pf=$('pc-fill'); pf.style.height=px+'px'; pf.style.background=col; if(a>0){pf.style.bottom='50%';pf.style.top='auto';} else {pf.style.top='50%';pf.style.bottom='auto';}
+  const pt=$('pc-tint'); pt.style.background=col; pt.style.opacity=(0.3*amp).toFixed(2);
+  $('b-agl').innerHTML=Math.round(o.alt-g)+'<small>m</small>';
+  $('b-alt').innerHTML=Math.round(o.alt)+'<small>m</small>';
+  const sp0=Math.hypot(o.ve,o.vn);
+  $('b-crs').innerHTML = sp0<0.5 ? '–' : `${pad3(brg(o.ve,o.vn))}°<small>· ${Math.round(sp0*1.94384)} kt</small>`;
+  $('b-clk').textContent=new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',hour12:false});
+  const fk=Math.round(FILL.f*20); if(fk!==mushK){ mushK=fk; $('pc-mush').innerHTML=mushSVG(fk/20); }
+  $('b-fill').innerHTML=Math.round(FILL.f*100)+'<small>%</small>';
+  $('pc-fsub').textContent = (!FILL.full && FILL.hPrall!==null) ? tr('fill_prall')+' '+Math.round(FILL.hPrall/10)*10+' m' : '';
+  $('pc-prall').hidden=!FILL.full;
   const sp=Math.hypot(o.ve,o.vn);
   $('b-wind').innerHTML = sp<0.5 ? '–' : `${pad3(windFrom(o.ve,o.vn))}°<small>${fmtWind(sp)}</small>`;
   const hot=S.thr.filter(x=>x.lvl===2).sort((a,b)=>a.d-b.d)[0], al=$('b-alert');
@@ -1617,6 +1689,22 @@ $('btn-sim').addEventListener('click',()=>$('sim').classList.toggle('open'));
 $('btn-pause').addEventListener('click',()=>{ S.paused=!S.paused; $('btn-pause').dataset.i=S.paused?'b_resume':'b_pause'; $('btn-pause').textContent=tr(S.paused?'b_resume':'b_pause'); });
 $('btn-hunter').addEventListener('click',()=>{ const h=S.targets.find(t=>t.hunter); respawn(h,5500); S.traffic=true; $('sim').classList.remove('open'); document.querySelectorAll('#sim [data-key="traffic"] button').forEach(b=>b.classList.toggle('on',b.dataset.v==='1')); applyTraffic(); showScreen('orbit'); });
 $('btn-reset').addEventListener('click',()=>location.reload());
+/* Änderungen je Version (neueste oben); bei jeder neuen Version ergänzen */
+const CHANGES = [
+ {v:'2026-10-12.1', t:['Pilotenanzeige „Flug und Profil“ neu: Höhe über Grund groß, darunter Höhe NN, darunter Vario mit breitem Beschleunigungsbalken','Beschleunigungsbalken: Länge nach Wurzelskala (voll bei 0,25 m/s², je Richtung 26 px), Glättung 0,5 s, Totzone 0,01 m/s²; grün = nach oben, rot = nach unten; Vario-Feld färbt sich mit','Neu: Kurs und Fahrt in kt sowie Uhrzeit','Neu: errechneter Füllgrad mit Pilzsymbol und Hinweis, wenn die Prallhöhe erreicht ist; Startfüllung einstellbar (Standard 70 %), Annahme: ideales Gas, Standardatmosphäre, Ventilzüge nicht erfasst','Neu: Button „Änderungen“ bei der Version in den Einstellungen']},
+ {v:'bis 2026-10-07.12 (zusammengefasst)', t:['Sieben Sprachen mit Flaggen, darunter Spanisch','Vertikalprofil mit gewichteter Schichtung, Windfähnchen und Windeinheit (kt, km/h, m/s)','Demo bis 5000 m mit Hinweis „Demo. Keine realen Daten“; Live-Wetter über Open-Meteo, Ortsname statt Koordinaten, Annahme mit Standardgradient bei fehlenden Daten','Fahrtaufzeichnung auf dem Handy (GPX und CSV), Stopp-Knopf erst nach bestätigter Landung, alte Fahrten ansehen','Luftfahrtkarte (open flightmaps)','Startplatz per „Start setzen“, Höhe über Grund, Orbit-Details']}
+];
+function renderChanges(){ $('chg-l').innerHTML=CHANGES.map(c=>`<div style="margin:0 0 14px"><b style="font-size:16px">${c.v}</b><ul style="margin:6px 0 0;padding-left:18px;font-size:14px;line-height:1.35">${c.t.map(x=>'<li style="margin:3px 0">'+x+'</li>').join('')}</ul></div>`).join(''); }
+$('btn-chg').addEventListener('click',()=>{ renderChanges(); $('chg').hidden=false; });
+$('chg-x').addEventListener('click',()=>{ $('chg').hidden=true; });
+$('chg').addEventListener('click',e=>{ if(e.target===$('chg')) $('chg').hidden=true; });
+try{ const f0=parseFloat(localStorage.getItem('bt-f0')); if(f0>=10&&f0<=100){ FILL.f0=f0/100; FILL.f=FILL.f0; $('in-f0').value=f0; } }catch(e){}
+$('in-f0').addEventListener('change',()=>{
+  let v=Math.min(100,Math.max(10,parseFloat($('in-f0').value)||70)); $('in-f0').value=v;
+  try{ localStorage.setItem('bt-f0',String(v)); }catch(e){}
+  if(!S.launched1){ FILL.f0=v/100; FILL.f=FILL.f0; FILL.pRef=null; FILL.full=false; FILL.hPrall=fillPrallH(S.orbit.alt); updFlight(); }
+  else toast(tr('toast_f0'));
+});
 window.addEventListener('resize',()=>{ if(S.screen==='flight') updMeteo(true); map1.invalidateSize(); map3.invalidateSize(); if(S.screen==='orbit') setRange(S.range); });
 
 let toastTimer=0;
@@ -1651,7 +1739,7 @@ $('btn-clear').addEventListener('click',async()=>{   // alles verwerfen und neu 
 });
 
 /* ---------------- Datenzähler und Service Worker ---------------- */
-const BUILD = '2026-10-07.12';
+const BUILD = '2026-10-12.1';
 
 // ---- Fahrt: Aufzeichnung auf dem Handy (IndexedDB), Stopp-Knopf und automatische Nachfrage nach der Landung
 window.FLIGHT=null;                                          // aktuelle Fahrt
