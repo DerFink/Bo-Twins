@@ -544,6 +544,7 @@ main{position:relative;flex:1;min-height:0}
       <div class="num" id="data-line" style="font-size:19px;font-weight:600;margin-top:2px">–</div>
       <div class="lbl" id="data-sub" style="margin-top:2px">–</div>
       <div class="lbl" id="tile-diag" style="margin-top:6px">–</div>
+      <div class="lbl" id="terr-diag" style="margin-top:6px">–</div>
     </div>
     <div class="r"><span data-i="s_f0">Startfüllung Ballon (%)</span><input type="number" id="in-f0" min="10" max="100" step="5" value="70" style="width:78px;background:var(--pan);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit;text-align:right"></div>
     <div class="r"><span data-i="s_range">Reichweite Luftraum</span><div class="seg" data-key="range"><button data-v="2">2 km</button><button data-v="5">5 km</button><button data-v="10" class="on">10 km</button></div></div>
@@ -552,6 +553,7 @@ main{position:relative;flex:1;min-height:0}
     <div class="r"><span data-i="s_rate">Simulationstempo</span><div class="seg" data-key="speed"><button data-v="1">1×</button><button data-v="5">5×</button><button data-v="10" class="on">10×</button><button data-v="30">30×</button></div></div>
     <div class="r"><span data-i="s_pilot">Pilot Orbit</span><div class="seg" data-key="mode"><button data-v="auto" class="on" data-i="p_auto">Auto</button><button data-v="climb" data-i="p_climb">Steigen</button><button data-v="hold" data-i="p_hold">Halten</button><button data-v="sink" data-i="p_sink">Sinken</button></div></div>
     <div class="r"><span data-i="s_wx">Demo-Wetter</span><div class="seg" data-key="wx"><button data-v="live" class="on" data-i="wx_live">Aktuell</button><button data-v="sim" data-i="wx_sim">Simuliert</button></div></div>
+    <div class="r"><span data-i="s_drop">Funkloch-Test (Demo)</span><div class="seg" data-key="drop"><button data-v="0" data-i="air_off">Aus</button><button data-v="1" class="on" data-i="air_on">Ein</button></div></div>
     <div class="r"><span data-i="s_dmk">Demo-Hinweis</span><div class="seg" data-key="dmk"><button data-v="0" class="on" data-i="air_off">Aus</button><button data-v="1" data-i="air_on">Ein</button></div></div>
     <div class="r"><span data-i="s_air">Luftraum-Seite (Demo)</span><div class="seg" data-key="traffic"><button data-v="0" data-i="air_off">Aus</button><button data-v="1" class="on" data-i="air_on">Ein</button></div></div>
     <div class="r"><span data-i="s_ogn">OGN-Anmeldung des Orbit</span><div class="seg" data-key="ogn"><button data-v="0" data-i="air_off">Aus</button><button data-v="1" class="on" data-i="air_on">Ein</button></div></div>
@@ -832,6 +834,13 @@ const TX = {
  rc_balloon:["Auf Ballon zentrieren","Center on balloon","Centrer sur le ballon","Wyśrodkuj na balonie","Vycentrovat na balón","置中於氣球","Centrar en el globo"],
  s_range:["Reichweite Luftraum","Airspace range","Portée espace aérien","Zasięg przestrzeni","Dosah vzdušného prostoru","空域範圍","Alcance espacio aéreo"],
  a_none0:["Kein Ziel","No target","Aucune cible","Brak celu","Žádný cíl","無目標","Sin objetivo"],
+ tsrc_live:["Höhe über Grund: Gelände live abgerufen (Raster 90 m)","Height above ground: terrain looked up live (90 m grid)","Hauteur sol : relief consulté en direct (maille 90 m)","Wysokość nad gruntem: teren pobrany na żywo (siatka 90 m)","Výška nad zemí: terén stažen živě (síť 90 m)","離地高度：即時查詢地形（90 m 網格）","Altura sobre el suelo: terreno consultado en vivo (malla 90 m)"],
+ tsrc_grid:["Höhe über Grund: Gelände aus gespeichertem Raster","Height above ground: terrain from stored grid","Hauteur sol : relief depuis la grille enregistrée","Wysokość nad gruntem: teren z zapisanej siatki","Výška nad zemí: terén z uložené sítě","離地高度：來自已儲存的地形網格","Altura sobre el suelo: terreno de la malla guardada"],
+ tsrc_none:["Kein Netz: Höhe über Grund bezogen auf den Startplatz","No network: height above ground relative to launch site","Pas de réseau : hauteur par rapport au site de décollage","Brak sieci: wysokość względem miejsca startu","Bez sítě: výška vzhledem k místu startu","無網路：離地高度以起飛點為準","Sin red: altura respecto al lugar de despegue"],
+ terr_diag:["Gelände: {n} Punkte gespeichert, bis {km} km Umkreis","Terrain: {n} points stored, up to {km} km radius","Relief : {n} points enregistrés, jusqu’à {km} km","Teren: {n} punktów, do {km} km","Terén: {n} bodů, do {km} km","地形：已儲存 {n} 點，半徑至 {km} km","Terreno: {n} puntos guardados, hasta {km} km"],
+ terr_diag0:["Gelände: noch keine Daten","Terrain: no data yet","Relief : pas encore de données","Teren: brak danych","Terén: zatím žádná data","地形：尚無資料","Terreno: aún sin datos"],
+ nosig:["kein Signal","no signal","pas de signal","brak sygnału","bez signálu","無訊號","sin señal"],
+ s_drop:["Funkloch-Test (Demo)","Dropout test (demo)","Test de coupure (démo)","Test utraty łączności (demo)","Test výpadku (demo)","斷訊測試（示範）","Prueba de pérdida de señal (demo)"],
  s_f0:["Startfüllung Ballon (%)","Balloon fill at launch (%)","Remplissage au départ (%)","Napełnienie przy starcie (%)","Naplnění při startu (%)","起飛時充氣量 (%)","Llenado al despegue (%)"],
  fill:["Füllgrad","Fill level","Remplissage","Napełnienie","Naplnění","充氣度","Llenado"],
  fill_hit:["Prallhöhe erreicht","Taut altitude reached","Altitude de gonflage max. atteinte","Osiągnięto wysokość pełnego napełnienia","Dosaženo výšky plného naplnění","已達滿脹高度","Altura de globo lleno alcanzada"],
@@ -896,8 +905,109 @@ const fmtV = v => { if(Math.abs(v)<0.05) v=0; return (v>=0?'+':'−')+Math.abs(v
 const fmtD = d => d<1000 ? Math.round(d)+' m' : (d/1000).toFixed(1)+' km';
 const fmtDh = d => (d>=0?'+':'−')+Math.abs(Math.round(d))+' m';
 const vcol = v => v>0.3 ? 'var(--up)' : v<-0.3 ? 'var(--dn)' : 'var(--tx)';
-const ground = (e,n) => 78 + 5*Math.sin(e/1800) + 3*Math.cos(n/1300) + 2*Math.sin((e+n)/700);   // flaches Land, rund 80 m NN
-const GREF = ground(0,0);   // Bezugshöhe Startplatz
+const synthGround = (e,n) => 78 + 5*Math.sin(e/1800) + 3*Math.cos(n/1300) + 2*Math.sin((e+n)/700);   // Ersatz ohne Geländedaten: flaches Land, Bezug Startplatz
+let GREF = synthGround(0,0);   // Bezugshöhe Startplatz (m NN), wird mit den Geländedaten auf die echte Höhe gesetzt
+
+/* ---- Gelände (Höhe über Grund): unregelmäßiges Raster aus Open-Meteo (Copernicus 90 m), im Speicher des Geräts abgelegt ----
+   Stufe 0 = 5 km Abstand, jede Verfeinerung halbiert den Abstand (2,5 / 1,25 / 0,6 km), wo das Gelände steil ist. */
+const TERR = { e:[], n:[], h:[], l:[], hash:new Map(), cache:new Map(), lastLive:null, fail:0, busy:false, near:Infinity, pending:null, dirty:false, t55:0, saved:0, ready:null };
+const TK='bt-terr', TCELL=2500, TMAXD=10000, TCAP=1500;
+function terrIndex(){ TERR.hash=new Map(); TERR.cache.clear(); for(let i=0;i<TERR.h.length;i++) terrHash(i); }
+function terrHash(i){ const k=Math.floor(TERR.e[i]/TCELL)+','+Math.floor(TERR.n[i]/TCELL); let a=TERR.hash.get(k); if(!a){ a=[]; TERR.hash.set(k,a); } a.push(i); }
+function terrCand(e,n,r){ const ci=Math.floor(e/TCELL), cj=Math.floor(n/TCELL), out=[]; for(let i=ci-r;i<=ci+r;i++) for(let j=cj-r;j<=cj+r;j++){ const a=TERR.hash.get(i+','+j); if(a) for(const x of a) out.push(x); } return out; }
+function terrNear(e,n,r){ for(const i of terrCand(e,n,Math.max(1,Math.ceil(r/TCELL)))) if(Math.hypot(TERR.e[i]-e,TERR.n[i]-n)<r) return true; return false; }
+function terrAt(e,n){                                          // Geländehöhe m NN oder null; merkt sich den Abstand zum nächsten Rasterpunkt
+  if(!TERR.h.length){ TERR.near=Infinity; return null; }
+  const ck=Math.round(e/5)+','+Math.round(n/5), c=TERR.cache.get(ck); if(c!==undefined){ TERR.near=c.d; return c.v; }
+  let idx=terrCand(e,n,2); if(idx.length<4) idx=terrCand(e,n,4);
+  const best=idx.map(i=>[Math.hypot(TERR.e[i]-e,TERR.n[i]-n),i]).sort((a,b)=>a[0]-b[0]).slice(0,4);
+  const d0=best.length?best[0][0]:Infinity; let v=null;
+  if(d0<=TMAXD){ if(d0<20) v=TERR.h[best[0][1]]; else { let sw=0,sh=0; for(const [d,i] of best){ const w=1/(d*d); sw+=w; sh+=w*TERR.h[i]; } v=sh/sw; } }
+  if(TERR.cache.size>4000) TERR.cache.clear();
+  TERR.cache.set(ck,{v,d:d0}); TERR.near=d0; return v;
+}
+const ground = (e,n) => { const h=terrAt(e,n); return h!==null ? h : GREF+synthGround(e,n)-synthGround(0,0); };
+function terrSrc(e,n){                                         // 'live' | 'grid' | 'none'
+  terrAt(e,n); if(TERR.near>TMAXD) return 'none';
+  const L=TERR.lastLive; return (L && Date.now()-L.t<120000 && Math.hypot(L.e-e,L.n-n)<400) ? 'live' : 'grid';
+}
+function aglStr(alt,e,n){                                      // Höhe über Grund als Text: aus Geländedaten mit ≈ und gerundet, sonst Bezug Startplatz
+  const g=ground(e,n), src=terrSrc(e,n), h=alt-g;
+  if(src==='none') return String(Math.round(h));
+  const hp=Math.max(0,h), st=hp<100?5:hp<400?10:hp<1500?50:100;   // grob in der Höhe, fein nahe am Boden
+  return '≈'+(Math.round(hp/st)*st);
+}
+function terrAdd(e,n,h,l,rep){
+  if(rep){ for(const i of terrCand(e,n,1)) if(Math.hypot(TERR.e[i]-e,TERR.n[i]-n)<rep){ TERR.h[i]=h; TERR.l[i]=Math.max(TERR.l[i],l); TERR.cache.clear(); TERR.dirty=true; return false; } }
+  if(TERR.h.length>=TCAP) return false;
+  TERR.e.push(e); TERR.n.push(n); TERR.h.push(h); TERR.l.push(l); terrHash(TERR.h.length-1); TERR.cache.clear(); TERR.dirty=true; return true;
+}
+async function elevFetch(pts){                                 // Höhen für Punkte [e,n], höchstens 100 je Abruf
+  const out=[];
+  for(let i=0;i<pts.length;i+=100){
+    const ch=pts.slice(i,i+100), la=[], lo=[]; for(const p of ch){ const q=ll(p[0],p[1]); la.push(q[0].toFixed(4)); lo.push(q[1].toFixed(4)); }
+    const ctl=new AbortController(), to=setTimeout(()=>ctl.abort(),8000);
+    const r=await fetch('https://api.open-meteo.com/v1/elevation?latitude='+la.join(',')+'&longitude='+lo.join(','),{signal:ctl.signal}); clearTimeout(to);
+    if(!r.ok) throw new Error('http');
+    const j=await r.json(); if(!j.elevation||j.elevation.length!==ch.length) throw new Error('fmt');
+    out.push(...j.elevation.map(Number));
+  }
+  return out;
+}
+async function terrStart(){                                    // erste Stufe: Startplatz und Ring in 5 km, ein einziger Abruf
+  if(navigator.onLine===false) return false;
+  const pts=[[0,0]]; for(let k=0;k<8;k++){ const a=k*Math.PI/4; pts.push([Math.round(Math.sin(a)*5000),Math.round(Math.cos(a)*5000)]); }
+  try{ const hs=await elevFetch(pts); pts.forEach((q,i)=>terrAdd(q[0],q[1],hs[i],0,100)); return true; }catch(e){ TERR.fail=Date.now(); return false; }
+}
+async function terrRefine(){                                   // Verfeinerung nach Steigung: ab 4 % auf 2,5 km, ab 8 % auf 1,25 km, ab 15 % auf rund 0,6 km
+  const TH=[0.04,0.08,0.15];
+  for(let L=0;L<3;L++){
+    const sp=5000/Math.pow(2,L), key=new Set(); let cand=[], n0=TERR.h.length;
+    for(let i=0;i<n0;i++){
+      if(TERR.l[i]!==L) continue;
+      let sl=0; for(const j of terrCand(TERR.e[i],TERR.n[i],Math.ceil(1.5*sp/TCELL))){ if(j===i) continue; const d=Math.hypot(TERR.e[j]-TERR.e[i],TERR.n[j]-TERR.n[i]); if(d>1.5*sp||d<1) continue; sl=Math.max(sl,Math.abs(TERR.h[j]-TERR.h[i])/d); }
+      if(sl<TH[L]) continue;
+      for(const [a,b] of [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]]){
+        const e=TERR.e[i]+a*sp/2, n=TERR.n[i]+b*sp/2, k=Math.round(e/(sp/2))+','+Math.round(n/(sp/2));
+        if(key.has(k)) continue; key.add(k); if(!terrNear(e,n,sp/4)) cand.push([e,n]);
+      }
+    }
+    cand=cand.slice(0,Math.max(0,TCAP-TERR.h.length)); if(!cand.length) continue;
+    const hs=await elevFetch(cand); cand.forEach((q,k)=>terrAdd(q[0],q[1],hs[k],L+1,0));
+  }
+}
+async function terrBuild(dirTo,spdMs){                         // Raster entlang der erwarteten Fahrt: 4 Stunden Wind, höchstens 100 km, ±50° um die Windrichtung; um den Start immer 10 km
+  if(TERR.busy){ TERR.pending=[dirTo,spdMs]; return; }
+  if(navigator.onLine===false||!TERR.h.length) return;
+  TERR.busy=true;
+  try{
+    const reach = dirTo===null ? 20000 : clamp(spdMs*4*3600,20000,100000), N=Math.ceil(reach/5000); let cand=[];
+    for(let i=-N;i<=N;i++) for(let j=-N;j<=N;j++){
+      const e=i*5000, n=j*5000, d=Math.hypot(e,n); if(d>reach) continue;
+      let ok = dirTo===null || d<=10000; if(!ok){ const da=Math.abs(((brg(e,n)-dirTo+540)%360)-180); ok=da<=50; }
+      if(ok && !terrNear(e,n,3000)) cand.push([e,n,d]);
+    }
+    cand.sort((a,b)=>a[2]-b[2]); cand=cand.slice(0,Math.max(0,TCAP-TERR.h.length));
+    if(cand.length){ const hs=await elevFetch(cand); cand.forEach((q,k)=>terrAdd(q[0],q[1],hs[k],0,0)); }
+    await terrRefine(); terrSave();
+  }catch(e){ TERR.fail=Date.now(); }
+  finally{ TERR.busy=false; terrDiag(); const q=TERR.pending; TERR.pending=null; if(q) terrBuild(q[0],q[1]); }
+}
+function terrPlan(m){                                          // mittlerer Wind 0 bis 3000 m über Grund aus dem Modell → Richtung, Geschwindigkeit
+  try{ const r=m.rows.filter(x=>x.z-m.elev<=3000); if(!r.length) return [null,0];
+    const u=r.reduce((a,x)=>a+x.u,0)/r.length, v=r.reduce((a,x)=>a+x.v,0)/r.length, sp=Math.hypot(u,v); return sp<1?[null,0]:[brg(u,v),sp]; }catch(e){ return [null,0]; }
+}
+function terrSave(){ TERR.saved=Date.now(); TERR.dirty=false; try{ localStorage.setItem(TK,JSON.stringify({lat:O.lat,lon:O.lon,p:TERR.h.map((h,i)=>[Math.round(TERR.e[i]),Math.round(TERR.n[i]),Math.round(h*10)/10,TERR.l[i]])})); }catch(e){} }
+function terrLoad(){
+  try{ const q=JSON.parse(localStorage.getItem(TK)||'null'); if(!q||!Array.isArray(q.p)) return;
+    const de=(q.lon-O.lon)*KLON, dn=(q.lat-O.lat)*KLAT; if(Math.hypot(de,dn)>50000) return;
+    for(const a of q.p){ TERR.e.push(a[0]+de); TERR.n.push(a[1]+dn); TERR.h.push(a[2]); TERR.l.push(a[3]||0); }
+    terrIndex();
+  }catch(e){}
+}
+function terrDiag(){ const el=document.getElementById('terr-diag'); if(!el) return; const n=TERR.h.length;
+  if(!n){ el.textContent=tr('terr_diag0'); return; }
+  let mx=0; for(let i=0;i<n;i++) mx=Math.max(mx,Math.hypot(TERR.e[i],TERR.n[i])); el.textContent=tr('terr_diag',{n,km:Math.round(mx/1000)}); }
 const DEMO_WX = { mode:(function(){ try{ return localStorage.getItem('bt-demowx')==='sim'?'sim':'live'; }catch(e){ return 'live'; } })(), ready:false, hours:null, elev:0, t0Ms:0, want:false };
 DEMO_WX.want = DEMO_WX.mode==='live' && navigator.onLine!==false;      // aktuelles Wetter nur mit Netz
 function wxProf(rows,h,elev){                                         // senkrecht zwischen den Druckflächen interpolieren
@@ -920,7 +1030,7 @@ function wind(alt){ if(DEMO_WX.ready){ const w=wxAt(alt-GREF,S.t); return [w.u,w
 
 /* ---------------- Zustand ---------------- */
 const S = {
-  screen:'chaser', follow:'both', speed:10, mode:'auto', map:'dark', frame:'auto', paused:false, wxWait:DEMO_WX.want,
+  screen:'chaser', follow:'both', speed:10, mode:'auto', map:'dark', frame:'auto', paused:false, wxWait:DEMO_WX.want,tWait:false,
   range:10,
   t:0, pkts:0,
   orbit:{e:0,n:0,alt:81,vario:0,ve:0,vn:0},
@@ -930,7 +1040,40 @@ const S = {
   fc:{on:false,e:35,n:-30,hdg:0,spd:0},
   link:{rssi:-80,snr:8,batt:3.95}
 };
+/* Empfangene Werte: Marker und Spur zeigen nur, was wirklich als Paket angekommen ist; dazwischen läuft ein Schatten voraus */
+const RX = {e:0,n:0,alt:81,vario:0,ve:0,vn:0,t:0,wall:Date.now(),a:0};
+let TICKW = Date.now();
+function rxSnap(){ const o=S.orbit; RX.e=o.e; RX.n=o.n; RX.alt=o.alt; RX.vario=o.vario; RX.ve=o.ve; RX.vn=o.vn; RX.t=S.t; RX.wall=Date.now(); RX.a=ACC.a; }
+/* Funkloch-Test der Demo: das erste 20 s (Echtzeit) ab Flugzeit 2 min, das zweite 40 s, 30 s nach dem Ende des ersten */
+const DEMO_DROP = { on:(function(){ try{ return localStorage.getItem('bt-drop')!=='0'; }catch(e){ return true; } })(), list:[{at:120,len:20},{gapS:30,len:40}] };
+const DROP = {on:false,i:0,end:0,next:0};
+function dropStep(){
+  if(!DEMO_DROP.on){ DROP.on=false; return; }
+  const now=Date.now();
+  if(!DROP.on){
+    if(DROP.i>=DEMO_DROP.list.length) return;
+    const d=DEMO_DROP.list[DROP.i];
+    if(DROP.i===0 ? S.t>=d.at : now>=DROP.next){ DROP.on=true; DROP.end=now+d.len*1000; }
+  } else if(now>=DROP.end){ DROP.on=false; DROP.i++; const d=DEMO_DROP.list[DROP.i]; DROP.next=now+(d?d.gapS*1000:0); }
+}
 S.lang=guessLang();
+S.tWait=false;
+terrLoad(); terrAt(0,0);
+const T_COV = TERR.h.length>0 && TERR.near<3000;
+function terrApplyStart(){ const h=terrAt(0,0); if(h===null||TERR.near>3000) return false; GREF=h; S.orbit.alt=h; return true; }
+function terrResetDemo(){                                    // Gelände kam erst nach dem ersten Messpunkt: Anfangszustand neu aufsetzen
+  S.track=[]; S.btrack=[]; S.hist=[]; S.met=[]; window.ASSUMED=false;
+  FILL.pRef=null; FILL.full=false; FILL.hPrall=fillPrallH(S.orbit.alt);
+  sample(); if(!S.wxWait && !DEMO_WX.ready) seedMet(); mkTargets();
+}
+if(T_COV) terrApplyStart();
+S.tWait = !T_COV && navigator.onLine!==false;
+TERR.ready = new Promise(res=>{ if(!S.tWait){ res(); return; } terrStart().then(()=>res()); setTimeout(res,4500); });
+TERR.ready.then(()=>{
+  if(S.tWait){ const ok=terrApplyStart(); S.tWait=false; if(ok) terrResetDemo(); }
+  let m=null; try{ const c=JSON.parse(localStorage.getItem('bt-model2')||'null'); m=c&&c.parsed; }catch(e){}
+  const [d,v]=m?terrPlan(m):[null,0]; terrBuild(d,v);
+});
 
 /* ---------------- Datenzähler (Mobilfunk-Verbrauch) ---------------- */
 const DATA = {tileBytes:0, tileNet:0, tileHit:0, routeBytes:0, routeN:0, sw:false};
@@ -990,13 +1133,14 @@ function dashHTML(kind){
     <div class="dex" hidden><div class="it"><span class="lbl" data-i="crs">Kurs / Fahrt</span><b class="d-crs">–</b></div><div class="it"><span class="lbl" data-i="clock">Uhrzeit</span><b class="d-clk">–</b></div>
     <div class="it"><span class="lbl" data-i="fill">Füllgrad</span><b style="display:flex;align-items:center;gap:6px"><span class="d-mush"></span><span class="d-fillp">–</span></b><span class="lbl d-fsub"></span></div>
     <div class="it d-windbox"><span class="lbl" data-i="wind">Wind</span><b class="d-wind">–</b></div>
-    <div class="it full-w"><span class="lbl" data-i="src_start">Höhe über Grund: Bezug Startplatz</span></div></div></div>`;
+    <div class="it full-w"><span class="lbl d-src"></span></div></div></div>`;
 }
 function applyDashExp(){ document.querySelectorAll('.dash.full').forEach(d=>{ d.classList.toggle('exp',DASH_EXP); d.querySelector('.dex').hidden=!DASH_EXP; d.querySelector('.dchev').textContent=DASH_EXP?'▴':'▾'; }); }
 function updDash(){
-  const o=S.orbit, g=ground(o.e,o.n), a=ACC.a, aa=Math.abs(a), amp=aa<ACC.dead?0:Math.min(1,Math.sqrt(aa/ACC.full)), px=amp?Math.max(2,Math.round(ACC.px*amp)):0, col=a>0?'var(--up)':'var(--dn)';
+  const o=RX, g=ground(o.e,o.n), a=RX.a, aa=Math.abs(a), amp=aa<ACC.dead?0:Math.min(1,Math.sqrt(aa/ACC.full)), px=amp?Math.max(2,Math.round(ACC.px*amp)):0, col=a>0?'var(--up)':'var(--dn)';
   const q=(c,f)=>document.querySelectorAll('.'+c).forEach(f), sp=Math.hypot(o.ve,o.vn);
-  q('d-agl',e=>e.innerHTML=Math.round(o.alt-g)+'<small>m</small>');
+  q('d-agl',e=>e.innerHTML=aglStr(o.alt,o.e,o.n)+'<small>m</small>');
+  q('d-src',e=>e.textContent=tr('tsrc_'+terrSrc(o.e,o.n)));
   q('d-nn',e=>e.innerHTML=Math.round(o.alt)+'<small>m</small>');
   q('d-var',e=>{ e.textContent=fmtV(o.vario); e.style.color=amp?col:vcol(o.vario); });
   q('d-fillbar',e=>{ const half=(e.parentElement.clientHeight||52)/2, px=amp?Math.max(2,Math.round(half*amp)):0; e.style.height=px+'px'; e.style.background=col; if(a>0){e.style.bottom='50%';e.style.top='auto';} else {e.style.top='50%';e.style.bottom='auto';} });
@@ -1032,8 +1176,8 @@ function metSample0(t,alt,g,dist,src,ve=0,vn=0){
 function seedMet(){
   const a=[], rot=rad(-12), cs=Math.cos(rot), sn=Math.sin(rot);   // Wind drehte seit dem Vorflug um etwa 12°
   const wv=alt=>{ const [e,n]=wind(alt); return [e*cs+n*sn+0.3*gauss(), n*cs-e*sn+0.3*gauss()]; };
-  for(let k=0;k<150;k++){ const al=GREF+3+(1400-GREF)*(k/149), [ve,vn]=wv(al); a.push(metSample(-5700+k*4, al, GREF, 1.5+k*0.01, 'prior', ve, vn)); }
-  for(let k=0;k<85;k++){ const al=1400-(1400-GREF-3)*(k/84), [ve,vn]=wv(al); a.push(metSample(-5100+k*4, al, GREF, 2.5+k*0.02, 'prior', ve, vn)); }
+  for(let k=0;k<150;k++){ const al=GREF+3+1320*(k/149), [ve,vn]=wv(al); a.push(metSample(-5700+k*4, al, GREF, 1.5+k*0.01, 'prior', ve, vn)); }
+  for(let k=0;k<85;k++){ const al=GREF+1320-(1317)*(k/84), [ve,vn]=wv(al); a.push(metSample(-5100+k*4, al, GREF, 2.5+k*0.02, 'prior', ve, vn)); }
   S.met=a.concat(S.met);
 }
 function metCompute(){
@@ -1135,7 +1279,7 @@ function driveCar(R,car,orb,dt){   // folgt der Straßenroute; ohne Netz Luftlin
 }
 
 /* ---------------- Simulation: Startsequenz Orbit, dann Orbit 2 ---------------- */
-const DEMO_CEIL_M = 5000;   // Obergrenze der Demo in m NN
+const DEMO_CEIL_M = 4900;   // Obergrenze der Demo in m NN
 const LAUNCH1 = 20, LAUNCH2 = 150;   // Startzeitpunkte in Sekunden Simulationszeit
 let lastSample = -1;
 function stepBalloon(o,dt,tt,mode){
@@ -1146,7 +1290,7 @@ function stepBalloon(o,dt,tt,mode){
   else if(mode==='sink') vt = -2.6 + 0.4*Math.sin(tt/6);
   else vt = 1.7*Math.sin(tt/150) + 0.9*Math.sin(tt/41+1) + 0.35*Math.sin(tt/9);
   if(agl<120 && mode!=='sink') vt = Math.max(vt,2.0);      // Bodenabstand halten, außer beim Sinken (Landung)
-  if(o.alt>DEMO_CEIL_M) vt = Math.min(vt,-2);    // Obergrenze der Demo
+  if(o.alt>GREF+DEMO_CEIL_M) vt = Math.min(vt,-2);    // Obergrenze der Demo
   if(mode==='sink' && agl<=1.5 && vt<0){ o.vario=0; o.ve=0; o.vn=0; o.alt=ground(o.e,o.n)+1; return; }   // gelandet: der Ballon bleibt stehen
   o.vario += (vt-o.vario)*(1-Math.exp(-dt/6));
   o.alt += o.vario*dt;
@@ -1184,8 +1328,9 @@ function step(dt){
   S.link.snr = clamp(12 - dist/600 + 1.5*Math.sin(S.t/7), -5, 12);
   S.link.batt = 3.98 - S.t*0.00004;
 
+  dropStep();
   const kk = Math.floor(S.t/2);
-  if(kk!==lastSample){ lastSample=kk; S.pkts++; sample(); }
+  if(kk!==lastSample){ lastSample=kk; if(!DROP.on){ S.pkts++; sample(); } }   // im Funkloch kommt kein Paket
 }
 // Pfad bleibt vollständig sichtbar: erst ab 6000 Punkten werden ältere auf etwa 25 m Abstand ausgedünnt, die letzten 900 bleiben unverändert
 function thinTrack(a){
@@ -1194,7 +1339,7 @@ function thinTrack(a){
   for(let i=1;i<old.length;i++){ const p=out[out.length-1], q=old[i]; if(Math.hypot(q[0]-p[0],q[1]-p[1])>=25) out.push(q); }
   a.splice(0,a.length-keep,...out);
 }
-function sample(){ sample0(); recStep(); }
+function sample(){ rxSnap(); sample0(); recStep(); }
 function sample0(){
   const o=S.orbit, b=S.base, g=ground(o.e,o.n);
   S.track.push([o.e,o.n]);  thinTrack(S.track);
@@ -1245,7 +1390,7 @@ function stepTargets(dt){
       const [we,wn]=wind(t.alt);
       t.ve+=(we-t.ve)*0.05; t.vn+=(wn-t.vn)*0.05; t.e+=t.ve*dt; t.n+=t.vn*dt;
       t.vz = 0.8*Math.sin(S.t/45+t.ph0);
-      if((t.alt<350&&t.vz<0)||(t.alt>1000&&t.vz>0)) t.vz=0;
+      if((t.alt<GREF+270&&t.vz<0)||(t.alt>GREF+920&&t.vz>0)) t.vz=0;
       t.alt += t.vz*dt;
     } else {
       t.e+=t.ve*dt; t.n+=t.vn*dt;
@@ -1273,7 +1418,7 @@ function threat(t){
 
 /* ---------------- Start am Ballonstartplatz ---------------- */
 sample();
-if(!DEMO_WX.want) seedMet();   // mit aktuellem Wetter wartet der Start auf die Daten
+if(!DEMO_WX.want && !S.tWait) seedMet();   // mit aktuellem Wetter wartet der Start auf die Daten
 mkTargets();
 
 /* ---------------- Karten ---------------- */
@@ -1361,7 +1506,7 @@ map1.setView(ll(S.orbit.e,S.orbit.n),15);
 // Karte 3: Orbit im Zentrum (Luftraum-Demo)
 const map3 = L.map('map3',{zoomControl:false,dragging:true,doubleClickZoom:false,boxZoom:false,keyboard:false,scrollWheelZoom:'center',touchZoom:'center'});
 map3.attributionControl.setPrefix(false); let o3follow=true;
-function setO3(f){ o3follow=f; $('rc3').hidden=f; if(f&&S.screen==='orbit') map3.setView(ll(S.orbit.e,S.orbit.n),map3.getZoom(),{animate:false}); }
+function setO3(f){ o3follow=f; $('rc3').hidden=f; }   // die Kamera fährt weich zurück (animLoop)
 map3.on('dragstart',()=>setO3(false));
 $('rc3').firstElementChild.addEventListener('click',()=>setO3(true)); map3.setView(ll(0,0),12);
 const oTrack3 = L.polyline([],{color:'#ff9f1c',weight:3,opacity:.8}).addTo(map3);
@@ -1370,6 +1515,34 @@ const rings = [1,2,5,10].map(km=>({km, c:L.circle([0,0],{radius:km*1000,color:'#
   l:L.marker([0,0],{interactive:false,keyboard:false,icon:L.divIcon({className:'mk',iconSize:[40,14],iconAnchor:[0,0],html:`<div class="rl">${km} km</div>`})}).addTo(map3)}));
 const alarmLine = L.polyline([],{color:'#ffe14d',weight:3,dashArray:'6 6',opacity:.95}).addTo(map3);
 const orbMk3 = L.marker([0,0],{icon:orbIcon(),keyboard:false,zIndexOffset:1000}).addTo(map3);
+/* Schatten des Ballons: gleitet zwischen den Paketen mit Kurs und Fahrt voraus, wird nach 10 s blasser und verschwindet nach 30 s */
+const CAM = {t1:null,lock:0,last:0};
+const ghMk1 = L.marker([0,0],{icon:orbIcon(),keyboard:false,interactive:false,opacity:0,zIndexOffset:850}).addTo(map1);
+const ghMk3 = L.marker([0,0],{icon:orbIcon(),keyboard:false,interactive:false,opacity:0,zIndexOffset:950}).addTo(map3);
+const lead1 = L.polyline([],{color:'#ff9f1c',weight:3,opacity:0,dashArray:'2 7',lineCap:'round',interactive:false}).addTo(map1);
+const lead3 = L.polyline([],{color:'#ff9f1c',weight:2,opacity:0,dashArray:'2 6',interactive:false}).addTo(map3);
+function simNow(){ return S.t + ((S.paused||S.wxWait||S.tWait)?0:Math.min(0.25,(Date.now()-TICKW)/1000)*S.speed); }
+function ghostPos(){ const age=(Date.now()-RX.wall)/1000, cap=30*Math.max(1,S.speed); let dt=Math.max(0,simNow()-RX.t); if(dt>cap) dt=cap; return {e:RX.e+RX.ve*dt, n:RX.n+RX.vn*dt, age}; }
+function ghostOp(age){ return age<0.9?0:age<10?0.45:age<30?0.45*(30-age)/20:0; }
+function animLoop(ts){
+  requestAnimationFrame(animLoop);
+  if(ts-CAM.last<33||document.hidden) return;
+  const dt=Math.min(0.25,(ts-CAM.last)/1000); CAM.last=ts;
+  const map=S.screen==='chaser'?map1:S.screen==='orbit'?map3:null; if(!map) return;
+  const on=map===map1, gm=on?ghMk1:ghMk3, ld=on?lead1:lead3, other=on?ghMk3:ghMk1;
+  other.setOpacity(0);
+  const g=ghostPos(), gl=ll(g.e,g.n), rl=ll(RX.e,RX.n), op=Math.hypot(g.e-RX.e,g.n-RX.n)<4?0:ghostOp(g.age);
+  gm.setLatLng(gl); gm.setOpacity(op); ld.setLatLngs(op>0?[rl,gl]:[]); ld.setStyle({opacity:Math.min(1,op*1.6)});
+  let tg=null;
+  if(on){ if(S.viewOld) tg=null; else if(S.follow==='orbit') tg=gl; else if(S.follow==='base') tg=ll(S.base.e,S.base.n); else if(S.follow==='both') tg=CAM.t1; }
+  else if(o3follow) tg=gl;
+  if(!tg||Date.now()<CAM.lock||!map._loaded) return;
+  const z=map.getZoom(), p1=map.project(map.getCenter(),z), p2=map.project(tg,z), dx=p2.x-p1.x, dy=p2.y-p1.y;
+  if(Math.hypot(dx,dy)<0.4){ if(on&&S.follow==='both') CAM.t1=null; return; }
+  const k=1-Math.exp(-dt/1.2);
+  map.panBy([dx*k,dy*k],{animate:false});   // weiches Nachziehen mit etwa 1,2 s Verzögerung
+}
+requestAnimationFrame(animLoop);
 startMark().addTo(map3);
 const tMarkers = {};
 function addTargetMarker(t){ const m=L.marker([0,0],{keyboard:false,icon:L.divIcon({className:'mk',html:''})}).addTo(map3); m._k=''; tMarkers[t.id]=m; }
@@ -1389,7 +1562,7 @@ function setRange(r){
   if(S.screen!=='orbit') return;
   if(!o3follow) return;
   map3.invalidateSize();
-  const c=ll(S.orbit.e,S.orbit.n), b=L.latLng(c).toBounds(r*2000*1.12);
+  const c=ll(RX.e,RX.n), b=L.latLng(c).toBounds(r*2000*1.12);
   map3.setView(c,map3.getBoundsZoom(b,false),{animate:false});
 }
 
@@ -1414,7 +1587,7 @@ function renderPop(){
   if(S.sel==='orbit'){
     const gs=Math.hypot(o.ve,o.vn)*3.6, hd=brg(o.ve,o.vn), de=o.e-b.e, dn=o.n-b.n, bb=brg(de,dn);
     el.innerHTML = popHead(esc(ownLabel('orbit')),'var(--orb)')
-      + kv2(tr('alt_gnd'),Math.round(o.alt-ground(o.e,o.n))+' m')
+      + kv2(tr('alt_gnd'),aglStr(o.alt,o.e,o.n)+' m')
       + kvSub(Math.round(o.alt)+' m '+tr('nn_sfx'))
       + kv2(tr('vario'),`<em style="font-style:normal;color:${vcol(o.vario)}">${fmtV(o.vario)} m/s</em>`)
       + kv2(tr('spd_crs'),`${Math.round(gs)} km/h, ${pad3(hd)}°`)
@@ -1424,7 +1597,7 @@ function renderPop(){
   } else if(S.sel==='orbit2' && q.active){
     const gs=Math.hypot(q.ve,q.vn)*3.6, hd=brg(q.ve,q.vn), de=q.e-o.e, dn=q.n-o.n, bo=brg(de,dn);
     el.innerHTML = popHead(esc(frLabel(frOrbit())),'var(--fr)')
-      + kv2(tr('alt_gnd'),Math.round(q.alt-ground(q.e,q.n))+' m')
+      + kv2(tr('alt_gnd'),aglStr(q.alt,q.e,q.n)+' m')
       + kvSub(Math.round(q.alt)+' m '+tr('nn_sfx'))
       + kv2(tr('vario'),`<em style="font-style:normal;color:${vcol(q.vario)}">${fmtV(q.vario)} m/s</em>`)
       + kv2(tr('spd_crs'),`${Math.round(gs)} km/h, ${pad3(hd)}°`)
@@ -1436,7 +1609,7 @@ function renderPop(){
 let lastFit=0;
 let zoomAt=0, roomSince=0;
 function updChaser(){
-  const o=S.orbit,b=S.base, oc=ll(o.e,o.n), bc=ll(b.e,b.n);
+  const o=RX,b=S.base, oc=ll(o.e,o.n), bc=ll(b.e,b.n), gp=ghostPos();
   orbMk1.setLatLng(oc); baseMk1.setLatLng(bc);
   const be=baseMk1.getElement(); if(be&&be.firstElementChild) be.firstElementChild.style.transform=`rotate(${b.hdg}deg)`;
   if(S.track.length!==lastTL||S.btrack.length!==lastBL){ lastTL=S.track.length; lastBL=S.btrack.length; oTrack.setLatLngs(S.track.map(p=>ll(p[0],p[1]))); bTrail.setLatLngs(S.btrack.map(p=>ll(p[0],p[1]))); }
@@ -1451,21 +1624,20 @@ function updChaser(){
   renderPop();
   const now=Date.now();
   if(S.viewOld){ /* alter Pfad wird angesehen: die Karte bleibt stehen */ }
-  else if(S.follow==='orbit') map1.setView(oc,map1.getZoom(),{animate:false});
-  else if(S.follow==='base') map1.setView(bc,map1.getZoom(),{animate:false});
+  else if(S.follow==='orbit'||S.follow==='base'){ /* Kamera: animLoop */ }
   else if(S.follow==='both' && now-lastFit>1500){
     lastFit=now;
-    const fb=[bc,oc,ll(o.e+o.ve*300,o.n+o.vn*300)]; if(S.o2.active) fb.push(ll(S.o2.e,S.o2.n)); if(S.fc.on) fb.push(ll(S.fc.e,S.fc.n));
+    const fb=[bc,ll(gp.e,gp.n),ll(gp.e+o.ve*300,gp.n+o.vn*300)]; if(S.o2.active) fb.push(ll(S.o2.e,S.o2.n)); if(S.fc.on) fb.push(ll(S.fc.e,S.fc.n));
     const bb=L.latLngBounds(fb), inView=map1.getBounds().pad(-0.12).contains(bb), cz=map1.getZoom(), ctr=bb.getCenter();
     const tz=Math.min(15,Math.floor(map1.getBoundsZoom(bb,false,L.point(48,160))));
     if(S.forceFit){ S.forceFit=false; map1.setView(ctr,tz,{animate:false}); zoomAt=now; roomSince=0; }
-    else if(!inView){ roomSince=0; if(now-zoomAt>4000){ zoomAt=now; if(tz<cz) map1.setView(ctr,tz,{animate:false}); else map1.panTo(ctr,{animate:false}); } }   // heraus zoomen nur wenn nötig, sonst verschieben
-    else if(tz>cz){ if(!roomSince) roomSince=now; else if(now-roomSince>10000 && now-zoomAt>4000){ zoomAt=now; roomSince=0; map1.setView(ctr,cz+1,{animate:false}); } }   // hinein erst nach 10 ruhigen Sekunden
+    else if(!inView){ roomSince=0; if(now-zoomAt>4000){ zoomAt=now; if(tz<cz){ CAM.lock=Date.now()+800; map1.setView(ctr,tz,{animate:true,duration:0.6}); } else CAM.t1=ctr; } }   // heraus zoomen nur wenn nötig, sonst verschieben
+    else if(tz>cz){ if(!roomSince) roomSince=now; else if(now-roomSince>10000 && now-zoomAt>4000){ zoomAt=now; roomSince=0; CAM.lock=Date.now()+800; map1.setView(ctr,cz+1,{animate:true,duration:0.6}); } }   // hinein erst nach 10 ruhigen Sekunden
     else roomSince=0;
   }
 }
 function updLora(){
-  $('h-rssi').textContent=Math.round(S.link.rssi)+' dBm'; bars($('hbars'),S.link.rssi);
+  $('h-rssi').textContent=DROP.on?tr('nosig'):Math.round(S.link.rssi)+' dBm'; bars($('hbars'),DROP.on?-130:S.link.rssi);
   if(!$('lora-pop').hidden){
     $('lp-rssi').textContent=Math.round(S.link.rssi)+' dBm'; $('lp-snr').textContent=S.link.snr.toFixed(1)+' dB';
     $('lp-pk').textContent=S.pkts; $('lp-bat').textContent=S.link.batt.toFixed(2)+' V';
@@ -1480,9 +1652,8 @@ let prevLvl=0;
 const typeName = t => t.type==='friend' ? tr('ty_friend') : t.type==='unk' ? tr('ty_unk') : tr('ty_'+t.type)+(t.model?' ('+t.model+')':'');
 const t0f = t => t.type==='friend'?'#ff7ad9':'#d5deec';
 function updOrbit(){
-  const o=S.orbit, c=ll(o.e,o.n);
+  const o=RX, c=ll(o.e,o.n);
   orbMk3.setLatLng(c);
-  if(o3follow) map3.setView(c,map3.getZoom(),{animate:false});
   oTrack3.setLatLngs(S.track.slice(-300).map(p=>ll(p[0],p[1])));
   oPred3.setLatLngs([c,ll(o.e+o.ve*300,o.n+o.vn*300)]);
   rings.forEach(r=>{ r.c.setLatLng(c); r.l.setLatLng(ll(o.e,o.n+r.km*1000)); });
@@ -1600,7 +1771,7 @@ const metPlugin={id:'metLayers',beforeDatasetsDraw(ch){
       const pt=x.getPixelForValue(tOfTheta(t,zhi)); if(pt>a.left+4 && pt<a.right-36) ctx.fillText(t+' K',pt+3,a.top+3);
     }
   }
-  const yo=y.getPixelForValue(ys(S.orbit.alt));
+  const yo=y.getPixelForValue(ys(RX.alt));
   ctx.setLineDash([3,5]); ctx.strokeStyle='rgba(255,159,28,.75)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(a.left,yo); ctx.lineTo(a.right,yo); ctx.stroke();
   if(MET.x==='G'){
     const w='rgba(238,243,250,.4)', g='rgba(95,227,161,.85)';
@@ -1635,7 +1806,7 @@ function initMetChart(){
           label:it=>{ const r=it.raw;
             if(r.m){ const m=r.m; return [tr('tt_pt1',{T:m.T.toFixed(1),z:Math.round(m.alt)}),tr('tt_pt2',{a:fmtAge(S.t-m.t),d:m.d.toFixed(0)}),tr('tt_pt3',{w:m.w.toFixed(2),wt:m.wt.toFixed(2),wd:m.wd.toFixed(2)})]; }
             if(r.p){ const p=r.p; return [tr('tt_pt1',{T:p.T.toFixed(1),z:Math.round(p.z)}),p.g==null?'':tr('tt_pr2',{g:p.g.toFixed(2)}),p.cat?tr('ly_'+p.cat):'',tr('tt_pr3',{w:p.W.toFixed(1)})]; }
-            return tr('tt_orbit',{z:Math.round(S.orbit.alt)}); }
+            return tr('tt_orbit',{z:Math.round(RX.alt)}); }
         }}}},
     plugins:[metPlugin,windPlugin]
   });
@@ -1681,9 +1852,9 @@ function drawCurves(){
 }
 function updMeteo(force){
   const now=Date.now(); if(!force && now-MET.last<500) return; MET.last=now;
-  const R=MET.R=metCompute(), o=S.orbit, live=[...S.met].reverse().find(m=>m.src==='live'), g0=ground(o.e,o.n);
+  const R=MET.R=metCompute(), o=RX, live=[...S.met].reverse().find(m=>m.src==='live'), g0=ground(o.e,o.n);
   let near=null, nd=Infinity; for(const p of R.prof){ const d=Math.abs(p.z-o.alt); if(p.g!=null&&d<nd){ nd=d; near=p; } }
-  $('sv-alt').textContent=Math.round(o.alt)+' m'; $('sv-agl').textContent=Math.round(o.alt-g0)+' m';
+  $('sv-alt').textContent=Math.round(o.alt)+' m'; $('sv-agl').textContent=aglStr(o.alt,o.e,o.n)+' m';
   $('sv-T').textContent=live?live.T.toFixed(1)+' °C':'–';
   const sg=$('sv-g'); sg.textContent=near?near.g.toFixed(2):'–'; sg.style.color=near?CAT[near.cat].c:'';
   $('sv-mix').textContent=R.mix!=null?Math.round(ys(R.mix))+' m':tr('mix_open');
@@ -1742,7 +1913,7 @@ buildLegend(); initMetChart();
 
 /* ---------------- Steuerung ---------------- */
 let acc=0;
-setInterval(()=>{ if(!S.paused && !S.wxWait){ acc+=0.2*S.speed; while(acc>=1){ step(1); acc-=1; } } render(); },200);
+setInterval(()=>{ if(!S.paused && !S.wxWait && !S.tWait){ acc+=0.2*S.speed; while(acc>=1){ step(1); acc-=1; } } TICKW=Date.now(); render(); },200);
 
 function applyTraffic(){
   $('nav-orbit').style.display=S.traffic?'':'none';
@@ -1788,6 +1959,7 @@ document.querySelectorAll('#sim .seg').forEach(el=>bindSeg(el,v=>{
   if(k==='dmk'){ DEMO_MARK=(v==='1'); try{ localStorage.setItem('bt-demomark',DEMO_MARK?'1':'0'); }catch(e){} applyDemoMark(DEMO_MARK); return; }
   if(k==='wx'){ try{ localStorage.setItem('bt-demowx',v==='sim'?'sim':'live'); }catch(e){} toast(tr('wx_reload')); setTimeout(()=>location.reload(),900); return; }
   if(k==='range'){ try{ localStorage.setItem('bt-range',v); }catch(e){} setO3(true); setRange(+v); return; }
+  if(k==='drop'){ DEMO_DROP.on=(v==='1'); try{ localStorage.setItem('bt-drop',v); }catch(e){} return; }
   if(k==='ogn'){ S.ogn=(v==='1'); try{ localStorage.setItem('bt-ogn',S.ogn?'1':'0'); }catch(e){} applyOgn(); return; }
   if(k==='speed') S.speed=+v; else if(k==='traffic'){ S.traffic=(v==='1'); applyTraffic(); } else S[k]=v;
   if(k==='map') applyTiles();
@@ -1795,6 +1967,7 @@ document.querySelectorAll('#sim .seg').forEach(el=>bindSeg(el,v=>{
 }));
 try{ DEMO_MARK=localStorage.getItem('bt-demomark')==='1'; }catch(e){}
 applyDemoMark(DEMO_MARK);
+document.querySelectorAll('#sim [data-key="drop"] button').forEach(b=>b.classList.toggle('on',(b.dataset.v==='1')===DEMO_DROP.on));
 document.querySelectorAll('#sim [data-key="dmk"] button').forEach(b=>b.classList.toggle('on',(b.dataset.v==='1')===DEMO_MARK));
 document.querySelectorAll('#sim [data-key="wx"] button').forEach(b=>b.classList.toggle('on',b.dataset.v===DEMO_WX.mode));
 $('btn-sim').addEventListener('click',()=>$('sim').classList.toggle('open'));
@@ -1803,6 +1976,8 @@ $('btn-hunter').addEventListener('click',()=>{ const h=S.targets.find(t=>t.hunte
 $('btn-reset').addEventListener('click',()=>location.reload());
 /* Änderungen je Version (neueste oben); bei jeder neuen Version ergänzen */
 const CHANGES = [
+ {v:'2026-10-12.7', t:['Marker und Spur zeigen nur noch echte Messwerte; dazwischen gleitet ein durchsichtiger Schatten des Ballons mit Kurs und Fahrt voraus, mit gestricheltem Vorlauf; nach 10 s wird er blasser, nach 30 s verschwindet er','Karte folgt weich mit etwa 1,2 s Verzögerung statt zu springen; Zoomwechsel mit sanfter Überblendung; „Auf Ballon zentrieren“ fährt weich zurück','Dashboard, Profil und Luftraum zeigen im Funkloch die letzten empfangenen Werte; Signalanzeige „kein Signal“','Demo: Funkloch von 20 s ab 2 min Flugzeit, danach eines von 40 s (Schalter in den Einstellungen unter Demo)']},
+ {v:'2026-10-12.6', t:['Höhe über Grund jetzt aus echten Geländedaten (Open-Meteo, Raster 90 m): Raster entlang der erwarteten Fahrt (4 Stunden Wind, bis 100 km), in steilem Gelände feiner, im Gerät gespeichert; online zusätzlich Abfrage der aktuellen Position, in der Luft alle 5 Minuten Auffrischung ±5 km; ohne Netz Rückfall auf das gespeicherte Raster, sonst „Kein Netz“ mit Bezug Startplatz','Anzeige mit „≈“ und gerundet (nahe am Boden 5 m, höher grober); Quelle im aufgeklappten Dashboard; Demo nutzt das echte Gelände am Startplatz und lädt fehlende Daten nach','Aufzeichnung und Flugzustände bleiben bei Höhe über Startplatz']},
  {v:'2026-10-12.5', t:['Luftraum: Umschalter 2/5/10 km entfernt, Standard 10 km, Reichweite jetzt in den Einstellungen','Luftraum eingeklappt: zeigt nur das nächste Ziel mit Name und Entfernung','Karten lassen sich verschieben (Chaser und Luftraum); danach erscheint „Auf Ballon zentrieren“']},
  {v:'2026-10-12.4', t:['Dashboard schmaler, klappt nur nach unten auf, Werte kleiner; auf dem Luftraum an derselben Stelle wie auf dem Chaser; Warnhinweise nur bei Bedarf, klein rechts daneben, nie permanent','Flug und Profil: Vario links mit schlankem Balken, Detailwerte klein rechts; Vertikalprofil bis zum unteren Rand; Umschalter Temperatur/Gradient und NN/Grund in die Details verlegt, Standard immer NN','Vertikalprofil: Windfähnchen im Diagramm; Taupunkt aus dem Modell (Open-Meteo), Wolkenschicht schraffiert mit Wolkenbasis; gestrichelt = Modell, durchgezogen = gemessen; Quelle wird immer angezeigt','Untere Leiste: aktive Seite hell auf Kapsel','Karte flackert weniger: Zoom höchstens alle 4 s in ganzen Stufen, heraus nur wenn nötig, hinein erst nach 10 ruhigen Sekunden']},
  {v:'2026-10-12.3', t:['Dashboard (Höhe über Grund, NN, Vario mit Beschleunigungsbalken) jetzt auch auf Chaser und Luftraum; dort antippen zum Aufklappen (Kurs, Fahrt in kt, Uhrzeit, Füllgrad, Wind, Quelle der Höhe); auf „Flug und Profil“ kompakt und ohne Füllgrad','Untere Leiste schmaler, alle Symbole gleichfarbig, per Griff bis auf einen dünnen Streifen einklappbar','Luftraum-Seite standardmäßig an, Luftfahrtkarte als Standard (Hinweis „Aktuelle Flugkarte nicht ladbar“ ohne Netz), Flugzeugliste einklappbar','Neuer Schalter „OGN-Anmeldung des Orbit“ (aus, wenn ein echter OGN-Tracker an Bord ist)','Warnungen nur noch gelb, kein Blinken; Demo mit nur einem Luftfahrzeug','Meldung „Prallhöhe erreicht“ wird eingeblendet und in der Aufzeichnung als Ereignis gespeichert (GPX-Wegpunkt, CSV-Zeile)','Update-Hinweise und Update-Knopf im Flug ausgeblendet']},
@@ -1900,7 +2075,7 @@ $('btn-clear').addEventListener('click',async()=>{   // alles verwerfen und neu 
 });
 
 /* ---------------- Datenzähler und Service Worker ---------------- */
-const BUILD = '2026-10-12.5';
+const BUILD = '2026-10-12.7';
 
 // ---- Fahrt: Aufzeichnung auf dem Handy (IndexedDB), Stopp-Knopf und automatische Nachfrage nach der Landung
 window.FLIGHT=null;                                          // aktuelle Fahrt
@@ -1945,8 +2120,8 @@ async function showOldTrip(id){
 }
 function updStopBtn(){ const F=window.FLIGHT, b=$('stop-btn'); if(b) b.hidden=!(F&&F.state==='flying'&&F.landed); }      // Stopp erst nach der Landung sichtbar
 function recStep(){                                          // wird bei jedem empfangenen Paket aufgerufen
-  const F=window.FLIGHT; if(!F||F.state==='ended'||S.wxWait) return;
-  const o=S.orbit, b=S.base, g=ground(o.e,o.n), agl=o.alt-g, [la,lo]=ll(o.e,o.n), [bla,blo]=ll(b.e,b.n), m=S.met[S.met.length-1]||{};
+  const F=window.FLIGHT; if(!F||F.state==='ended'||S.wxWait||S.tWait) return;
+  const o=S.orbit, b=S.base, agl=o.alt-GREF, [la,lo]=ll(o.e,o.n), [bla,blo]=ll(b.e,b.n), m=S.met[S.met.length-1]||{};
   const sp=Math.hypot(o.ve,o.vn), ts=Math.round((F.t0Ms+S.t*1000)/1000), dt=F.orbit.length?Math.max(0,S.t-F.lastT):0; F.lastT=S.t;
   F.orbit.push([ts,+la.toFixed(6),+lo.toFixed(6),+o.alt.toFixed(1),+o.vario.toFixed(2),+sp.toFixed(1),Math.round(brg(o.ve,o.vn)),+(m.T||0).toFixed(2),+(m.p||0).toFixed(1),Math.round(m.rh||0),+S.link.batt.toFixed(2),Math.round(S.link.rssi)]);
   F.base.push([ts,+bla.toFixed(6),+blo.toFixed(6)]);          // GPS-Spur der Base
@@ -2111,6 +2286,8 @@ async function loadModelProfile(){
   }
   if(!m && fresh(cached)) m=cached.parsed;                                                       // Rückfall: Daten von einem anderen Ort
   if(m){ m.dkm=distKm(m.lat,m.lon); if(!(m.dkm<=MODEL_MAX_KM)) m=null; }                          // weiter als 500 km: nicht verfügbar
+  await TERR.ready;
+  if(m){ const [td,tv]=terrPlan(m); terrBuild(td,tv); }
   if(!m){ if(S.wxWait) endWxWait(); MODELREF=null; window.NOMODEL=true; $('model-line').textContent=tr('mo_assume'); updProfRef(); return; }
   if(S.wxWait){ if(DEMO_WX.want && m.hours && m.dkm<=50) activateDemoWx(m); else endWxWait(); }
   const pts=modelPoints(m,now); S.met=pts.concat(S.met);
@@ -2124,6 +2301,21 @@ async function loadModelProfile(){
   else $('model-line').textContent=tr('mo_line',{t:hh,n:m.rows.length})+' · '+tr('mo_osm');
 }
 setInterval(()=>{ if(window.NOMODEL && !window.ASSUMED) buildAssume(); updProfRef(); },2000);
+// Gelände im Betrieb: aktuelle Position online abfragen, in der Luft alle 5 Minuten ±5 km (5×5 Punkte) auffrischen; Rückfall: gespeichertes Raster
+setInterval(async()=>{
+  terrDiag();
+  if(S.tWait||TERR.busy||S.paused||navigator.onLine===false||Date.now()-TERR.fail<60000) return;
+  const o=S.orbit, now=Date.now(), L=TERR.lastLive;
+  if(!TERR.h.length){ if(S.launched1) return; TERR.busy=true; const ok=await terrStart(); TERR.busy=false; if(ok){ if(terrApplyStart()) terrResetDemo(); terrBuild(null,0); } return; }
+  TERR.busy=true;
+  try{
+    if(!L||now-L.t>15000||Math.hypot(L.e-o.e,L.n-o.n)>300){ const [h]=await elevFetch([[o.e,o.n]]); terrAdd(o.e,o.n,h,3,60); TERR.lastLive={t:Date.now(),e:o.e,n:o.n,h}; }
+    if(o.alt-GREF>30 && now-TERR.t55>300000){ TERR.t55=now; const pts=[]; for(let i=-2;i<=2;i++) for(let j=-2;j<=2;j++) pts.push([o.e+i*2500,o.n+j*2500]);
+      const hs=await elevFetch(pts); pts.forEach((q,k)=>terrAdd(q[0],q[1],hs[k],1,400)); }
+    if(TERR.dirty && now-TERR.saved>60000) terrSave();
+  }catch(e){ TERR.fail=Date.now(); }
+  TERR.busy=false;
+},5000);
 
 // ---- Luftfahrtkarte (KRT-03): open flightmaps als zuschaltbare Ebene; Adresse und Zoomgrenzen sind hier einstellbar
 const OFM = { url:'https://nwy-tiles-api.prod.newaydata.com/tiles/{z}/{x}/{y}.png?path=latest/aero/latest',
