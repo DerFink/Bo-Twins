@@ -3,7 +3,7 @@
    - Bibliotheken (Leaflet, Chart.js, Tailwind, Schriften): einmal laden, dann aus dem Zwischenspeicher
    - Kartenkacheln: nur was angezeigt wurde, wird gespeichert und beim nächsten Mal nicht erneut geladen
    - Routing-Abfragen gehen immer direkt ins Netz */
-const VER = 'v10';   // v7: neue Pilotenanzeige, Füllgrad, Änderungen-Übersicht; v6: Luftfahrtkarte (open flightmaps) mit auf 14 Tage begrenztem Zwischenspeicher; v5: Startdatei wird immer beim Server geprüft
+const VER = 'v11';   // v7: neue Pilotenanzeige, Füllgrad, Änderungen-Übersicht; v6: Luftfahrtkarte (open flightmaps) mit auf 14 Tage begrenztem Zwischenspeicher; v5: Startdatei wird immer beim Server geprüft
 const SHELL = 'bt-shell-' + VER;
 const LIBS = 'bt-libs-' + VER;
 const TILES = 'bt-tiles-' + VER;

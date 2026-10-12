@@ -168,6 +168,11 @@ main{position:relative;flex:1;min-height:0}
 .orb.lmin{--lh:40px;--lw:46px}
 .orb.lmin .orb-list{overflow:hidden;padding:4px 8px}
 .orb.lmin #o-list{display:none}
+#o-first{display:none;font-family:var(--num);font-size:16px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.orb.lmin #o-first{display:block}
+.orb.lmin .rw1 span,.orb.lmin #o-count{display:none}
+.orb.lmin .rw1{justify-content:flex-start;align-items:center}
+.rcbtn{background:rgba(10,16,25,.92);color:var(--tx);border:1px solid var(--line);border-radius:999px;padding:9px 14px;font:inherit;font-size:14px;font-weight:600}
 .pc-l,.pc-r{min-width:0}
 .pc-big{font-size:46px!important;line-height:1}
 .pc-nn{display:flex;align-items:baseline;gap:5px;margin:2px 0 6px}
@@ -409,6 +414,7 @@ main{position:relative;flex:1;min-height:0}
         </div>
       </div>
       <div class="ov card oldbar" id="old-bar" hidden style="left:8px;right:8px;bottom:84px"><span id="old-bar-t"></span><button class="sm" id="old-hide" data-i="old_hide">Ausblenden</button></div>
+      <div class="ov" style="right:8px;bottom:70px" id="rc1" hidden><button class="rcbtn" data-i="rc_balloon">Auf Ballon zentrieren</button></div>
       <div class="ov followbar" id="followbar">
         <button class="pbtn" data-f="orbit" data-i="f_orbit">Orbit folgen</button>
         <button class="pbtn on" data-f="both" data-i="f_both">Beide zeigen</button>
@@ -497,12 +503,10 @@ main{position:relative;flex:1;min-height:0}
           <div class="ov" id="dash-o" style="left:8px;top:8px"></div>
           <div class="ov" id="ofm3-note" hidden style="right:8px;bottom:26px;background:rgba(10,16,25,.92);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:12px;color:var(--mut)" data-i="ofm3_err">Aktuelle Flugkarte nicht ladbar</div>
           <div class="ov" id="ogn-note" hidden style="right:8px;bottom:62px;background:rgba(10,16,25,.92);border:1px solid var(--line);border-radius:10px;padding:5px 9px;font-size:12px;color:var(--mut)" data-i="ogn_off_n">OGN-Anmeldung aus</div>
-          <div class="ov" style="left:8px;bottom:26px" id="rangebar">
-            <div class="seg" style="background:rgba(10,16,25,.92)"><button data-r="2">2 km</button><button data-r="5" class="on">5 km</button><button data-r="10">10 km</button></div>
-          </div>
+          <div class="ov" style="left:8px;bottom:26px" id="rc3" hidden><button class="rcbtn" data-i="rc_balloon">Auf Ballon zentrieren</button></div>
         </div>
         <div class="orb-list">
-          <div class="rw1" style="padding-top:0"><button class="sm" id="list-t" aria-label="Liste ein-/ausklappen" style="margin-right:8px">▾</button><b id="o-count" style="font-size:16px;font-family:var(--ui);color:var(--tx)">–</b><span data-i="a_hdr">OGN, simulierte Ziele</span></div>
+          <div class="rw1" style="padding-top:0"><button class="sm" id="list-t" aria-label="Liste ein-/ausklappen" style="margin-right:8px">▾</button><span id="o-first"></span><b id="o-count" style="font-size:16px;font-family:var(--ui);color:var(--tx)">–</b><span data-i="a_hdr">OGN, simulierte Ziele</span></div>
           <div id="o-list"></div>
         </div>
       </div>
@@ -542,6 +546,7 @@ main{position:relative;flex:1;min-height:0}
       <div class="lbl" id="tile-diag" style="margin-top:6px">–</div>
     </div>
     <div class="r"><span data-i="s_f0">Startfüllung Ballon (%)</span><input type="number" id="in-f0" min="10" max="100" step="5" value="70" style="width:78px;background:var(--pan);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit;text-align:right"></div>
+    <div class="r"><span data-i="s_range">Reichweite Luftraum</span><div class="seg" data-key="range"><button data-v="2">2 km</button><button data-v="5">5 km</button><button data-v="10" class="on">10 km</button></div></div>
     <div class="r"><span data-i="s_view">Ansicht</span><div class="seg" data-key="frame"><button data-v="auto" class="on" data-i="v_full">Voll</button><button data-v="portrait" data-i="v_port">Hoch</button><button data-v="land" data-i="v_land">Quer</button></div></div>
     <div style="border-top:1px solid var(--line);margin:4px 0 12px"></div>
     <div class="r"><span data-i="s_rate">Simulationstempo</span><div class="seg" data-key="speed"><button data-v="1">1×</button><button data-v="5">5×</button><button data-v="10" class="on">10×</button><button data-v="30">30×</button></div></div>
@@ -824,6 +829,9 @@ const TX = {
  ogn_off_n:["OGN-Anmeldung aus","OGN registration off","Inscription OGN désactivée","Rejestracja OGN wyłączona","Registrace OGN vypnuta","OGN 註冊已關閉","Registro OGN desactivado"],
  chg:["Änderungen","Changes","Modifications","Zmiany","Změny","更新內容","Cambios"],
  chg_t:["Änderungen je Version","Changes by version","Modifications par version","Zmiany w wersjach","Změny podle verzí","各版本更新內容","Cambios por versión"],
+ rc_balloon:["Auf Ballon zentrieren","Center on balloon","Centrer sur le ballon","Wyśrodkuj na balonie","Vycentrovat na balón","置中於氣球","Centrar en el globo"],
+ s_range:["Reichweite Luftraum","Airspace range","Portée espace aérien","Zasięg przestrzeni","Dosah vzdušného prostoru","空域範圍","Alcance espacio aéreo"],
+ a_none0:["Kein Ziel","No target","Aucune cible","Brak celu","Žádný cíl","無目標","Sin objetivo"],
  s_f0:["Startfüllung Ballon (%)","Balloon fill at launch (%)","Remplissage au départ (%)","Napełnienie przy starcie (%)","Naplnění při startu (%)","起飛時充氣量 (%)","Llenado al despegue (%)"],
  fill:["Füllgrad","Fill level","Remplissage","Napełnienie","Naplnění","充氣度","Llenado"],
  fill_hit:["Prallhöhe erreicht","Taut altitude reached","Altitude de gonflage max. atteinte","Osiągnięto wysokość pełnego napełnienia","Dosaženo výšky plného naplnění","已達滿脹高度","Altura de globo lleno alcanzada"],
@@ -913,7 +921,7 @@ function wind(alt){ if(DEMO_WX.ready){ const w=wxAt(alt-GREF,S.t); return [w.u,w
 /* ---------------- Zustand ---------------- */
 const S = {
   screen:'chaser', follow:'both', speed:10, mode:'auto', map:'dark', frame:'auto', paused:false, wxWait:DEMO_WX.want,
-  range:5,
+  range:10,
   t:0, pkts:0,
   orbit:{e:0,n:0,alt:81,vario:0,ve:0,vn:0},
   base:{e:-25,n:-15,hdg:60,spd:0},
@@ -1351,8 +1359,11 @@ startMark().addTo(map1);
 map1.setView(ll(S.orbit.e,S.orbit.n),15);
 
 // Karte 3: Orbit im Zentrum (Luftraum-Demo)
-const map3 = L.map('map3',{zoomControl:false,dragging:false,doubleClickZoom:false,boxZoom:false,keyboard:false,scrollWheelZoom:'center',touchZoom:'center'});
-map3.attributionControl.setPrefix(false); map3.setView(ll(0,0),12);
+const map3 = L.map('map3',{zoomControl:false,dragging:true,doubleClickZoom:false,boxZoom:false,keyboard:false,scrollWheelZoom:'center',touchZoom:'center'});
+map3.attributionControl.setPrefix(false); let o3follow=true;
+function setO3(f){ o3follow=f; $('rc3').hidden=f; if(f&&S.screen==='orbit') map3.setView(ll(S.orbit.e,S.orbit.n),map3.getZoom(),{animate:false}); }
+map3.on('dragstart',()=>setO3(false));
+$('rc3').firstElementChild.addEventListener('click',()=>setO3(true)); map3.setView(ll(0,0),12);
 const oTrack3 = L.polyline([],{color:'#ff9f1c',weight:3,opacity:.8}).addTo(map3);
 const oPred3  = L.polyline([],{color:'#ffc277',weight:3,opacity:.9,dashArray:'3 9'}).addTo(map3);
 const rings = [1,2,5,10].map(km=>({km, c:L.circle([0,0],{radius:km*1000,color:'#4cc9ff',weight:1.2,opacity:.5,dashArray:'4 7',fill:false,interactive:false}).addTo(map3),
@@ -1375,8 +1386,8 @@ function tIcon(t,lvl,dh){
 }
 function setRange(r){
   S.range=r;
-  document.querySelectorAll('#rangebar button').forEach(b=>b.classList.toggle('on',+b.dataset.r===r));
   if(S.screen!=='orbit') return;
+  if(!o3follow) return;
   map3.invalidateSize();
   const c=ll(S.orbit.e,S.orbit.n), b=L.latLng(c).toBounds(r*2000*1.12);
   map3.setView(c,map3.getBoundsZoom(b,false),{animate:false});
@@ -1471,7 +1482,7 @@ const t0f = t => t.type==='friend'?'#ff7ad9':'#d5deec';
 function updOrbit(){
   const o=S.orbit, c=ll(o.e,o.n);
   orbMk3.setLatLng(c);
-  map3.setView(c,map3.getZoom(),{animate:false});
+  if(o3follow) map3.setView(c,map3.getZoom(),{animate:false});
   oTrack3.setLatLngs(S.track.slice(-300).map(p=>ll(p[0],p[1])));
   oPred3.setLatLngs([c,ll(o.e+o.ve*300,o.n+o.vn*300)]);
   rings.forEach(r=>{ r.c.setLatLng(c); r.l.setLatLng(ll(o.e,o.n+r.km*1000)); });
@@ -1489,6 +1500,7 @@ function updOrbit(){
   else if(mx===1){ const x=items.find(i=>i.lvl===1); st.textContent=tr('a_hint',{id:x.t.id,d:fmtD(x.dcpa)}); }
   else st.textContent='';
   $('o-count').textContent=items.length===1?tr('a_count1',{r:S.range}):tr('a_count',{n:items.length,r:S.range});
+  { const f=items[0]; $('o-first').textContent = f ? f.t.id+' · '+fmtD(f.d) : tr('a_none0'); }
   $('o-list').innerHTML = items.length ? items.map(x=>{
     const t=x.t, col=x.lvl===2?'#ffe14d':x.lvl===1?'#ffe14d':t0f(t);
     const ic = (t.type==='balloon'||t.type==='friend') ? `<svg width="22" height="22" viewBox="0 0 28 30"><circle cx="14" cy="12" r="9" fill="none" stroke="${col}" stroke-width="3"/><rect x="11" y="23" width="6" height="5" fill="${col}"/></svg>`
@@ -1753,13 +1765,13 @@ document.querySelectorAll('#nav button').forEach(b=>b.addEventListener('click',(
 document.addEventListener('keydown',e=>{ const m={'1':'chaser','2':'flight','3':'orbit'}[e.key]; if(m && !/INPUT|SELECT|TEXTAREA/.test((e.target||{}).tagName||'')) showScreen(m); });
 
 document.querySelectorAll('#followbar button').forEach(b=>b.addEventListener('click',()=>{ S.follow=b.dataset.f; lastFit=0; S.forceFit=true; markFollow(); render(); }));
-function markFollow(){ document.querySelectorAll('#followbar button').forEach(x=>x.classList.toggle('on',x.dataset.f===S.follow)); }
-map1.on('dragstart',()=>{ S.follow='free'; markFollow(); });
+function markFollow(){ if($('rc1')) $('rc1').hidden = S.follow!=='free'; document.querySelectorAll('#followbar button').forEach(x=>x.classList.toggle('on',x.dataset.f===S.follow)); }
+map1.on('dragstart',()=>{ S.follow='free'; markFollow(); $('rc1').hidden=false; });
+$('rc1').firstElementChild.addEventListener('click',()=>{ S.follow='orbit'; markFollow(); $('rc1').hidden=true; map1.setView(ll(S.orbit.e,S.orbit.n),map1.getZoom(),{animate:false}); });
 map1.on('click',()=>{ if(S.sel){ S.sel=null; renderPop(); } });
 orbMk1.on('click',()=>{ S.sel=S.sel==='orbit'?null:'orbit'; renderPop(); });
 o2Mk1.on('click',()=>{ S.sel=S.sel==='orbit2'?null:'orbit2'; renderPop(); });
 $('pop').addEventListener('click',e=>{ if(e.target.closest('.px')){ S.sel=null; renderPop(); } });
-document.querySelectorAll('#rangebar button').forEach(b=>b.addEventListener('click',()=>setRange(+b.dataset.r)));
 
 // LoRa-Details: antippen der Signalstärke in der Kopfzeile
 $('chip-lora').addEventListener('click',e=>{
@@ -1775,6 +1787,7 @@ document.querySelectorAll('#sim .seg').forEach(el=>bindSeg(el,v=>{
   const k=el.dataset.key;
   if(k==='dmk'){ DEMO_MARK=(v==='1'); try{ localStorage.setItem('bt-demomark',DEMO_MARK?'1':'0'); }catch(e){} applyDemoMark(DEMO_MARK); return; }
   if(k==='wx'){ try{ localStorage.setItem('bt-demowx',v==='sim'?'sim':'live'); }catch(e){} toast(tr('wx_reload')); setTimeout(()=>location.reload(),900); return; }
+  if(k==='range'){ try{ localStorage.setItem('bt-range',v); }catch(e){} setO3(true); setRange(+v); return; }
   if(k==='ogn'){ S.ogn=(v==='1'); try{ localStorage.setItem('bt-ogn',S.ogn?'1':'0'); }catch(e){} applyOgn(); return; }
   if(k==='speed') S.speed=+v; else if(k==='traffic'){ S.traffic=(v==='1'); applyTraffic(); } else S[k]=v;
   if(k==='map') applyTiles();
@@ -1790,6 +1803,7 @@ $('btn-hunter').addEventListener('click',()=>{ const h=S.targets.find(t=>t.hunte
 $('btn-reset').addEventListener('click',()=>location.reload());
 /* Änderungen je Version (neueste oben); bei jeder neuen Version ergänzen */
 const CHANGES = [
+ {v:'2026-10-12.5', t:['Luftraum: Umschalter 2/5/10 km entfernt, Standard 10 km, Reichweite jetzt in den Einstellungen','Luftraum eingeklappt: zeigt nur das nächste Ziel mit Name und Entfernung','Karten lassen sich verschieben (Chaser und Luftraum); danach erscheint „Auf Ballon zentrieren“']},
  {v:'2026-10-12.4', t:['Dashboard schmaler, klappt nur nach unten auf, Werte kleiner; auf dem Luftraum an derselben Stelle wie auf dem Chaser; Warnhinweise nur bei Bedarf, klein rechts daneben, nie permanent','Flug und Profil: Vario links mit schlankem Balken, Detailwerte klein rechts; Vertikalprofil bis zum unteren Rand; Umschalter Temperatur/Gradient und NN/Grund in die Details verlegt, Standard immer NN','Vertikalprofil: Windfähnchen im Diagramm; Taupunkt aus dem Modell (Open-Meteo), Wolkenschicht schraffiert mit Wolkenbasis; gestrichelt = Modell, durchgezogen = gemessen; Quelle wird immer angezeigt','Untere Leiste: aktive Seite hell auf Kapsel','Karte flackert weniger: Zoom höchstens alle 4 s in ganzen Stufen, heraus nur wenn nötig, hinein erst nach 10 ruhigen Sekunden']},
  {v:'2026-10-12.3', t:['Dashboard (Höhe über Grund, NN, Vario mit Beschleunigungsbalken) jetzt auch auf Chaser und Luftraum; dort antippen zum Aufklappen (Kurs, Fahrt in kt, Uhrzeit, Füllgrad, Wind, Quelle der Höhe); auf „Flug und Profil“ kompakt und ohne Füllgrad','Untere Leiste schmaler, alle Symbole gleichfarbig, per Griff bis auf einen dünnen Streifen einklappbar','Luftraum-Seite standardmäßig an, Luftfahrtkarte als Standard (Hinweis „Aktuelle Flugkarte nicht ladbar“ ohne Netz), Flugzeugliste einklappbar','Neuer Schalter „OGN-Anmeldung des Orbit“ (aus, wenn ein echter OGN-Tracker an Bord ist)','Warnungen nur noch gelb, kein Blinken; Demo mit nur einem Luftfahrzeug','Meldung „Prallhöhe erreicht“ wird eingeblendet und in der Aufzeichnung als Ereignis gespeichert (GPX-Wegpunkt, CSV-Zeile)','Update-Hinweise und Update-Knopf im Flug ausgeblendet']},
  {v:'2026-10-12.2', t:['Neu: Update-Knopf ganz unten in den Einstellungen neben der Versionsnummer: prüft beim Server, meldet „Version ist aktuell“ oder fragt „Jetzt neu laden?“','Beim Beantworten mit „Später“ fragt die App frühestens nach 8 Stunden von selbst wieder; nie während einer Fahrt']},
@@ -1838,6 +1852,7 @@ applyOgn();
 $('btn-chg').addEventListener('click',()=>{ renderChanges(); $('chg').hidden=false; });
 $('chg-x').addEventListener('click',()=>{ $('chg').hidden=true; });
 $('chg').addEventListener('click',e=>{ if(e.target===$('chg')) $('chg').hidden=true; });
+try{ const rg=+localStorage.getItem('bt-range'); if(rg===2||rg===5||rg===10){ S.range=rg; document.querySelectorAll('#sim [data-key="range"] button').forEach(b=>b.classList.toggle('on',+b.dataset.v===rg)); } }catch(e){}
 try{ const f0=parseFloat(localStorage.getItem('bt-f0')); if(f0>=10&&f0<=100){ FILL.f0=f0/100; FILL.f=FILL.f0; $('in-f0').value=f0; } }catch(e){}
 $('in-f0').addEventListener('change',()=>{
   let v=Math.min(100,Math.max(10,parseFloat($('in-f0').value)||70)); $('in-f0').value=v;
@@ -1885,7 +1900,7 @@ $('btn-clear').addEventListener('click',async()=>{   // alles verwerfen und neu 
 });
 
 /* ---------------- Datenzähler und Service Worker ---------------- */
-const BUILD = '2026-10-12.4';
+const BUILD = '2026-10-12.5';
 
 // ---- Fahrt: Aufzeichnung auf dem Handy (IndexedDB), Stopp-Knopf und automatische Nachfrage nach der Landung
 window.FLIGHT=null;                                          // aktuelle Fahrt
