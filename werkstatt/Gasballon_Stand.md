@@ -1,6 +1,6 @@
 # Gasballon-Simulator: Stand und Arbeitsweise
 
-Stand 13.10.2026 · Build **2026-10-12.2** (Service Worker `v46`) · Projektplan **0.49**
+Stand 13.10.2026 · Build **2026-10-13.1** (Service Worker `v47`) · Projektplan **0.50**
 
 ## Wo die App läuft
 - Test: https://derfink.github.io/Bo-Twins/spiel/ (GitHub-Repository derfink/Bo-Twins, Ordner `spiel/`)

@@ -1,4 +1,4 @@
-Gasballon-Simulator, Web-App, Build 2026-10-12.2
+Gasballon-Simulator, Web-App, Build 2026-10-13.1
 ==================================================
 
 Inhalt des Ordners "gasballon"
@@ -67,7 +67,7 @@ Gemeinsame Bestenliste (Ordner api)
     .../api/api.php?action=stats&key=SCHLÜSSEL              Besuche und Geräte je Tag
   Für alle sichtbar (ohne Schlüssel), in der App unter Einstellungen, "Statistik":
     .../api/api.php?action=pubstats                         Zahl der Geräte und Verteilung der Nutzungszeit, nur Summen
-  Bei diesem Build (2026-10-12.2) auch api/api.php ersetzen; api/data und api/config.php bleiben.
+  Bei diesem Build (2026-10-13.1) auch api/api.php ersetzen; api/data und api/config.php bleiben.
   Ohne Schlüssel ist die Verwaltung abgeschaltet.
 
   Was gespeichert wird

@@ -804,7 +804,7 @@ const DEFAULT_CFG = {
   ropeMu: 3.8,     // Reibungsbeiwert des Schlepptaus am Boden (Annahme, OP-28): Bremskraft = ropeMu × Gewicht des aufliegenden Taus.
                    // Reine Gleitreibung von Kokosfaser auf Gras läge bei etwa 0,6 bis 1. Das rund 10 cm dicke, sehr raue Tau pflügt aber durch
                    // den Bewuchs der Felder und bremst um ein Mehrfaches. Abgestimmt auf die Vorgabe: Liegen 40 m auf, steht der Ballon bei 4 m/s Wind fast.
-  holdKg: 30,      // kg Auftriebsüberschuss, ab dem die Bodencrew den Ballon loslässt (Vorgabe Nutzer: rund 30 kg, zwei Säcke)
+  holdKg: null,    // kg Auftriebsüberschuss, ab dem die Bodencrew mindestens loslässt; null = je angefangene 500 m³ ein Sack (Vorgabe Nutzer 13.10.2026: 400 m³ ein Sack, 1000 m³ zwei)
   markKg: 0.07     // kg, ein Säckchen (Marker) für die Aufgabe Wandziel (Vorgabe Nutzer)
 };
 
@@ -912,11 +912,12 @@ function loadout(cfg, tab, Tg){                           // Tg: Temperatur des 
   // ein Sack liegt beim Start in der Sandmulde (vom Nutzer bestätigt)
   return {ok: true, n, lift, trim, sacks: Math.max(full - 1, 0), mU: (full >= 1 ? sU : 0) + restU};
 }
+const crewMinKg = cfg => cfg.holdKg != null ? cfg.holdKg : (cfg.sackKg || 15) * Math.max(1, Math.ceil((cfg.vol || 1000) / 500));   // Untergrenze der Bodencrew
 /* Auftriebsüberschuss, bei dem die Bodencrew loslässt (STE-22): mindestens holdKg, und so viel, dass der pralle Ballon bis 250 m über Grund steigt.
    In einer Bodeninversion (nachts) wird die Luft nach oben wärmer und dünner; dann braucht es deutlich mehr als zwei Säcke. */
 function holdNeed(cfg, tab, Tg0){
   const a0 = atmAt(tab, 0), a = atmAt(tab, 250), lift = (q, Tg) => q.p * cfg.vol / R_GAS * (M_AIR / q.T - M_H2 / Tg);
-  return Math.max(cfg.holdKg || 0, Math.ceil(lift(a0, Tg0) - lift(a, Tg0 * Math.pow(a.p / a0.p, KAPPA))));
+  return Math.max(crewMinKg(cfg), Math.ceil(lift(a0, Tg0) - lift(a, Tg0 * Math.pow(a.p / a0.p, KAPPA))));
 }
 function newBalloon(cfg, tab){
   // Der Ballon steht schon eine Weile am Startplatz: Hülle und Gas haben die Temperatur, die sich in Sonne oder Nacht einstellt (STE-23).
@@ -1018,7 +1019,7 @@ function stepBalloon(B, cfg, tab, dt, valve){
   const free = rho * V - B.gas * M_H2 - load;                              // kg Auftriebsüberschuss
   B.free = free;
   if (!B.air && !B.go){                                                    // Start (STE-22): Die Bodencrew hält den Ballon am Boden fest, bis er eindeutig leichter als Luft ist
-    if (free < (B.holdKg == null ? cfg.holdKg || 0 : B.holdKg) - 0.1){ B.held = true;                       // 0,1 kg Spiel: Der Trimmballast ist auf 100 g gerundet, zwei Säcke müssen reichen
+    if (free < (B.holdKg == null ? crewMinKg(cfg) : B.holdKg) - 0.1){ B.held = true;                       // 0,1 kg Spiel: Der Trimmballast ist auf 100 g gerundet, zwei Säcke müssen reichen
       B.w = 0; B.acc = 0; B.h = B.gnd; return; }
     B.go = true; B.held = false;
   }
@@ -1147,7 +1148,7 @@ function autopilot(B, cfg, tab, hSoll){
   if (hSoll <= 0) wSoll = B.h > 200 ? -2 : -(0.5 + 1.5 * B.h / 200);              // Abstieg, kurz vor dem Boden abfangen
   else wSoll = Math.max(-2, Math.min(2.5, (hSoll - B.h) / 60));
   const need = k * wSoll * Math.abs(wSoll) / G0 - B.free;                         // kg, die am Auftriebsüberschuss fehlen (+) oder zu viel sind (−)
-  if (B.h <= 0 && !B.air && hSoll > 0){ dropKg(B, cfg, Math.max(need, 2, B.go ? 0 : (B.holdKg == null ? cfg.holdKg || 0 : B.holdKg) + 1 - B.free)); return; }   // am Start so viel, dass die Bodencrew loslässt
+  if (B.h <= 0 && !B.air && hSoll > 0){ dropKg(B, cfg, Math.max(need, 2, B.go ? 0 : (B.holdKg == null ? crewMinKg(cfg) : B.holdKg) + 1 - B.free)); return; }   // am Start so viel, dass die Bodencrew loslässt
   if (need > 1.2) dropKg(B, cfg, need);
   else if (need < -1.2) B.gas = Math.max(0, B.gas + need / (M_AIR * B.Tg / a.T - M_H2));   // Gas ablassen
 }
@@ -1452,7 +1453,7 @@ es:{ brand:'Globo de gas', speed:'Cámara rápida', settings:'Ajustes', close:'C
 /* =====================================================================
    Oberfläche
    ===================================================================== */
-const BUILD = '2026-10-12.2';
+const BUILD = '2026-10-13.1';
 const ACC_FULL = 0.25;   // m/s², Vertikalbeschleunigung, bei der der Balken am Vario voll ausschlägt (ein Sack von 15 kg ergibt rund 0,08)
 const $ = id => document.getElementById(id);
 const store = { get(k, d){ try{ const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
@@ -2280,7 +2281,7 @@ function updInst(){
   if (!B.full && fillNow() < 0.98) PRALL.armed = true;
   if (STATE !== 'play') hint.hidden = true;
   else if (!B.ok){ hint.hidden = false; hint.textContent = tr('hint_heavy'); }
-  else if (agl <= 0 && !B.air && !B.landed && !B.go){ hint.hidden = false; hint.textContent = tr('hint_hold', {kg: nf(B.holdKg == null ? CFG.holdKg : B.holdKg), rest: nf(Math.max(0, (B.holdKg == null ? CFG.holdKg : B.holdKg) - (B.free || 0)), 1)}); heldSeen = true; }
+  else if (agl <= 0 && !B.air && !B.landed && !B.go){ hint.hidden = false; hint.textContent = tr('hint_hold', {kg: nf(B.holdKg == null ? crewMinKg(CFG) : B.holdKg), rest: nf(Math.max(0, (B.holdKg == null ? crewMinKg(CFG) : B.holdKg) - (B.free || 0)), 1)}); heldSeen = true; }
   else if (heldSeen && B.go){ heldSeen = false; hint.hidden = true; toast(tr('hold_go')); }
   else if (B.full && PRALL.armed && B.air && !B.landed){ PRALL.armed = false; hint.hidden = true; toast(tr('prall_hit')); }   // einmal; wieder scharf erst unter 98 % Füllgrad
   else hint.hidden = true;
@@ -2447,7 +2448,7 @@ const HERO = (() => {
    andere Sprachen zeigen Englisch. ---------- */
 const TUT_TX = {
  de: {intro: 'Willkommen an Bord. Dein Gasballon ist mit Wasserstoff gefüllt und steht im Gleichgewicht: Er ist genau so schwer wie die Luft, die er verdrängt. Die Bodencrew hält ihn noch fest. Unten links siehst du ihn von der Seite.',
-  sacks: 'Das sind deine Sandsäcke, je 15 kg. Tippe auf einen Sack, um ihn zu entleeren. Die Crew lässt los, sobald der Ballon 30 kg leichter als die Luft ist. Über den kleinen Griff am Rand lässt sich dieses Bedienfeld klein machen, wenn du mehr Karte sehen willst.',
+  sacks: 'Das sind deine Sandsäcke, je 15 kg. Tippe auf einen Sack, um ihn zu entleeren. Die Crew lässt los, sobald der Ballon {kg} kg leichter als die Luft ist. Über den kleinen Griff am Rand lässt sich dieses Bedienfeld klein machen, wenn du mehr Karte sehen willst.',
   go: 'Die Crew hat losgelassen, der Ballon steigt. Sand abgeben ist der einzige Weg nach oben, und was weg ist, kommt nicht wieder. Weiter geht es, sobald der Ballon 30 m hoch ist.',
   inst: 'Rechts stehen deine Anzeigen: Höhe über Grund, darunter das Vario (Steigen und Sinken in m/s), Fahrtrichtung, Sand und Füllgrad. Der Balken am Vario zeigt, ob der Ballon gerade beschleunigt. Mit dem kleinen Griff unten klappst du die Anzeigen in drei Längen ein; die kürzeste zeigt nur Höhe und Vario.',
   prof: 'Links das Vertikalprofil: Die Fähnchen zeigen, woher und wie stark der Wind in jeder Höhe weht. Lenken kannst du nur, indem du die Höhe mit dem passenden Wind suchst. Die Farben zeigen die Schichtung der Luft, blau ist eine Inversion.',
@@ -2463,7 +2464,7 @@ const TUT_TX = {
   land: 'Jetzt lande: Zieh das Ventil in kurzen Zügen und lass den Ballon sinken. Setz mit weniger als 1 m/s auf, dann ist es eine sanfte Landung. Sinkt er zu schnell, gib eine Schaufel Sand ab. „Weiter“ blendet dieses Fenster aus; nach der Landung geht es weiter.',
   done: 'Gelandet. Das war deine erste Fahrt. In der Freien Fahrt wählst du Startplatz und Wetter selbst; in der Challenge warten Aufgaben mit Wertung.'},
  en: {intro: 'Welcome aboard. Your gas balloon is filled with hydrogen and is in equilibrium: it weighs exactly as much as the air it displaces. The ground crew is still holding it. At the bottom left you see it from the side.',
-  sacks: 'These are your sandbags, 15 kg each. Tap a bag to empty it. The crew lets go as soon as the balloon is 30 kg lighter than the air. With the small handle at its edge you can shrink this control panel to see more of the map.',
+  sacks: 'These are your sandbags, 15 kg each. Tap a bag to empty it. The crew lets go as soon as the balloon is {kg} kg lighter than the air. With the small handle at its edge you can shrink this control panel to see more of the map.',
   go: 'The crew has let go and the balloon climbs. Releasing sand is the only way up, and what is gone does not come back. We continue as soon as the balloon is 30 m up.',
   inst: 'Your instruments are on the right: height above ground, below it the vario (climb and sink in m/s), track, sand and fill. The bar at the vario shows whether the balloon is accelerating. With the small handle at the bottom you fold the instruments to three lengths; the shortest shows only height and vario.',
   prof: 'On the left is the vertical profile: the barbs show where the wind comes from and how strong it is at each height. You can only steer by finding the height with the right wind. The colours show how the air is layered; blue is an inversion.',
@@ -2485,7 +2486,7 @@ const TUT = {on: false, i: 0, vT: 0, mU0: 0,
     {k: 'scoop', show: ['box-trough'], at: 'scoop', done: () => B.mU < TUT.mU0 || B.sacks < TUT.s0}, {k: 'scoop2'}, {k: 'valve', show: ['box-valve'], at: 'valve', done: () => TUT.vT > 1.6}, {k: 'valve2'},
     {k: 'speed', show: ['seg-speed', 'corner'], at: 'seg-speed'}, {k: 'opts', show: ['btn-set', 'ofm-btn'], at: 'btn-set', mid: 1}, {k: 'rope', show: ['box-rope'], at: 'rope', done: () => B.rope},
     {k: 'land', at: 'valve', away: 3, done: () => B.landed || (B.go && !B.air && B.h <= B.gnd + 0.01 && B.free < 0)}, {k: 'done'}]};
-function tutText(k){ return (TUT_TX[UI.lang] || TUT_TX.en)[k]; }
+function tutText(k){ return (TUT_TX[UI.lang] || TUT_TX.en)[k].replace('{kg}', () => nf(B && B.holdKg != null ? B.holdKg : crewMinKg(CFG))); }
 function tutShow(){
   const s = TUT.steps[TUT.i]; (s.show || []).forEach(id => { $(id).style.visibility = ''; $(id).style.pointerEvents = ''; });
   TUT.mU0 = B.mU; TUT.s0 = B.sacks; TUT.vT = 0; TUT.gone = false; TUT.tS = performance.now();
@@ -3246,6 +3247,8 @@ foldApply(false);
 
 /* ---------- Was ist neu (INS-06): kurze Texte je Build für die Nutzer, der neueste zuerst. Deutsch und Englisch; andere Sprachen zeigen Englisch. ---------- */
 const NEWS = [
+ {b: '2026-10-13.1', de: ['Start: Wie viel Sand die Bodencrew mindestens sehen will, hängt jetzt vom Ballon ab, je angefangene 500 m³ ein Sack. Ein 400-m³-Ballon startet mit einem Sack, der 1000-m³-Ballon wie bisher mit zwei. Steigt der Ballon damit nicht bis 250 m, verlangt die Crew wie bisher mehr.'],
+  en: ['Launch: the minimum the ground crew wants to see now depends on the balloon, one sandbag per started 500 m³. A 400 m³ balloon launches with one bag, the 1000 m³ balloon with two as before. If that does not take the balloon to 250 m, the crew asks for more as before.']},
  {b: '2026-10-12.2', de: ['Autopilot: Der Knopf „AP“ unter dem Tau hält die Höhe beim Einschalten auf ±5 m und gibt dafür selbst Sand oder Gas ab. Darunter wählst du, ob er die Höhe über NN oder über Grund hält. Er schaltet sich aus, sobald du selbst Sand gibst oder am Ventil ziehst, wenn der Sand die Landereserve erreicht oder wenn Gas abgelassen werden müsste, der Füllgrad aber unter 40 % liegt. Die Sollhöhe steht als violette Linie im Vertikalprofil.', 'Tutorial: Hinweise, dass sich Anzeigen und Bedienfeld über ihre Griffe einklappen lassen.'],
   en: ['Autopilot: the “AP” button below the trail rope holds the altitude at the moment you switch it on to ±5 m, releasing sand or gas by itself. Below it you choose altitude above sea level or above ground. It switches off as soon as you release sand or pull the valve yourself, when the sand reaches the landing reserve, or when gas would have to be released while the fill is below 40 %. The target altitude is a violet line in the vertical profile.', 'Tutorial: notes that the instruments and the control panel fold away with their handles.']},
  {b: '2026-10-12.1', de: ['Prallhöhe: Eine gelb gestrichelte Linie im Vertikalprofil zeigt, in welcher Höhe der Ballon mit dem jetzigen Gas prall wird. Entweicht Gas, wandert sie nach oben. Wird sie erreicht, erscheint „Prallhöhe erreicht“.'],
