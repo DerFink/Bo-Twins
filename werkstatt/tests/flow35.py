@@ -1,0 +1,21 @@
+from playwright.sync_api import sync_playwright
+exec(open('flow17.py').read().split(chr(10)+'with sync_playwright() as p:')[0])
+with sync_playwright() as p:
+    b=p.chromium.launch(); c=b.new_context(viewport={'width':360,'height':720},locale='de-DE',device_scale_factor=2); pg=c.new_page(); ev=lambda s: pg.evaluate(s)
+    errs=[]; pg.on('pageerror',lambda e: errs.append(str(e)))
+    pg.route('**/*', h); pg.goto(FILE); pg.wait_for_timeout(2000); ev("store.set('gb-news',BUILD)")
+    pg.click('#m-free'); pg.click('#seg-wx button[data-v="sim"]'); pg.click('#su-go'); pg.wait_for_function("STATE==='brief'",timeout=20000); pg.click('#sw-go'); pg.wait_for_timeout(500)
+    ev("window.TL=[];const t0=toast;window.toast=toast=function(m){TL.push(m);return t0.apply(this,arguments)}")
+    pg.click('#ap-btn'); print('am Boden:',ev('AP.on'),ev('TL.slice(-1)'))
+    ev("dropKg(B,CFG,45);UI.speed=30"); pg.wait_for_timeout(4000); print('dbg',ev('[B.h,B.go,B.air,PAUSED,UI.speed,STATE,B.free,sandKg(B,CFG)]')); pg.wait_for_function("B.h-B.gnd>250",timeout=60000); ev("UI.speed=1"); print('aufgestiegen, Höhe',ev('Math.round(B.h)'),'w',ev('B.w.toFixed(2)'))
+    pg.click('#ap-btn'); print('in der Luft an:',ev('AP.on'),'Soll',ev('Math.round(AP.h)'),ev('TL.slice(-1)'))
+    s0=ev('sandKg(B,CFG)')
+    pg.click('#seg-speed button:nth-child(5)') if False else ev("UI.speed=30")
+    pg.wait_for_timeout(20000)
+    print('nach ~10 min Fahrzeit: Höhe',ev('B.h.toFixed(1)'),'Abw',ev('(B.h-AP.h).toFixed(1)'),'Sand verbraucht',round(s0-ev('sandKg(B,CFG)'),1),'AP',ev('AP.on'))
+    ev("UI.speed=1"); pg.screenshot(path='p_ap.png')
+    pg.click('#ap-mode'); print('Modus Grund:',ev('AP.agl'),ev('$("ap-mode").textContent'),'Soll',ev('Math.round(AP.h)'),'AP',ev('AP.on'))
+    pg.click('#scoop'); pg.wait_for_timeout(300); print('eigene Schaufel -> AP',ev('AP.on'),ev('TL.slice(-1)'))
+    pg.click('#ap-btn'); ev("const r=apReserve();const need=sandKg(B,CFG)-r+1; dropKg(B,CFG,need); AP.sandX=sandKg(B,CFG)"); 
+    pg.wait_for_timeout(4000); print('Reserve -> AP',ev('AP.on'),ev('TL.slice(-2)'),'Sand',round(ev('sandKg(B,CFG)'),1),'Reserve',ev('apReserve()'))
+    print('Fehler',errs); b.close()

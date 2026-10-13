@@ -1,0 +1,135 @@
+Gasballon-Simulator: Installation auf einem Synology-NAS, Schritt für Schritt
+=============================================================================
+Stand: Build 2026-10-12.2. Die Menünamen gelten für DSM 7; in anderen Versionen heißen sie etwas anders.
+Diese Schritte sind an einem Testserver mit PHP 8.3 geprüft, nicht an einem Synology-NAS.
+Diese Datei und LIESMICH.txt müssen nicht auf den Server.
+
+Was am Ende läuft
+  A  die App unter https://<deine-adresse>/gasballon/
+  B  die gemeinsame Bestenliste mit Namen und die Statistik (Ordner api)
+  C  Nachrichten an dich als Admin per E-Mail (freiwillig)
+Jeder Teil lässt sich einzeln prüfen. Erst A fertig machen, dann B, dann C.
+
+
+TEIL A: die App
+---------------
+A1  Web Station installieren
+    DSM, Paket-Zentrum: "Web Station" installieren. Dabei entsteht der gemeinsame Ordner "web".
+    Im Paket-Zentrum außerdem "PHP 8.2" (oder neuer) installieren; das braucht erst Teil B.
+
+A2  Dateien hochladen
+    File Station, Ordner "web": den ganzen Ordner "gasballon" aus dem ZIP hineinkopieren.
+    Danach gibt es web/gasballon/index.html, web/gasballon/sw.js, web/gasballon/api/ und so weiter.
+
+A3  Im eigenen Netz prüfen
+    Im Browser:  http://<IP-des-NAS>/gasballon/
+    Die Startseite muss erscheinen, oben rechts im Rahmen steht 2026-10-12.2.
+    Über http (ohne s) fehlen Installation, GPS und der Start ohne Netz. Das ist hier normal.
+
+A4  Adresse und HTTPS
+    a) Systemsteuerung, Externer Zugriff, DDNS: einen Namen anlegen (zum Beispiel bei Synology:
+       <name>.synology.me). Wenn es schon eine eigene Adresse gibt, diese verwenden.
+    b) Im Router die Ports 80 und 443 auf das NAS weiterleiten. Port 80 braucht das Zertifikat.
+    c) Systemsteuerung, Sicherheit, Zertifikat: Hinzufügen, "Zertifikat von Let's Encrypt abrufen",
+       den Namen aus a) eintragen. Danach unter "Einstellungen" das neue Zertifikat dem Dienst
+       "Web Station" bzw. dem Standardportal zuweisen.
+
+A5  Von außen prüfen
+    Am Handy über mobile Daten (nicht WLAN):  https://<deine-adresse>/gasballon/
+    - Das Schloss im Browser ist geschlossen, es gibt keine Zertifikatswarnung.
+    - Der Hinweis "Als App installieren" erscheint; installieren und vom Startbildschirm öffnen.
+    - Flugmodus einschalten und die App erneut öffnen: Sie startet, die Simulation läuft.
+
+
+TEIL B: Bestenliste und Statistik
+---------------------------------
+B1  PHP für die Web Station einrichten
+    Web Station, Skriptspracheneinstellungen, PHP: Profil für PHP 8.2 (oder neuer) bearbeiten.
+    Unter "Erweiterungen" ankreuzen:  pdo_sqlite  und  sqlite3.  Für Teil C zusätzlich:  openssl.
+    Speichern.
+    Web Station, Webdienst bzw. Webportal: Beim Standardportal als PHP dieses Profil wählen
+    (Server: nginx oder Apache, beides geht).
+
+B2  Schreibrecht für den Dienst
+    File Station, Ordner web/gasballon/api: Rechtsklick, Eigenschaften, Berechtigung.
+    Der Gruppe "http" Lesen und Schreiben geben, "Auf diesen Ordner, Unterordner und Dateien anwenden".
+    Der Dienst legt beim ersten Aufruf selbst den Unterordner "data" mit der Datenbank an.
+
+B3  Prüfen
+    Im Browser:  https://<deine-adresse>/gasballon/api/api.php?action=ping
+    Richtig ist:   {"ok":true,"v":1}
+    Zeigt der Server nur seine eigene Fehlerseite ("500 ..."), sagt der Selbsttest, was fehlt:
+        https://<deine-adresse>/gasballon/api/api.php?action=check
+    Er nennt PHP-Version, Erweiterungen, Schreibrecht und unter "zu_tun" die nötigen Schritte.
+    Fehlerbilder:
+    - Der Quelltext der Datei erscheint oder ein Download beginnt: PHP ist für das Portal nicht aktiv (B1).
+    - "Ordner data ist nicht beschreibbar": Schreibrecht fehlt (B2).
+    - "Fehler im Dienst": meist fehlt die Erweiterung pdo_sqlite (B1).
+
+B4  Schlüssel für die Verwaltung setzen
+    Die Datei web/gasballon/api/config.php mit dem Texteditor des NAS öffnen (Paket "Text-Editor")
+    und bei admin_key einen eigenen Schlüssel eintragen, mindestens 12 Zeichen, zum Beispiel
+        'admin_key' => 'mein-langer-geheimer-schluessel',
+    Den Schlüssel nicht weitergeben. Ohne Schlüssel ist die Verwaltung abgeschaltet.
+
+B5  In der App prüfen
+    App neu öffnen. In den Einstellungen gibt es jetzt den Knopf "Statistik".
+    Eine Challenge fahren und landen: Der Eintrag steht in "Die besten Fahrten".
+    Mit einem zweiten Handy öffnen: Es sieht denselben Eintrag.
+
+B6  Verwaltung (im Browser, SCHLÜSSEL = dein Schlüssel aus B4)
+    .../gasballon/api/api.php?action=admin&key=SCHLÜSSEL             die letzten 200 Einträge mit Nummer
+    .../gasballon/api/api.php?action=delete&key=SCHLÜSSEL&id=NUMMER   einen Eintrag löschen
+    .../gasballon/api/api.php?action=stats&key=SCHLÜSSEL              Besuche und Geräte je Tag
+    .../gasballon/api/api.php?action=pubstats                         die öffentliche Statistik (ohne Schlüssel)
+
+
+TEIL C: Nachrichten an den Admin (freiwillig)
+---------------------------------------------
+Der Dienst schickt eine E-Mail, wenn
+  - eine Liste zu 80 % oder ganz gefüllt ist (Gordon Bennett: 400 und 500 Einträge, Challenges: 80 und 100),
+  - 10, 50, 100, 500 oder 1000 Geräte die App geöffnet haben,
+  - ein Gerät auffällig viel meldet (sehr viele Ergebnisse in einer Stunde, fünfmal 100 Punkte an
+    einem Tag, mehr als 2000 km in der Meisterschaft),
+  - die Datenbank nicht schreibbar ist (höchstens einmal am Tag).
+Jeder Anlass meldet sich nur einmal.
+
+C1  Ein Postfach wählen, über das der Dienst senden darf
+    Am einfachsten ein eigenes Postfach nur für diesen Zweck. Du brauchst vom Anbieter:
+    SMTP-Server, Port, Anmeldename und Kennwort. Viele Anbieter verlangen dafür ein eigenes
+    "App-Kennwort", und der SMTP-Zugang muss dort oft erst eingeschaltet werden.
+
+C2  In web/gasballon/api/config.php eintragen
+        'notify_to'   => 'du@beispiel.de',        an diese Adresse gehen die Nachrichten
+        'smtp_host'   => 'mail.anbieter.de',
+        'smtp_port'   => 587,
+        'smtp_secure' => 'tls',                   bei Port 465 stattdessen 'ssl'
+        'smtp_user'   => 'postfach@anbieter.de',
+        'smtp_pass'   => 'das-kennwort',
+    Bleibt smtp_host leer, versucht der Dienst den Mailversand des NAS; der ist bei Synology
+    oft nicht eingerichtet. Die Datei enthält dann ein Kennwort: Sie wird vom Server nie als Text
+    ausgeliefert, sollte aber nicht kopiert oder weitergegeben werden.
+
+C3  Prüfen
+    Im Browser:  .../gasballon/api/api.php?action=testmail&key=SCHLÜSSEL
+    Richtig ist  "ok":true  und kurz darauf eine Probenachricht im Postfach (auch im Spam-Ordner nachsehen).
+    Bei  "ok":false  steht unter "fehler", an welcher Stelle der Mailserver abgelehnt hat.
+    Dieselbe Seite listet unter "gesendet" alle bisherigen Nachrichten.
+    Hinweis: Geprüft ist der Versand unverschlüsselt gegen einen Testserver. Die verschlüsselten
+    Wege (tls, ssl) konnten nicht gegen einen echten Anbieter geprüft werden; der Aufruf oben zeigt es.
+
+
+SPÄTER: Aktualisieren
+---------------------
+  1. Neue Dateien erhalten. Fast immer sind es nur index.html und sw.js.
+  2. Beide Dateien in web/gasballon ersetzen, immer zusammen.
+  3. NICHT ersetzen oder löschen: api/config.php (dein Schlüssel und das Postfach) und den Ordner api/data
+     (die Bestenliste). api/api.php nur ersetzen, wenn es zum Build dazugesagt wird.
+  4. Die Adresse öffnen und die Build-Nummer prüfen. Nutzer bekommen die neue Fassung beim nächsten Start mit Netz.
+
+Sicherung
+  Den Ordner web/gasballon/api/data sichern (zum Beispiel mit Hyper Backup). Darin liegt die ganze Bestenliste.
+
+Wenn etwas nicht geht
+  Diese drei Angaben helfen bei der Fehlersuche: die Antwort von ...api.php?action=ping, die Build-Nummer
+  auf der Startseite und die DSM-Version (Systemsteuerung, Info-Center).

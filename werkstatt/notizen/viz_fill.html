@@ -1,0 +1,31 @@
+<!doctype html><meta charset="utf-8"><style>
+body{margin:0;background:#1d4a6b;color:#eef3fa;font:14px Arial,sans-serif;padding:14px;width:1180px}
+h2{font-size:17px;margin:14px 0 4px}p{margin:0 0 6px;color:#c9d6e8}
+.row{display:flex;gap:0;align-items:flex-end}.c{width:90px;text-align:center}.c b{display:block;font-size:15px;margin-top:2px}
+.big svg{width:88px;height:108px}.small{height:58px}.mark{background:#24597f;border-radius:8px}
+</style><body>
+<h2>Heute im Build .4 (zum Vergleich): Blase schrumpft von Anfang an</h2><div id="r0"></div>
+<h2>Vorschlag A: bis 50 % Pilzform wie früher, ab 50 % gleichmäßig schmaler bis zur Wurst</h2><p>Flattern beginnt unter 30 %.</p><div id="rA"></div>
+<h2>Vorschlag B: wie A, aber zwischen 50 und 30 % nur wenig schmaler, die Wurst kommt erst unter 20 %</h2><div id="rB"></div>
+<p style="margin-top:12px">Oben vergrößert, darunter in der echten Größe des Kartensymbols. Hell hinterlegt: 60 bis 40 %, der Bereich, der in der Fahrt vorkommt.</p>
+<script>
+const FS=[1,.9,.8,.7,.6,.5,.4,.3,.2,.1,.05,0], r=x=>x.toFixed(1);
+function hullProf(f, Lr, n){ f = Math.max(0, Math.min(1, f)); const wt = 0.21, rb = wt + (1 - wt) * Math.pow(f, 0.55), qc = Math.max(0.05, 1 - rb / Lr), p = 0.9 + 5 * (1 - f), amp = Math.pow(Math.max(0, Math.min(1, (0.45 - f) / 0.37)), 1.5), out = [];
+  for (let i = 0; i <= n; i++){ const q = i / n, x = (q - qc) / (1 - qc); out.push({q, w: q >= qc ? rb * Math.sqrt(Math.max(0, 1 - x * x)) : wt + (rb - wt) * Math.pow(Math.sin(Math.PI / 2 * q / qc), p), a: amp * q}); } return out; }
+const tail=(m)=>`<path d="M${r(22-m)} 39L20 45M${r(22+m)} 39L24 45" stroke="#eef3fa" stroke-width="1.4"/><rect x="18" y="45" width="8" height="6" rx="1.5" fill="#eef3fa" stroke="#0a1019" stroke-width="1.5"/></svg>`;
+function cur(c,f){ const P=hullProf(f,37/18,16), side=(sg,k)=>P.map(p=>r(22+Math.sin(p.q*7+1)*5*p.a+sg*k*p.w*18)+' '+r(39-p.q*37));
+  return `<svg viewBox="0 0 44 54" width="44" height="54"><path d="M${side(-1,1).join('L')}L${side(1,1).reverse().join('L')}z" fill="${c}" stroke="#0a1019" stroke-width="2" stroke-linejoin="round"/><path d="M${side(-1,.45).join('L')}M${side(1,.45).join('L')}" fill="none" stroke="#0a1019" stroke-opacity=".35" stroke-width="1.6"/>`+tail(3.8); }
+const bz=(a,b,c,d,t)=>{const u=1-t;return u*u*u*a+3*u*u*t*b+3*u*t*t*c+t*t*t*d;};
+// neu: Pilzform (Formel des alten Symbols) bis 50 %, darunter waagerecht gestaucht (Faktor k) und zunehmend flatternd
+function neu(c,f,kOf){ f=Math.max(0,Math.min(1,f)); const s=Math.pow(1-Math.max(f,0.5),0.7)+ (f<0.5? (0.5-f)*0.5:0), nw=5-3.2*Math.min(1,s), k=f>=0.5?1:kOf(f/0.5), amp=Math.pow(Math.max(0,Math.min(1,(0.3-f)/0.25)),1.5), R=[];
+  for(let i=0;i<=10;i++){const t=i/10;R.push([bz(22,33,40,40,t)-22,bz(2,2,10,20,t)]);}
+  for(let i=1;i<=12;i++){const t=i/12;R.push([bz(40,40-15*s,34-9*s,22+nw,t)-22,bz(20,28-2*s,34.5,39,t)]);}
+  const hw=p=>Math.max(k*p[0],Math.min(p[0],2.3)), off=y=>{const q=(39-y)/37;return Math.sin(q*7+1)*5*amp*q;};
+  const pt=(p,sg,m)=>r(22+off(p[1])+sg*m*hw(p))+' '+r(p[1]);
+  const right=R.map(p=>pt(p,1,1)), left=R.slice(1).reverse().map(p=>pt(p,-1,1));
+  const seam=sg=>R.map(p=>pt(p,sg,0.45)).join('L');
+  return `<svg viewBox="0 0 44 54" width="44" height="54"><path d="M${right.join('L')}L${left.join('L')}z" fill="${c}" stroke="#0a1019" stroke-width="2" stroke-linejoin="round"/><path d="M${seam(-1)}M${seam(1)}" fill="none" stroke="#0a1019" stroke-opacity=".35" stroke-width="1.6" stroke-linejoin="round"/>`+tail(Math.max(2.3,k*nw)); }
+const kA=x=>0.15+0.85*x, kB=x=>0.15+0.85*Math.pow(Math.sin(Math.PI/2*Math.min(1,x*1.15)),0.9);
+function row(id,fn){ document.getElementById(id).innerHTML='<div class="row big">'+FS.map(f=>`<div class="c ${f<=.6&&f>=.4?'mark':''}">${fn('#ff9f1c',f)}</div>`).join('')+'</div><div class="row">'+FS.map(f=>`<div class="c small ${f<=.6&&f>=.4?'mark':''}">${fn('#ff9f1c',f)}<b>${Math.round(f*100)} %</b></div>`).join('')+'</div>'; }
+row('r0',cur); row('rA',(c,f)=>neu(c,f,kA)); row('rB',(c,f)=>neu(c,f,kB));
+</script>

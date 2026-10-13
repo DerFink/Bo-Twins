@@ -1,0 +1,111 @@
+Gasballon-Simulator, Web-App, Build 2026-10-12.2
+==================================================
+
+Inhalt des Ordners "gasballon"
+  index.html              die App (alles in einer Datei)
+  sw.js                   Service Worker: Start ohne Netz, Aktualisierung
+  manifest.json           Angaben für die Installation als App
+  icon-192.png, icon-512.png, icon-maskable-512.png, apple-touch-icon.png   Symbole
+  htaccess-beispiel.txt   nur für Apache-Server, siehe unten
+  api/                    Dienst für die gemeinsame Bestenliste (PHP), siehe unten; ohne ihn läuft die App wie bisher
+  INSTALLATION_Synology.txt   Anleitung Schritt für Schritt (muss nicht auf den Server)
+  LIESMICH.txt            diese Datei (muss nicht auf den Server)
+
+Synology-NAS: Die genaue Anleitung Schritt für Schritt steht in INSTALLATION_Synology.txt.
+
+Hochladen
+  1. Den Ordner "gasballon" auf den Server legen. Der Name ist frei wählbar und bestimmt die Adresse,
+     zum Beispiel https://cloud.aerarium.de/gasballon/
+  2. Der Server muss die Seite über HTTPS ausliefern. Ohne HTTPS gibt es keine Installation,
+     keinen Start ohne Netz und kein GPS.
+  3. Die Adresse im Browser öffnen. Im Startfenster steht oben rechts die Build-Nummer.
+  4. Der Hinweis "Als App installieren" erscheint im Startfenster. Auf Android öffnet "Installieren"
+     den Dialog des Browsers. Auf iPhone und iPad nennt er die Schritte in Safari.
+
+Server-Einstellung (empfohlen)
+  index.html, sw.js und manifest.json sollen vom Server nicht lange zwischengespeichert werden,
+  sonst kommen Aktualisierungen verspätet an. Auf einem Apache-Server: die Datei
+  htaccess-beispiel.txt in ".htaccess" umbenennen. Bei anderen Servern (nginx, Caddy) dieselbe
+  Regel in der Server-Einstellung setzen: Cache-Control "no-cache" für diese drei Dateien.
+  Die App fragt beim Start ohnehin ohne Browser-Cache nach; die Regel ist eine zusätzliche Sicherung.
+
+Synology-NAS (Web Station)
+  Die App selbst besteht nur aus Dateien. PHP braucht nur die gemeinsame Bestenliste (Ordner api).
+  1. Im Paket-Zentrum "Web Station" installieren. Danach gibt es den gemeinsamen Ordner "web".
+  2. Den Ordner "gasballon" nach "web" kopieren (File Station oder Synology Drive).
+  3. HTTPS einrichten: Systemsteuerung, Externer Zugriff (DDNS-Name) und Sicherheit, Zertifikat
+     (Let's Encrypt). Im Router Port 443 auf das NAS weiterleiten. Ohne gültiges Zertifikat
+     lässt sich die App nicht installieren.
+  4. Adresse: https://<dein-name>/gasballon/
+  5. Web Station nutzt in der Grundeinstellung nginx; die Datei htaccess-beispiel.txt wirkt nur,
+     wenn als Server Apache gewählt ist. Sie ist nicht nötig, die App fragt selbst ohne Cache nach.
+  Die Menüs heißen je nach DSM-Version etwas anders; diese Schritte sind nicht an einem NAS geprüft.
+  Die Fassung auf GitHub kann daneben weiterlaufen. Name und Bestenliste hängen an der Adresse:
+  Wer von GitHub auf den Server wechselt, beginnt dort mit leerer Liste.
+
+Gemeinsame Bestenliste (Ordner api)
+  Was sie tut: Alle, die die App von diesem Server öffnen, sehen dieselbe Bestenliste und dieselbe Liste
+  "69. Gordon Bennett". Die App prüft beim Start, ob api/api.php antwortet. Antwortet nichts (zum Beispiel
+  auf GitHub), bleibt jede Liste auf dem eigenen Gerät. Es ist dieselbe App für beide Fälle.
+
+  Voraussetzung: PHP 8.0 oder neuer mit der Erweiterung pdo_sqlite. Keine Datenbank einrichten, keine weiteren Pakete.
+
+  Einrichten
+  1. Den Ordner api mit hochladen (liegt schon im Ordner gasballon).
+  2. Synology: In Web Station ein PHP-Profil (8.0 oder neuer) anlegen, darin die Erweiterung pdo_sqlite
+     ankreuzen, und das Profil dem Webdienst zuweisen.
+  3. Der Webserver braucht Schreibrecht im Ordner api. Der Dienst legt dort beim ersten Aufruf den Unterordner
+     data mit der Datenbank an. Auf Synology: Ordner api, Eigenschaften, Berechtigung, Gruppe "http": Schreiben.
+  4. Prüfen: https://<adresse>/gasballon/api/api.php?action=ping  muss  {"ok":true,"v":1}  zeigen.
+     Steht dort eine Fehlermeldung, nennt sie den Grund (zum Beispiel: Ordner nicht beschreibbar).
+  5. Die App öffnen, eine gewertete Fahrt machen, auf einem zweiten Gerät "Die besten Fahrten" öffnen.
+
+  Verwaltung
+  In api/config.php bei admin_key einen eigenen Schlüssel eintragen (mindestens 12 Zeichen). Danach:
+    .../api/api.php?action=admin&key=SCHLÜSSEL             die letzten 200 Einträge mit Nummer
+    .../api/api.php?action=delete&key=SCHLÜSSEL&id=NUMMER   einen Eintrag löschen
+    .../api/api.php?action=stats&key=SCHLÜSSEL              Besuche und Geräte je Tag
+  Für alle sichtbar (ohne Schlüssel), in der App unter Einstellungen, "Statistik":
+    .../api/api.php?action=pubstats                         Zahl der Geräte und Verteilung der Nutzungszeit, nur Summen
+  Bei diesem Build (2026-10-12.2) auch api/api.php ersetzen; api/data und api/config.php bleiben.
+  Ohne Schlüssel ist die Verwaltung abgeschaltet.
+
+  Was gespeichert wird
+  Name (frei gewählt), Aufgabe, Punkte oder km, Restsand, Dauer, Zeitpunkt, Build und ein Kurzwert der
+  zufälligen Gerätekennung. Keine IP-Adresse, kein Standort. Besuche: Tag, Sprache, Herkunft des Links, Dauer.
+  Schutz: höchstens 60 Meldungen je Gerät und Stunde, Punkte nur 0 bis 100, Namen höchstens 24 Zeichen.
+  Die App rechnet auf dem Handy; ein gefälschtes Ergebnis kann der Dienst nicht erkennen, nur löschen.
+
+  Sicherung und Aktualisierung
+  Die Liste liegt in api/data. Diesen Ordner sichern und bei einer Aktualisierung NICHT löschen oder
+  überschreiben. Auch api/config.php behalten, sonst ist der Schlüssel weg. Bei Aktualisierungen der App
+  genügen weiterhin index.html und sw.js; api.php nur ersetzen, wenn es zum Build dazugesagt wird.
+  nginx beachtet die .htaccess in api/data nicht. Die Datenbank hat deshalb einen zufälligen Dateinamen;
+  wer zusätzlich sperren will, setzt für den Pfad /gasballon/api/data/ die Regel "deny all".
+
+  Geprüft ist der Dienst mit PHP 8.3 auf einem Testrechner, nicht auf einem Synology-NAS.
+
+Aktualisieren
+  1. Neue Dateien von Claude erhalten. Geändert sind fast immer nur index.html und sw.js.
+  2. Beide Dateien auf dem Server ersetzen, immer zusammen.
+  3. Die Adresse auf einem Gerät öffnen und die Build-Nummer prüfen.
+  Nutzer bekommen die neue Fassung beim nächsten Start mit Netz; die App meldet "Neue Version geladen".
+  Ohne Netz läuft die alte Fassung weiter. In den Einstellungen gibt es "Neueste Version laden".
+  Einstellungen, Name und Bestenliste auf dem Gerät bleiben bei einer Aktualisierung erhalten.
+
+Zurück zur alten Fassung
+  Die vorherigen Dateien wieder hochladen und in sw.js die Zeile  const VER = 'v41';  auf eine
+  höhere Nummer setzen (zum Beispiel 'v42'), damit die Geräte den Wechsel bemerken.
+
+Meisterschaft (Gordon Bennett)
+  Die Meisterschaft braucht zwei zusätzliche Quellen: das Wetterarchiv historical-forecast-api.open-meteo.com und die
+  Ländergrenzen für die Sperrzonen. Die Grenzen lädt die App von cdn.jsdelivr.net (Paket world-atlas, Datei countries-50m.json,
+  rund 0,8 MB). Wer davon unabhängig sein will, legt diese Datei unter dem Namen countries-50m.json in denselben Ordner;
+  die App nimmt dann die eigene Datei.
+
+Was die App aus dem Netz lädt
+  Lufträume (nur wenn in den Einstellungen eingeschaltet): open flightmaps, nwy-tiles-api.prod.newaydata.com.
+  Alle Quellen mit Abdeckung und Aktualität stehen in der App unter Einstellungen, "Karten und Daten".
+  Karte: OpenStreetMap. Wetter und Geländehöhen: Open-Meteo. Zielorte: Overpass. Ortsnamen: Nominatim.
+  Kartenprogramm und Schriften: cdnjs.cloudflare.com und fonts.googleapis.com.
+  Bestenliste und Besuchszählung: vom eigenen Server, wenn der Ordner api dort läuft; sonst nur auf dem Gerät.

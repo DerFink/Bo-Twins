@@ -1,0 +1,23 @@
+from playwright.sync_api import sync_playwright
+exec(open('flow17.py').read().split(chr(10)+'with sync_playwright() as p:')[0])
+with sync_playwright() as p:
+    b=p.chromium.launch(); errs=[]; c=b.new_context(viewport={'width':360,'height':700},locale='de-DE'); pg=c.new_page(); ev=lambda s: pg.evaluate(s)
+    pg.on('pageerror',lambda e:errs.append(str(e))); pg.route('**/*', h); pg.goto(FILE); pg.wait_for_timeout(2500); print('Build',ev('BUILD'))
+    pg.click('#m-tut'); pg.wait_for_timeout(500); k=lambda: ev("TUT.steps[TUT.i].k")
+    print('Luftraum-Schalter im Tutorial zunächst verborgen:',ev("$('ofm-btn').style.visibility==='hidden'"))
+    pg.click('#tut-next')
+    while k()=='sacks': pg.click('#rack'); pg.wait_for_timeout(300)
+    # Pause während eines Schritts ohne sichtbaren Pausenknopf
+    pg.wait_for_timeout(1500); ev("setPaused(true)"); pg.wait_for_timeout(300); print('Pause in Schritt',k(),'| Weiter klickbar:',not ev("$('tut-next').disabled")); pg.click('#tut-next'); pg.wait_for_timeout(300); print(' fortgesetzt:',not ev('PAUSED'),'| Schritt unverändert:',k(),'| Weiter wieder grau:',ev("$('tut-next').disabled"))
+    ev("setPaused(true)"); pg.wait_for_timeout(200); ev("$('paused').click()"); pg.wait_for_timeout(200); print(' Tipp auf „Pause“ setzt fort:',not ev('PAUSED'))
+    ev('UI.speed=10'); pg.wait_for_function('!$("tut-next").disabled',timeout=40000); ev('UI.speed=1')
+    for i in range(3): pg.click('#tut-next')
+    pg.click('#temp-btn'); pg.wait_for_timeout(300); pg.mouse.click(180,120); pg.wait_for_timeout(300); pg.click('#scoop'); pg.wait_for_timeout(300); pg.click('#tut-next'); ev("valve=0.6"); pg.wait_for_timeout(2200); ev("valve=0"); pg.wait_for_timeout(300); pg.click('#tut-next'); pg.click('#tut-next'); print('Schritt',k(),'| Luftraum-Schalter sichtbar:',ev("$('ofm-btn').style.visibility!=='hidden'"),ev("$('ofm-btn').textContent"),ev("$('ofm-btn').style.top")); pg.screenshot(path='h_opts.png')
+    pg.click('#ofm-btn'); pg.wait_for_timeout(200); print(' ein:',ev('UI.ofm'),ev("$('ofm-btn').classList.contains('on')"),'Einstellung folgt:',ev("document.querySelector('#seg-ofm button.on').dataset.v")); pg.click('#ofm-btn'); print(' aus:',ev('UI.ofm'))
+    pg.click('#tut-next'); pg.click('#rope'); pg.wait_for_timeout(300); print('Tau ohne Rückfrage:',ev('B.rope'),ev("$('confirm').hidden"),'| Schritt',k(),'Weiter grau:',ev("$('tut-next').disabled"))
+    pg.wait_for_timeout(3300); print(' nach 3 s klickbar:',not ev("$('tut-next').disabled")); pg.click('#tut-next'); pg.wait_for_timeout(300); print(' Fenster weg:',ev("$('tut').hidden"),'Hand weg:',ev("$('tut-hand').hidden"),'| Schritt bleibt',k()); pg.screenshot(path='h_gone.png')
+    ev("setPaused(true)"); pg.wait_for_timeout(300); print(' Pause: Fenster da:',not ev("$('tut').hidden")); pg.click('#tut-next'); pg.wait_for_timeout(300); print(' fortgesetzt, Fenster wieder weg:',not ev('PAUSED'),ev("$('tut').hidden"))
+    ev("window.__v=setInterval(()=>{valve=B.landed?0:1},50);0"); pg.wait_for_function('B.landed',timeout=60000); ev("clearInterval(__v);valve=0"); pg.wait_for_timeout(500); print('gelandet: Schritt',k(),'Fenster da:',not ev("$('tut').hidden")); pg.click('#tut-next'); pg.wait_for_timeout(200)
+    pg.click('#r-map'); pg.wait_for_timeout(300); r=ev("(()=>{const q=$('result').getBoundingClientRect();return [Math.round(q.left),Math.round(q.top),Math.round(q.width),Math.round(q.height)]})()"); print('Weg auf der Karte: Ergebnis klein',r,'| sichtbar:',ev("[...$('result').children].filter(x=>getComputedStyle(x).display!=='none').map(x=>x.textContent.trim().slice(0,22))"),'| Karte eingepasst:',ev('__calls.fitBounds')); pg.screenshot(path='h_mini.png')
+    pg.click('#r-full'); pg.wait_for_timeout(200); print(' zurück zur Auswertung:',not ev("$('result').classList.contains('mini')"))
+    print('Fehler:',[e for e in errs if 'countries-50m' not in e]); b.close()

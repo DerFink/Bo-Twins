@@ -1,0 +1,15 @@
+from playwright.sync_api import sync_playwright
+exec(open('flow17.py').read().split(chr(10)+'with sync_playwright() as p:')[0])
+with sync_playwright() as p:
+    b=p.chromium.launch(); c=b.new_context(viewport={'width':360,'height':720},locale='de-DE',device_scale_factor=2); pg=c.new_page(); ev=lambda s: pg.evaluate(s)
+    errs=[]; pg.on('pageerror',lambda e: errs.append(str(e)))
+    pg.route('**/*', h); pg.goto(FILE); pg.wait_for_timeout(2000); ev("store.set('gb-news',BUILD)")
+    pg.click('#m-free'); pg.click('#seg-wx button[data-v="sim"]'); pg.click('#su-go'); pg.wait_for_function("STATE==='brief'",timeout=20000); pg.click('#sw-go'); pg.wait_for_timeout(500)
+    ev("window.TL=[];const t0=toast;window.toast=toast=function(m){TL.push(m);return t0.apply(this,arguments)}")
+    ev("B.go=true;B.air=true;B.h=600;B.w=2;(()=>{const a=atmAt(ATM,900);B.gas=a.p*CFG.vol/(R_GAS*(a.T+(B.Tg-atmAt(ATM,B.h).T)));})();dropKg(B,CFG,40)")
+    pg.wait_for_timeout(800); ev("B.h=1000;B.w=0.5"); pg.wait_for_timeout(1500)
+    pg.wait_for_timeout(600)
+    print('Höhe',ev('Math.round(B.h)'),'prall',ev('B.full'),'Füllgrad',ev('Math.round(fillNow()*100)'),'Meldungen',ev('TL'))
+    r=ev("(()=>{const q=$('prof').getBoundingClientRect();return [q.left,q.top,q.width,q.height]})()")
+    pg.screenshot(path='o_prof.png',clip={'x':0,'y':0,'width':360,'height':400})
+    ev("B.gas*=0.9"); pg.wait_for_timeout(1500); print('nach Gasverlust: prall',ev('B.full'),'Füllgrad',ev('Math.round(fillNow()*100)'),'scharf',ev('PRALL.armed'),'Fehler',errs); b.close()
