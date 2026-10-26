@@ -1,7 +1,7 @@
-Gasballon-Simulator, Web-App, Build 2026-10-26.3
+Gasballon-Simulator, Web-App, Build 2026-10-26.4
 ==================================================
 
-DIESES UPDATE: index.html, sw.js UND api/api.php ersetzen (api.php kennt jetzt die zweite Rennliste 2018).
+DIESES UPDATE: index.html, sw.js, die vier Symbole (icon-192.png, icon-512.png, icon-maskable-512.png, apple-touch-icon.png) und api/api.php ersetzen (api.php kennt seit 2026-10-26.1 die zweite Rennliste).
 api/config.php und den Ordner api/data NICHT ersetzen.
 
 Inhalt des Ordners "gasballon"

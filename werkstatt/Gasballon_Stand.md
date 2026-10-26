@@ -1,6 +1,6 @@
 # Gasballon-Simulator: Stand und Arbeitsweise
 
-Stand 13.10.2026 · Build **2026-10-26.3** (Service Worker `v50`) · Projektplan **0.51**
+Stand 13.10.2026 · Build **2026-10-26.4** (Service Worker `v51`) · Projektplan **0.52**
 
 ## Wo die App läuft
 - Test: https://derfink.github.io/Bo-Twins/spiel/ (GitHub-Repository derfink/Bo-Twins, Ordner `spiel/`)
@@ -32,10 +32,12 @@ Stand 13.10.2026 · Build **2026-10-26.3** (Service Worker `v50`) · Projektplan
 - Füllgrad statt Gas in % in den Anzeigen; Hüllenform: bis 50 % Pilzform, darunter schmaler, unter 20 % flatternde Hülle (Wahl 11.10.).
 - Autopilot: aus bei eigenem Eingriff, Sand unter 6 kg je 100 m³ Hülle oder Füllgrad unter 40 %; überall erlaubt, ausblendbar über `AP_HIDE`.
 - Meisterschaft: offizielle Sperrflächen und Spuren zurückgestellt. Eigenes Team: Name, Land frei wählbar oder ohne Land (dann nur der Name); mit Land z. B. GER-4 (seit 26.10.2026, ersetzt JAM-1 CoolRidings).
+- Ballonbild (seit 26.10.2026, Entwurf B2): silberne Hülle, oranges Rautennetz mit fünf Reihen, Ventil, Füllansatz, Lastring, Korb mit Sandsäcken; dieselbe Zeichnung (balGeo/balloonSVG/balDraw) für App-Symbol, Logo, Karte, Seitenansicht und Startseite. Werkzeuge in `werkstatt/ballonbild/`.
+- „Was ist neu“: nach einem Update nur ein Satz, die Liste öffnet sich nicht von selbst; Schließen-Knopf immer sichtbar.
 - App ist nicht kommerziell, nur für den privaten Gebrauch.
 
 ## Offen
-- Build 2026-10-26.1 auf den Server: diesmal auch `api/api.php` ersetzen.
+- Build 2026-10-26.4 auf den Server: `index.html`, `sw.js`, die vier Symbole und `api/api.php` ersetzen.
 - Gordon Bennett 2018 ist gesperrt („in Vorbereitung“): Das Open-Meteo-Archiv liefert für 2018 keine Werte in der Höhe (alle null). Plan: ERA5 auf Druckflächen über Copernicus (Konto des Nutzers, Download per Formular, GRIB), daraus Wetterpaket für App und Vorflug. Freischalten über `ready` in `GB_SC.gb62`.
 - PHP auf dem Server einrichten, dann `…/gasballon/api/api.php?action=check` prüfen.
 - Am Handy prüfen: Autopilot, Prallhöhe, Hüllenform, Melodie; restliche Basis-Tests im Blatt `Abnahme_Basis` (T-06, T-15 bis T-20, T-22 bis T-24, T-26 bis T-30, T-36, T-40, T-41).
