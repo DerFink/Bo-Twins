@@ -7,7 +7,7 @@
    Aufrufe
      GET  ?action=check                   Selbsttest ohne Datenbank: PHP-Version, Erweiterungen, Schreibrecht (immer Status 200, damit der Server die Antwort nicht durch seine Fehlerseite ersetzt)
      GET  ?action=ping                    Lebenszeichen
-     GET  ?action=top&kind=chal|gb        Liste (chal: höchstens 100, gb: höchstens 500)
+     GET  ?action=top&kind=chal|gb[&c=gb69|gb62]   Liste (chal: höchstens 100, gb: je Rennen höchstens 500)
      POST ?action=score                   Ergebnis melden (JSON als Text)
      POST ?action=unscore                 eigenes Ergebnis zurückziehen (Meisterschaft: „30 Minuten noch einmal“)
      POST ?action=visit / ?action=leave   Besuch und Nutzungsdauer zählen
@@ -27,6 +27,7 @@ header('X-Content-Type-Options: nosniff');
 
 $CFG = ['admin_key' => '', 'max_per_hour' => 60, 'keep_visits_days' => 400, 'notify_to' => '', 'notify_from' => '', 'site_name' => 'Gasballon-Simulator',
         'smtp_host' => '', 'smtp_port' => 587, 'smtp_user' => '', 'smtp_pass' => '', 'smtp_secure' => 'tls'];
+const GB_RACES = ['gb69', 'gb62'];   // Rennen der Meisterschaft mit eigener Liste
 if (is_file(__DIR__ . '/config.php')) { $c = include __DIR__ . '/config.php'; if (is_array($c)) $CFG = array_merge($CFG, $c); }
 
 /* ---------- Nachrichten an den Admin ---------- */
@@ -132,11 +133,12 @@ try {
     case 'top': {
       $kind = (string)($_GET['kind'] ?? 'chal');
       if ($kind === 'gb') {
-        $r = db()->query("SELECT n, km, rank, dq, t, at FROM scores WHERE c = 'gb69' ORDER BY (dq IS NOT NULL), km DESC, at ASC LIMIT 500")->fetchAll();
+        $gc = (string)($_GET['c'] ?? 'gb69'); if (!in_array($gc, GB_RACES, true)) fail('Rennen unbekannt');
+        $q = db()->prepare("SELECT n, km, rank, dq, t, at FROM scores WHERE c = ? ORDER BY (dq IS NOT NULL), km DESC, at ASC LIMIT 500"); $q->execute([$gc]); $r = $q->fetchAll();
         foreach ($r as &$x) { $x['km'] = (float)$x['km']; $x['rank'] = $x['rank'] === null ? null : (int)$x['rank']; $x['t'] = (int)$x['t']; $x['at'] = (int)$x['at']; }
         out($r);
       }
-      $r = db()->query("SELECT n, p, c, l, s, at FROM scores WHERE c <> 'gb69' ORDER BY p DESC, s DESC, at ASC LIMIT 100")->fetchAll();
+      $r = db()->query("SELECT n, p, c, l, s, at FROM scores WHERE c NOT LIKE 'gb%' ORDER BY p DESC, s DESC, at ASC LIMIT 100")->fetchAll();
       foreach ($r as &$x) { $x['p'] = (float)$x['p'] + 0; if ($x['p'] == floor($x['p'])) $x['p'] = (int)$x['p']; $x['l'] = $x['l'] === null ? null : (int)$x['l']; $x['s'] = (float)$x['s']; $x['at'] = (int)$x['at']; }
       out($r);
     }
@@ -144,12 +146,12 @@ try {
     case 'score': {
       if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail('nur POST', 405);
       $j = body(); $pdo = db(); $d = dev($j['id'] ?? null); $now = nowMs();
-      $c = (string)($j['c'] ?? ''); if (!in_array($c, ['target', 'wz', 'mdt', 'mid', 'gb69'], true)) fail('Aufgabe unbekannt');
-      $n = txt($j['n'] ?? '', 24); if ($n === '') $n = 'Pilot';
+      $c = (string)($j['c'] ?? ''); $isGb = in_array($c, GB_RACES, true); if (!$isGb && !in_array($c, ['target', 'wz', 'mdt', 'mid'], true)) fail('Aufgabe unbekannt');
+      $n = txt($j['n'] ?? '', $isGb ? 34 : 24); if ($n === '') $n = 'Pilot';
       $q = $pdo->prepare('SELECT COUNT(*) FROM scores WHERE dev = ? AND at > ?'); $q->execute([$d, $now - 3600000]);
       if ((int)$q->fetchColumn() >= (int)$CFG['max_per_hour']) fail('zu viele Meldungen', 429);
       $t = num($j['t'] ?? null, 0, 400000, 0); $s = num($j['s'] ?? null, 0, 5000, 0); $cat = num($j['at'] ?? null, 0, 9e15, 0);
-      if ($c === 'gb69') {
+      if ($isGb) {
         $km = num($j['km'] ?? null, 0, 6000); if ($km === null) fail('km fehlt');
         $dq = $j['dq'] ?? null; if ($dq !== null && !in_array($dq, ['zone', 'water', 'hard'], true)) fail('Grund unbekannt');
         $rank = $dq === null ? num($j['rank'] ?? null, 1, 1000) : null;
@@ -163,14 +165,14 @@ try {
       }
       /* Nachrichten an den Admin: Füllstand der Listen und auffällige Geräte */
       if (trim((string)$CFG['notify_to']) !== '') {
-        if ($c === 'gb69') { $nG = (int)$pdo->query("SELECT COUNT(*) FROM scores WHERE c = 'gb69'")->fetchColumn();
-          if ($nG >= 500) notify($CFG, 'gb-500', 'Liste „69. Gordon Bennett“ ist voll', "Die Liste hat $nG Einträge. Angezeigt werden die 500 weitesten Fahrten; schwächere fallen ab jetzt aus der Anzeige. Gespeichert bleibt alles.");
-          elseif ($nG >= 400) notify($CFG, 'gb-400', 'Liste „69. Gordon Bennett“ zu 80 % gefüllt', "Die Liste hat $nG von 500 angezeigten Einträgen.");
+        if ($isGb) { $q = $pdo->prepare('SELECT COUNT(*) FROM scores WHERE c = ?'); $q->execute([$c]); $nG = (int)$q->fetchColumn(); $race = $c === 'gb62' ? '62. Gordon Bennett' : '69. Gordon Bennett';
+          if ($nG >= 500) notify($CFG, $c . '-500', "Liste „{$race}“ ist voll", "Die Liste hat $nG Einträge. Angezeigt werden die 500 weitesten Fahrten; schwächere fallen ab jetzt aus der Anzeige. Gespeichert bleibt alles.");
+          elseif ($nG >= 400) notify($CFG, $c . '-400', "Liste „{$race}“ zu 80 % gefüllt", "Die Liste hat $nG von 500 angezeigten Einträgen.");
           if (($km ?? 0) > 2000) notify($CFG, 'far-' . $d . '-' . gmdate('Ymd'), 'Auffällig weite Fahrt', "Ein Gerät meldet $km km in der Meisterschaft (Name: $n). Das ist weiter, als das Wetter des Rennens plausibel hergibt.\nPrüfen und bei Bedarf löschen: api.php?action=admin&key=…");
-        } else { $nC = (int)$pdo->query("SELECT COUNT(*) FROM scores WHERE c <> 'gb69'")->fetchColumn();
+        } else { $nC = (int)$pdo->query("SELECT COUNT(*) FROM scores WHERE c NOT LIKE 'gb%'")->fetchColumn();
           if ($nC >= 100) notify($CFG, 'chal-100', 'Bestenliste der Challenges ist voll', "Es gibt $nC gewertete Fahrten. Angezeigt werden die besten 100.");
           elseif ($nC >= 80) notify($CFG, 'chal-80', 'Bestenliste der Challenges zu 80 % gefüllt', "Es gibt $nC von 100 angezeigten Einträgen.");
-          $q = $pdo->prepare("SELECT COUNT(*) FROM scores WHERE dev = ? AND c <> 'gb69' AND p >= 100 AND at > ?"); $q->execute([$d, $now - 86400000]);
+          $q = $pdo->prepare("SELECT COUNT(*) FROM scores WHERE dev = ? AND c NOT LIKE 'gb%' AND p >= 100 AND at > ?"); $q->execute([$d, $now - 86400000]);
           if ((int)$q->fetchColumn() >= 5) notify($CFG, 'top-' . $d . '-' . gmdate('Ymd'), 'Auffällig viele volle Punktzahlen', "Ein Gerät hat in 24 Stunden mindestens fünfmal 100 Punkte gemeldet (Name zuletzt: $n).\nPrüfen und bei Bedarf löschen: api.php?action=admin&key=…");
         }
         $q = $pdo->prepare('SELECT COUNT(*) FROM scores WHERE dev = ? AND at > ?'); $q->execute([$d, $now - 3600000]);

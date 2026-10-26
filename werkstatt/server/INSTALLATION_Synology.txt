@@ -1,6 +1,6 @@
 Gasballon-Simulator: Installation auf einem Synology-NAS, Schritt für Schritt
 =============================================================================
-Stand: Build 2026-10-13.1. Die Menünamen gelten für DSM 7; in anderen Versionen heißen sie etwas anders.
+Stand: Build 2026-10-26.1. Die Menünamen gelten für DSM 7; in anderen Versionen heißen sie etwas anders.
 Diese Schritte sind an einem Testserver mit PHP 8.3 geprüft, nicht an einem Synology-NAS.
 Diese Datei und LIESMICH.txt müssen nicht auf den Server.
 
@@ -23,7 +23,7 @@ A2  Dateien hochladen
 
 A3  Im eigenen Netz prüfen
     Im Browser:  http://<IP-des-NAS>/gasballon/
-    Die Startseite muss erscheinen, oben rechts im Rahmen steht 2026-10-13.1.
+    Die Startseite muss erscheinen, oben rechts im Rahmen steht 2026-10-26.1.
     Über http (ohne s) fehlen Installation, GPS und der Start ohne Netz. Das ist hier normal.
 
 A4  Adresse und HTTPS

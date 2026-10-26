@@ -1,5 +1,8 @@
-Gasballon-Simulator, Web-App, Build 2026-10-13.1
+Gasballon-Simulator, Web-App, Build 2026-10-26.1
 ==================================================
+
+DIESES UPDATE: index.html, sw.js UND api/api.php ersetzen (api.php kennt jetzt die zweite Rennliste 2018).
+api/config.php und den Ordner api/data NICHT ersetzen.
 
 Inhalt des Ordners "gasballon"
   index.html              die App (alles in einer Datei)

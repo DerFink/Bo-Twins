@@ -1,6 +1,6 @@
 # Gasballon-Simulator: Stand und Arbeitsweise
 
-Stand 13.10.2026 · Build **2026-10-13.1** (Service Worker `v47`) · Projektplan **0.50**
+Stand 13.10.2026 · Build **2026-10-26.1** (Service Worker `v48`) · Projektplan **0.51**
 
 ## Wo die App läuft
 - Test: https://derfink.github.io/Bo-Twins/spiel/ (GitHub-Repository derfink/Bo-Twins, Ordner `spiel/`)
@@ -23,7 +23,7 @@ Stand 13.10.2026 · Build **2026-10-13.1** (Service Worker `v47`) · Projektplan
 ## Spielarten
 - **Freie Fahrt:** Startplatz (Karte, GPS, Bitterfeld) und Wetter (echt oder Simulation) wählbar.
 - **Challenge:** Zielfahren (Landezone 100 m Durchmesser), Wandziel, Max- und Min-Distance.
-- **Meisterschaft:** Nachfahrt des 69. Gordon Bennett (Start Gladbeck, 29.08.2026), „inoffizielles Fan-Projekt“. Gesperrte Länder mit rotem 10-km-Rand, offizielle Landepunkte, Vorflug „KI-optimiert“ (1733 km über die Ostsee nach Finnland) und „Konservativ“ (1059 km), eigene Bestenliste.
+- **Meisterschaft:** Szenarien zur Auswahl. 62. Gordon Bennett 2018 ab Bern (20 Teams, Wetter ERA5 aus dem Open-Meteo-Archiv, Start 19:00 MESZ Berner Allmend angenommen, keine gesperrten Länder, noch ohne Vorflug; Daten in `werkstatt/notizen/gb2018_daten.md`) und Nachfahrt des 69. Gordon Bennett (Start Gladbeck, 29.08.2026), „inoffizielles Fan-Projekt“. Gesperrte Länder mit rotem 10-km-Rand, offizielle Landepunkte, Vorflug „KI-optimiert“ (1733 km über die Ostsee nach Finnland) und „Konservativ“ (1059 km), eigene Bestenliste.
 - Tutorial „Erste Fahrt“ (16 Schritte), Rückblick auf die Fahrt, Seitenansicht unter 50 m, Temp-Diagramm (Skew-T), Prallhöhen-Linie, Autopilot (±5 m, NN oder über Grund).
 
 ## Wichtige Entscheidungen
@@ -31,10 +31,12 @@ Stand 13.10.2026 · Build **2026-10-13.1** (Service Worker `v47`) · Projektplan
 - Landung härter als 2,5 m/s = disqualifiziert (alle gewerteten Aufgaben und Meisterschaft).
 - Füllgrad statt Gas in % in den Anzeigen; Hüllenform: bis 50 % Pilzform, darunter schmaler, unter 20 % flatternde Hülle (Wahl 11.10.).
 - Autopilot: aus bei eigenem Eingriff, Sand unter 6 kg je 100 m³ Hülle oder Füllgrad unter 40 %; überall erlaubt, ausblendbar über `AP_HIDE`.
-- Meisterschaft: offizielle Sperrflächen und Spuren zurückgestellt; in Auswertung und Rangliste soll später nur der Name des Spielers stehen, ohne Team und Nation (erst auf Nachfrage umsetzen; derzeit noch „JAM-1 CoolRidings“).
+- Meisterschaft: offizielle Sperrflächen und Spuren zurückgestellt. Eigenes Team: Name, Land frei wählbar oder ohne Land (dann nur der Name); mit Land z. B. GER-4 (seit 26.10.2026, ersetzt JAM-1 CoolRidings).
 - App ist nicht kommerziell, nur für den privaten Gebrauch.
 
 ## Offen
+- Build 2026-10-26.1 auf den Server: diesmal auch `api/api.php` ersetzen.
+- Vorflug-Routen 2018: Wetterpaket der Region nötig (vom Nutzer in der App zu erzeugen).
 - PHP auf dem Server einrichten, dann `…/gasballon/api/api.php?action=check` prüfen.
 - Am Handy prüfen: Autopilot, Prallhöhe, Hüllenform, Melodie; restliche Basis-Tests im Blatt `Abnahme_Basis` (T-06, T-15 bis T-20, T-22 bis T-24, T-26 bis T-30, T-36, T-40, T-41).
 - Rückmeldung erfahrener Gasballonpiloten zu Sonne, Nacht und Regen (OP-46).
