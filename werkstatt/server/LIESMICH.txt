@@ -1,4 +1,4 @@
-Gasballon-Simulator, Web-App, Build 2026-10-26.2
+Gasballon-Simulator, Web-App, Build 2026-10-26.3
 ==================================================
 
 DIESES UPDATE: index.html, sw.js UND api/api.php ersetzen (api.php kennt jetzt die zweite Rennliste 2018).

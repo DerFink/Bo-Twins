@@ -1,6 +1,6 @@
 # Gasballon-Simulator: Stand und Arbeitsweise
 
-Stand 13.10.2026 · Build **2026-10-26.2** (Service Worker `v49`) · Projektplan **0.51**
+Stand 13.10.2026 · Build **2026-10-26.3** (Service Worker `v50`) · Projektplan **0.51**
 
 ## Wo die App läuft
 - Test: https://derfink.github.io/Bo-Twins/spiel/ (GitHub-Repository derfink/Bo-Twins, Ordner `spiel/`)
@@ -36,7 +36,7 @@ Stand 13.10.2026 · Build **2026-10-26.2** (Service Worker `v49`) · Projektplan
 
 ## Offen
 - Build 2026-10-26.1 auf den Server: diesmal auch `api/api.php` ersetzen.
-- Vorflug-Routen 2018: Wetterpaket der Region nötig (vom Nutzer in der App zu erzeugen).
+- Gordon Bennett 2018 ist gesperrt („in Vorbereitung“): Das Open-Meteo-Archiv liefert für 2018 keine Werte in der Höhe (alle null). Plan: ERA5 auf Druckflächen über Copernicus (Konto des Nutzers, Download per Formular, GRIB), daraus Wetterpaket für App und Vorflug. Freischalten über `ready` in `GB_SC.gb62`.
 - PHP auf dem Server einrichten, dann `…/gasballon/api/api.php?action=check` prüfen.
 - Am Handy prüfen: Autopilot, Prallhöhe, Hüllenform, Melodie; restliche Basis-Tests im Blatt `Abnahme_Basis` (T-06, T-15 bis T-20, T-22 bis T-24, T-26 bis T-30, T-36, T-40, T-41).
 - Rückmeldung erfahrener Gasballonpiloten zu Sonne, Nacht und Regen (OP-46).

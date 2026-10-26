@@ -33,3 +33,6 @@ Landekoordinaten und Landezeiten stehen im PDF nicht lesbar; Landeorte wären ü
 Quellen: legends.gordonbennett.aero (Seite des 62. Rennens, Ergebnis-PDF results_gb062.pdf, Berichte der Race Control), ltaflightmagazine.com/gb2018-pol2wins, fai.org.
 
 Wetter 2018: Die für 2026 genutzte Historical-Forecast-Schnittstelle reicht nicht bis 2018. Möglich: Open-Meteo Archiv (ERA5), falls es Druckflächen liefert (offen, von hier nicht abrufbar), sonst ERA5 auf Druckflächen über Copernicus CDS (kostenlos, Konto nötig).
+
+
+Ergebnis 26.10.2026: Das Open-Meteo-Archiv liefert für 2018 alle Druckflächen-Werte als null (Test des Nutzers). Szenario in Build 2026-10-26.3 gesperrt; nächster Schritt ERA5 über Copernicus.
