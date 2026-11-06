@@ -1,171 +1,358 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Bo Twins Test</title>
-<!-- Autor: Claude im Auftrag von Erich | Letzte Aenderung: 2026-11-05 21:40 | v1 17:55 Erste Version: Bluetooth-Testseite (Live-Werte, Referenzvergleich, LoRa, CSV) | v2 21:40 Fremdpakete, Hoer-/Sendemodus, Knopf Senden | v3 22:15 Geraetesuche auch ueber den Dienst, nicht nur ueber den Namen -->
+<!-- Autor: Claude im Auftrag von Erich
+     Letzte Aenderung: 2026-11-06 09:20
+     v1 2026-11-05 17:55  Erste Version: Bluetooth-Testseite (Live-Werte, Referenzvergleich, LoRa, CSV)
+     v2 2026-11-05 21:40  Fremdpakete, Hoer-/Sendemodus, Knopf Senden
+     v3 2026-11-05 22:15  Geraetesuche auch ueber den Dienst, nicht nur ueber den Namen
+     v4 2026-11-06 09:20  Neu gebaut: Karte im Hintergrund (Position des Orbits, Pfeil mit Kurs, Spur), Konsole mit aufklappbaren Zeilen,
+                          Aufnahme per Knopf mit Sicherung im Browser (IndexedDB), automatisches Neuverbinden, Marker, Speed/Kurs/HDOP,
+                          Paketnummern und Position des Gegenstuecks in der CSV -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
-:root{--bg:#0d1117;--card:#161b22;--line:#30363d;--tx:#e6edf3;--mu:#8b949e;--ok:#4ade80;--ref:#f0b429;--sens:#58a6ff;--bad:#f87171}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px system-ui,sans-serif;padding:14px;max-width:560px;margin:auto}
-h1{font-size:18px;margin:0 0 8px}small{color:var(--mu)}
-.chip{display:inline-block;padding:4px 10px;border-radius:12px;background:#3a2a05;color:var(--ref);font-size:13px}.chip.on{background:#12351f;color:var(--ok)}
-.row{display:flex;gap:8px;margin:10px 0}.t{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;min-width:0}
-.t small{display:block;font-size:12px}.t b{font-size:21px;white-space:nowrap}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin:10px 0}
-input{width:80px;background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:16px}
-button{background:#1f6feb;color:#fff;border:0;border-radius:10px;padding:10px 14px;font-size:15px}button.g{background:var(--line)}button:disabled{opacity:.5}
-table{width:100%;font-size:14px;border-collapse:collapse}td{padding:3px 0}td+td{text-align:right}
-canvas{width:100%;height:150px;background:var(--bg);border-radius:8px;display:block}
-.ok{color:var(--ok)}.ref{color:var(--ref)}
+:root{--bg:#0d1117;--card:#161b22;--line:#30363d;--tx:#e6edf3;--mu:#8b949e;--ok:#4ade80;--warn:#f0b429;--bad:#f87171;--sens:#58a6ff}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:15px system-ui,sans-serif;overflow:hidden}
+#map{position:absolute;inset:0;z-index:0}
+.top{position:absolute;top:calc(env(safe-area-inset-top) + 8px);left:8px;right:8px;display:flex;gap:6px;align-items:center;z-index:500;pointer-events:none}
+.top>*{pointer-events:auto}
+.chip{flex:1 1 auto;min-width:0;background:rgba(58,42,5,.92);color:var(--warn);padding:6px 11px;border-radius:14px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chip.on{background:rgba(18,53,31,.92);color:var(--ok)}
+.sp{margin-left:auto}
+button{background:#1f6feb;color:#fff;border:0;border-radius:11px;padding:9px 13px;font-size:14px;white-space:nowrap}
+.top button{padding:8px 10px;font-size:13px;flex:none}button.g{background:rgba(48,54,61,.95)}button:disabled{opacity:.5}
+button.rec{background:#b42318;font-weight:600}
+.mini{position:absolute;top:calc(env(safe-area-inset-top) + 56px);left:8px;z-index:500;background:rgba(13,17,23,.88);border-radius:10px;padding:5px 9px;font-size:13px;line-height:1.35}
+.mini b{font-size:17px}
+#follow{position:absolute;right:8px;top:calc(env(safe-area-inset-top) + 56px);z-index:500}
+#mk{position:absolute;right:8px;top:calc(env(safe-area-inset-top) + 100px);z-index:500;background:rgba(13,17,23,.92);border-radius:12px;padding:8px;display:none;flex-direction:column;gap:6px}
+#mk input{background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:15px;width:170px}
+#banner{position:absolute;left:8px;right:8px;top:calc(env(safe-area-inset-top) + 100px);z-index:600;background:#3a2a05;color:#f6e3a8;border-radius:12px;padding:10px;display:none;font-size:14px}
+#banner button{margin:6px 6px 0 0;padding:7px 11px}
+.con{position:absolute;left:0;right:0;bottom:0;max-height:58vh;overflow:auto;z-index:500;background:rgba(13,17,23,.95);border-radius:16px 16px 0 0;padding:8px 8px calc(env(safe-area-inset-bottom) + 8px)}
+.r{background:var(--card);border:1px solid var(--line);border-radius:10px;margin:5px 0;padding:8px 10px}
+.h{display:flex;align-items:center;gap:8px;cursor:pointer;min-height:24px}.h b{width:50px;flex:none}.h .v{margin-left:auto;text-align:right}.h .ch{color:var(--mu);width:12px;text-align:center}
+.mu{color:var(--mu)}
+.d{width:12px;height:12px;border-radius:6px;display:inline-block;margin-right:3px;vertical-align:-1px;background:#6b7280}.d.g{background:var(--ok)}.d.y{background:var(--warn)}.d.rd{background:var(--bad)}
+.det{display:none;margin-top:8px;font-size:13px}.open .det{display:block}
+.det table{width:100%;border-collapse:collapse}.det td{padding:2px 0}.det td+td{text-align:right}
+canvas{width:100%;display:block;background:var(--bg);border-radius:8px}
+input.ref{width:80px;background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:7px;font-size:15px}
+.seg button{padding:5px 10px;font-size:12px;margin-right:4px}.seg button.act{background:#1f6feb}
+.arr{width:34px;height:34px;transition:transform .8s linear}
+.leaflet-container{background:#1b1f27}
 </style></head><body>
-<h1>Bo Twins Test</h1>
-<span class="chip" id="chip">Nicht verbunden</span> <small id="msg"></small>
+<div id="map"></div>
 
-<div class="row">
- <div class="t"><small>Temperatur</small><b id="vT">-</b></div>
- <div class="t"><small>Feuchte</small><b id="vH">-</b></div>
- <div class="t"><small>Druck</small><b id="vP">-</b></div>
+<div class="top">
+  <span class="chip" id="chip">Nicht verbunden</span>
+    <button class="g" id="bMk">⚑</button>
+  <button class="g" id="bRec">● REC</button>
+</div>
+<div class="mini" id="mini"><b id="mKmh">-</b> km/h<br><span class="mu">Kurs</span> <span id="mCrs">-</span></div>
+<button class="g" id="follow" title="Karte folgt dem Orbit">⌖</button>
+<div id="mk">
+  <button class="g" data-m="Funkloch">Funkloch</button>
+  <button class="g" data-m="Unterführung">Unterführung</button>
+  <button class="g" data-m="Auffällig">Auffällig</button>
+  <div style="display:flex;gap:6px"><input id="mkTxt" placeholder="Eigener Text"><button id="mkOk">OK</button></div>
+</div>
+<div id="banner"></div>
+
+<div class="con" id="con">
+ <div class="r" data-s="bat"><div class="h"><b>Akku</b><span class="mu" id="batSub"></span><span class="v" id="batV">-</span><span class="ch">▸</span></div>
+  <div class="det"><table><tr><td>Spannung</td><td id="batD">-</td></tr><tr><td>USB</td><td id="usbD">-</td></tr></table><canvas id="cBat"></canvas></div></div>
+
+ <div class="r" data-s="bme"><div class="h"><b>BME</b><span id="bmeV" class="mu">-</span><span class="v"></span><span class="ch">▸</span></div>
+  <div class="det"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">Referenz
+    <input class="ref" id="ref" inputmode="decimal" placeholder="21,8"> °C <button id="bRef" style="padding:7px 11px">Setzen</button></div>
+   <canvas id="cBme"></canvas>
+   <div class="mu" style="margin-top:4px">Gelbe Punkte: Referenz. Abweichung letzte: <b id="dLast">-</b>, Mittel: <b id="dAvg">-</b></div></div></div>
+
+ <div class="r" data-s="gps"><div class="h"><b>GPS</b><span class="d" id="gpsL"></span><span id="gpsT" class="mu">-</span><span class="v" id="gpsSats">-</span><span class="ch">▸</span></div>
+  <div class="det"><table><tr><td>Position</td><td id="gPos">-</td></tr><tr><td>Höhe</td><td id="gAlt">-</td></tr>
+   <tr><td>HDOP (kleiner ist besser)</td><td id="gHdop">-</td></tr><tr><td>Geschwindigkeit</td><td id="gKmh">-</td></tr><tr><td>Kurs</td><td id="gCrs">-</td></tr></table></div></div>
+
+ <div class="r" data-s="lora"><div class="h"><b>LoRa</b><span><span class="d" id="lBt"></span>BoTwin</span><span><span class="d" id="lFr"></span>Fremd</span><span class="v" id="lRssiS">-</span><span class="ch">▸</span></div>
+  <div class="det"><table>
+   <tr><td>Modus</td><td id="lMode">-</td></tr>
+   <tr><td>Gesendet / Empfangen</td><td id="lCnt">-</td></tr>
+   <tr><td>Paketnummer eigene / Gegenstelle</td><td id="lSeq">-</td></tr>
+   <tr><td>Verloren (nach Nummern)</td><td id="lLoss">-</td></tr>
+   <tr><td>RSSI / SNR</td><td id="lRs">-</td></tr>
+   <tr><td>Letztes Paket</td><td id="lAge">-</td></tr>
+   <tr><td>Gegenstück Position / Entfernung</td><td id="lPeer">-</td></tr>
+   <tr><td>Fremdpakete gesamt</td><td id="fSum">0</td></tr></table>
+   <div style="margin:8px 0"><button id="bSend" class="g" disabled>Senden: aus</button> <span class="mu">Standard ist nur Hören.</span></div>
+   <table id="fTab"></table></div></div>
+
+ <div class="r" data-s="all"><div class="h"><b>Alle</b><span class="mu">Verlauf aller Werte</span><span class="v"></span><span class="ch">▸</span></div>
+  <div class="det"><div class="seg" id="seg"><button data-min="5">5 min</button><button data-min="20" class="act">20 min</button><button data-min="60">60 min</button></div>
+   <canvas id="cAll" style="margin-top:6px"></canvas></div></div>
 </div>
 
-<div class="card"><b>Temperaturvergleich</b>
- <div style="margin:8px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap">Referenzthermometer
-  <input id="ref" inputmode="decimal" placeholder="21,8"> °C <button id="bRef">Eintragen</button></div>
- <canvas id="cv" width="700" height="300"></canvas>
- <small><span style="color:var(--sens)">━</span> Sensor &nbsp; <span class="ref">●</span> Referenz (Verlauf: letzte 20 min)</small>
- <div style="margin-top:6px">Letzte Abweichung: <b class="ref" id="dLast">-</b> &nbsp; Mittel: <b id="dAvg">-</b></div>
- <small>Tipp: Sensor und Thermometer 10 Minuten nebeneinander liegen lassen, der Sensor wird vom Board etwas erwärmt.</small>
-</div>
-
-<div class="card"><table>
- <tr><td><b>LoRa</b></td><td id="lState">-</td></tr>
- <tr><td>Modus</td><td id="lMode">-</td></tr>
- <tr><td>Gesendet / Empfangen</td><td id="lCnt">-</td></tr>
- <tr><td>Signalstärke (RSSI)</td><td id="lRssi">-</td></tr>
- <tr><td>Signalqualität (SNR)</td><td id="lSnr">-</td></tr>
- <tr><td>Letztes Paket</td><td id="lAge">-</td></tr>
-</table>
- <div style="margin-top:8px"><button id="bSend" class="g" disabled>Senden: aus</button> <small>Standard ist nur Hören. Ein Gerät muss einmal senden, damit sich zwei Geräte finden.</small></div>
-</div>
-
-<div class="card"><b>Fremdsignale</b> <small id="fSum">noch keine</small>
- <table id="fTab" style="margin-top:6px"></table></div>
-
-<div class="card"><table>
- <tr><td><b>GPS</b></td><td id="gState">-</td></tr>
- <tr><td>Position</td><td id="gPos">-</td></tr>
- <tr><td>Höhe</td><td id="gAlt">-</td></tr>
- <tr><td><b>Akku</b></td><td id="bat">-</td></tr>
- <tr><td>Gerät</td><td id="role">-</td></tr>
-</table></div>
-
-<div class="row"><button id="bConn" style="flex:1">Verbinden</button><button id="bCsv" class="g" style="flex:1">CSV speichern</button></div>
-<small id="hint"></small>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
-const NUS='6e400001-b5a3-f393-e0a9-e50e24dcca9e', TX='6e400003-b5a3-f393-e0a9-e50e24dcca9e', RX='6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+const NUS='6e400001-b5a3-f393-e0a9-e50e24dcca9e',TX='6e400003-b5a3-f393-e0a9-e50e24dcca9e',RX='6e400002-b5a3-f393-e0a9-e50e24dcca9e';
 const $=id=>document.getElementById(id);
-const rows=[];            // alle Datenzeilen für CSV
-const hist=[];            // {t, temp}
-const refs=[];            // {t, val, temp}
-let buf='', dev=null, wake=null;
 const PROF=['Bo Twins','Meshtastic EU868','LoRaWAN 868,1','LoRaWAN 868,3','LoRaWAN 868,5'];
 const MODE=['nur Hören','Antwort auf Gegenstück','Senden (manuell)'];
-const fcount=[0,0,0,0,0], flist=[];
-const HEAD='zeit,ms,temp_C,feuchte_pct,druck_hPa,fix,sats,lat,lon,hoehe_m,akku_mV,usb,rolle,lora_tx,lora_rx,rssi_dBm,snr_dB,alter_rx_s,gegenstelle,profil,sendemodus,referenz_C';
-const num=s=>s==='-'?NaN:parseFloat(s);
+const num=s=>(s===undefined||s==='-'||s==='')?NaN:parseFloat(s);
 const f=(v,d,u)=>isNaN(v)?'-':v.toFixed(d).replace('.',',')+(u?' '+u:'');
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const HEAD=['zeit','typ','ms','temp_C','feuchte_pct','druck_hPa','fix','sats','hdop','lat','lon','hoehe_m','kmh','kurs_deg','akku_mV','usb','rolle','lora_tx','lora_rx','tx_seq','rx_seq','rssi_dBm','snr_dB','alter_rx_s','gegenstelle','gegen_lat','gegen_lon','profil','sendemodus','fremd_gesamt','referenz_C','text','fremd_profil','fremd_len','fremd_rssi','fremd_snr','fremd_crc','fw'];
 
+/* ---------- Zustand ---------- */
+let hist=[], refs=[], last=null, lastDMs=0, lastLine=0;
+let flist=[], fTotalSeen=0, lastForeignMs=0;
+let rxChar=null, dev=null, wanted=false, sendOn=false, wake=null;
+let rxCountPrev=0, seqPrev=null, seqRecv=0, seqLost=0;
+let minutes=20;
+
+/* ---------- Aufnahme mit Sicherung im Browser ---------- */
+let rec={on:false,start:0}, idb=null, backupRows=0;
+function idbOpen(){return new Promise(res=>{try{const r=indexedDB.open('botwins-test',1);
+  r.onupgradeneeded=()=>r.result.createObjectStore('rows',{autoIncrement:true});
+  r.onsuccess=()=>{idb=r.result;res()};r.onerror=()=>res()}catch(e){res()}})}
+function idbAdd(row){if(!idb)return;try{idb.transaction('rows','readwrite').objectStore('rows').add(row)}catch(e){}backupRows++}
+function idbAll(){return new Promise(res=>{if(!idb)return res([]);const q=idb.transaction('rows').objectStore('rows').getAll();q.onsuccess=()=>res(q.result);q.onerror=()=>res([])})}
+function idbClear(){return new Promise(res=>{if(!idb)return res();const t=idb.transaction('rows','readwrite');t.objectStore('rows').clear();t.oncomplete=()=>{backupRows=0;res()};t.onerror=()=>res()})}
+const q=v=>{v=String(v??'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+function mk(obj){return HEAD.map(h=>q(obj[h]??'')).join(',')}
+function addRow(obj){obj.zeit=new Date().toISOString();if(rec.on){idbAdd(mk(obj));}}
+async function saveCsv(){
+  const rows=await idbAll();if(!rows.length)return;
+  const blob=new Blob([HEAD.join(',')+'\n'+rows.join('\n')+'\n'],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='botwins_'+new Date(rec.start||Date.now()).toISOString().slice(0,16).replace(/[:T]/g,'-')+'.csv';a.click();
+}
+async function showBanner(){
+  const rows=await idbAll();backupRows=rows.length;const b=$('banner');
+  if(rec.on||!rows.length){b.style.display='none';return}
+  b.style.display='block';
+  b.innerHTML='Gesicherte Aufnahme: '+rows.length+' Zeilen.<br><button id="bSv">CSV speichern</button><button id="bDs" class="g">Verwerfen</button>';
+  $('bSv').onclick=saveCsv;$('bDs').onclick=async()=>{await idbClear();showBanner()};
+}
+$('bRec').onclick=async()=>{
+  if(!rec.on){
+    if(backupRows>0){$('banner').style.outline='2px solid #f0b429';return}
+    rec.on=true;rec.start=Date.now();$('banner').style.display='none';
+    addRow({typ:'E',text:'Aufnahme gestartet'});
+  }else{
+    addRow({typ:'E',text:'Aufnahme beendet'});rec.on=false;
+    await saveCsv();await showBanner();
+  }
+  updRec();
+};
+function updRec(){const b=$('bRec');
+  if(rec.on){const s=Math.floor((Date.now()-rec.start)/1000);b.className='rec';b.textContent='■ '+Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+  else{b.className='g';b.textContent='● REC'}}
+setInterval(updRec,1000);
+
+/* ---------- Karte ---------- */
+let map=null,mOrbit=null,mPeer=null,track=null,trackLast=null,follow=true,lastCenterCheck=0,arrowEl=null,curPos=null;
+function dist(a,b,c,d){const R=6371000,t=x=>x*Math.PI/180,dl=t(c-a),dn=t(d-b);const h=Math.sin(dl/2)**2+Math.cos(t(a))*Math.cos(t(c))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
+function initMap(){
+  if(typeof L==='undefined'){$('map').style.background='#1b1f27';return}
+  map=L.map('map',{zoomControl:false,attributionControl:true}).setView([52.4736,13.4018],15);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+  track=L.polyline([],{color:'#1f6feb',weight:4}).addTo(map);
+  map.on('dragstart',()=>{follow=false;$('follow').className='g';});
+  const icon=L.divIcon({className:'',iconSize:[34,34],iconAnchor:[17,17],html:'<svg class="arr" id="arr" viewBox="0 0 34 34"><circle cx="17" cy="17" r="15" fill="rgba(31,111,235,.25)"/><path d="M17 4 L26 28 L17 23 L8 28 Z" fill="#1f6feb" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/></svg>'});
+  mOrbit=L.marker([52.4736,13.4018],{icon,opacity:0}).addTo(map);
+}
+$('follow').onclick=()=>{follow=true;$('follow').className='g';if(curPos&&map)map.panTo(curPos,{animate:true,duration:1.5})};
+function mapUpdate(d){
+  const fixOk=d.fix&&!isNaN(d.lat);
+  if(fixOk){
+    curPos=[d.lat,d.lon];
+    if(map){
+      if(!arrowEl)arrowEl=document.getElementById('arr');
+      mOrbit.setLatLng(curPos).setOpacity(1);
+      if(arrowEl){const ok=!isNaN(d.course)&&d.kmh>2;arrowEl.style.transform='rotate('+(ok?d.course:0)+'deg)';arrowEl.style.opacity=ok?1:.7}
+      const pts=track.getLatLngs();
+      if(!trackLast||dist(trackLast[0],trackLast[1],d.lat,d.lon)>4){track.addLatLng(curPos);trackLast=curPos}
+      const now=Date.now();
+      if(follow&&now-lastCenterCheck>10000){            // alle 10 s pruefen, nur bei Aenderung neu zentrieren
+        lastCenterCheck=now;
+        const c=map.getCenter();
+        if(dist(c.lat,c.lng,d.lat,d.lon)>8)map.panTo(curPos,{animate:true,duration:2.5,easeLinearity:.2});
+      }
+    }
+  }
+  if(map&&!isNaN(d.plat)&&!isNaN(d.plon)){
+    if(!mPeer)mPeer=L.circleMarker([d.plat,d.plon],{radius:9,color:'#fff',weight:2,fillColor:'#f0b429',fillOpacity:1}).bindTooltip('Gegenstück',{permanent:false}).addTo(map);
+    else mPeer.setLatLng([d.plat,d.plon]);
+  }
+}
+function addFlag(text){
+  if(!map||!curPos)return;
+  L.marker(curPos,{icon:L.divIcon({className:'',html:'<div style="font-size:22px;transform:translate(-4px,-22px)">⚑</div>',iconSize:[20,20]})}).bindTooltip(text,{permanent:true,direction:'right',offset:[10,-8]}).addTo(map);
+}
+
+/* ---------- Marker ---------- */
+$('bMk').onclick=()=>{const m=$('mk');m.style.display=m.style.display==='flex'?'none':'flex'};
+function setMarker(t){
+  const d=last||{};
+  addRow({typ:'M',ms:d.ms,lat:d.lat,lon:d.lon,fix:d.fix?1:0,text:t});
+  addFlag(t);$('mk').style.display='none';
+  const c=$('chip');c.textContent='Marker: '+t+(rec.on?'':' (nur Karte)');setTimeout(()=>chipUpd(),2500);
+}
+document.querySelectorAll('#mk [data-m]').forEach(b=>b.onclick=()=>setMarker(b.dataset.m));
+$('mkOk').onclick=()=>{const t=$('mkTxt').value.trim();if(t){setMarker(t);$('mkTxt').value=''}};
+
+/* ---------- Daten verarbeiten ---------- */
 function onLine(line){
   const p=line.trim().split(',');
   if(p[0]==='F'&&p.length>=8){onForeign(p);return}
-  if(p[0]!=='D'||p.length<19) return;
-  const now=Date.now();
-  const d={temp:num(p[2]),hum:num(p[3]),press:num(p[4]),fix:p[5]==='1',sats:+p[6],lat:p[7],lon:p[8],alt:num(p[9]),
-    bat:+p[10],usb:p[11]==='1',role:p[12],tx:+p[13],rx:+p[14],rssi:num(p[15]),snr:num(p[16]),age:num(p[17]),peer:p[18],prof:p[19]===undefined?0:+p[19],mode:p[20]===undefined?0:+p[20]};
-  rows.push(now+','+p.slice(1).join(',')+',');
-  hist.push({t:now,temp:d.temp}); while(hist.length&&now-hist[0].t>20*60e3) hist.shift();
-  show(d); draw();
+  if(p[0]!=='D'||p.length<19)return;
+  const now=Date.now();lastDMs=now;
+  const d={ms:+p[1],temp:num(p[2]),hum:num(p[3]),press:num(p[4]),fix:p[5]==='1',sats:+p[6],lat:num(p[7]),lon:num(p[8]),alt:num(p[9]),
+    bat:+p[10],usb:p[11]==='1',role:p[12],tx:+p[13],rx:+p[14],rssi:num(p[15]),snr:num(p[16]),age:num(p[17]),peer:p[18],
+    prof:p[19]===undefined?0:+p[19],mode:p[20]===undefined?0:+p[20],
+    kmh:num(p[21]),course:num(p[22]),hdop:num(p[23]),txSeq:num(p[24]),rxSeq:num(p[25]),plat:num(p[26]),plon:num(p[27]),fTot:num(p[28]),fw:p[29]||''};
+  last=d;
+  // Paketnummern: Verluste zaehlen
+  if(d.rx>rxCountPrev&&!isNaN(d.rxSeq)){
+    if(seqPrev!==null&&d.rxSeq>seqPrev&&d.rxSeq-seqPrev<1000){seqLost+=d.rxSeq-seqPrev-1}
+    seqRecv+=d.rx-rxCountPrev;seqPrev=d.rxSeq;
+  }
+  rxCountPrev=d.rx;
+  hist.push({t:now,temp:d.temp,hum:d.hum,press:d.press,bat:d.bat/1000,sats:d.sats,hdop:d.hdop,kmh:d.kmh,rssi:d.rx>0&&d.age<20?d.rssi:NaN,fremd:isNaN(d.fTot)?0:d.fTot});
+  while(hist.length&&now-hist[0].t>3*3600e3)hist.shift();
+  addRow({typ:'D',ms:d.ms,temp_C:isNaN(d.temp)?'':d.temp,feuchte_pct:isNaN(d.hum)?'':d.hum,druck_hPa:isNaN(d.press)?'':d.press,fix:d.fix?1:0,sats:d.sats,hdop:isNaN(d.hdop)?'':d.hdop,
+    lat:isNaN(d.lat)?'':d.lat,lon:isNaN(d.lon)?'':d.lon,hoehe_m:isNaN(d.alt)?'':d.alt,kmh:isNaN(d.kmh)?'':d.kmh,kurs_deg:isNaN(d.course)?'':d.course,
+    akku_mV:d.bat,usb:d.usb?1:0,rolle:d.role,lora_tx:d.tx,lora_rx:d.rx,tx_seq:isNaN(d.txSeq)?'':d.txSeq,rx_seq:isNaN(d.rxSeq)?'':d.rxSeq,
+    rssi_dBm:isNaN(d.rssi)?'':d.rssi,snr_dB:isNaN(d.snr)?'':d.snr,alter_rx_s:isNaN(d.age)?'':d.age,gegenstelle:d.peer==='-'?'':d.peer,
+    gegen_lat:isNaN(d.plat)?'':d.plat,gegen_lon:isNaN(d.plon)?'':d.plon,profil:d.prof,sendemodus:d.mode,fremd_gesamt:isNaN(d.fTot)?'':d.fTot,fw:d.fw});
+  show(d);mapUpdate(d);drawOpen();
 }
-function show(d){
-  $('vT').textContent=f(d.temp,1,'°C'); $('vH').textContent=f(d.hum,0,'%'); $('vP').textContent=f(d.press,0,'hPa');
-  $('gState').textContent=d.fix?'Fix, '+d.sats+' Satelliten':'kein Fix ('+d.sats+' Sat.)'; $('gState').className=d.fix?'ok':'';
-  $('gPos').textContent=d.fix?(+d.lat).toFixed(5)+' N, '+(+d.lon).toFixed(5)+' E':'-';
-  $('gAlt').textContent=f(d.alt,0,'m');
-  $('bat').textContent=(d.bat/1000).toFixed(2).replace('.',',')+' V'+(d.usb?', USB angeschlossen':'');
-  $('role').textContent=d.role==='B'?'Base':'Orbit';
-  $('lCnt').textContent=d.tx+' / '+d.rx;
-  $('lRssi').textContent=f(d.rssi,0,'dBm'); $('lSnr').textContent=f(d.snr,1,'dB');
-  $('lAge').textContent=isNaN(d.age)?'noch keins':'vor '+d.age+' s'+(d.peer==='B'?' (von Base)':d.peer==='O'?' (von Orbit)':'');
-  $('lMode').textContent=MODE[d.mode]+', Profil: '+PROF[d.prof];
-  $('bSend').textContent='Senden: '+(sendOn?'an':'aus');
-  const ok=!isNaN(d.age)&&d.age<20;
-  $('lState').textContent=ok?'Empfang ok':(d.rx>0?'Funkstille':'noch nichts empfangen'); $('lState').className=ok?'ok':'';
-}
-let sendOn=false, rxChar=null;
 function onForeign(p){
-  const i=+p[2]; fcount[i]++;
-  flist.unshift(new Date().toLocaleTimeString('de-DE')+'|'+PROF[i]+'|'+p[3]+' Byte, '+p[4]+' dBm, SNR '+p[5]+(p[6]==='1'?'':' (Prüfsumme falsch)'));
+  const i=+p[2];lastForeignMs=Date.now();fTotalSeen++;
+  flist.unshift({t:new Date().toLocaleTimeString('de-DE'),n:PROF[i]||('Profil '+i),txt:p[3]+' Byte, '+p[4]+' dBm, SNR '+p[5]+(p[6]==='1'?'':' (Prüfsumme falsch)')});
   flist.length=Math.min(flist.length,6);
-  $('fSum').textContent=PROF.map((n,k)=>n+': '+fcount[k]).filter((x,k)=>k>0).join(' | ');
-  $('fTab').innerHTML=flist.map(x=>{const q=x.split('|');return '<tr><td>'+q[0]+' '+q[1]+'</td><td>'+q[2]+'</td></tr>'}).join('');
+  addRow({typ:'F',ms:p[1],fremd_profil:i,fremd_len:p[3],fremd_rssi:p[4],fremd_snr:p[5],fremd_crc:p[6],text:p[7],lat:last&&!isNaN(last.lat)?last.lat:'',lon:last&&!isNaN(last.lon)?last.lon:''});
+  $('fTab').innerHTML=flist.map(x=>'<tr><td>'+x.t+' '+x.n+'</td><td>'+x.txt+'</td></tr>').join('');
 }
-function draw(){
-  const c=$('cv'),x=c.getContext('2d'),W=c.width,H=c.height,L=60,B=30,T=14;
-  x.clearRect(0,0,W,H);
-  const now=Date.now(),t0=now-20*60e3;
-  const vals=hist.map(h=>h.temp).concat(refs.map(r=>r.val)).filter(v=>!isNaN(v));
-  if(!vals.length){return}
-  let lo=Math.min(...vals)-.5,hi=Math.max(...vals)+.5; if(hi-lo<2){const m=(hi+lo)/2;lo=m-1;hi=m+1}
-  const X=t=>L+(t-t0)/(20*60e3)*(W-L-8), Y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
-  x.strokeStyle='#21262d';x.fillStyle='#8b949e';x.font='22px system-ui';x.lineWidth=1;
-  for(let i=0;i<=3;i++){const v=lo+(hi-lo)*i/3;x.beginPath();x.moveTo(L,Y(v));x.lineTo(W-8,Y(v));x.stroke();x.fillText(v.toFixed(1),2,Y(v)+7)}
-  x.fillText('vor 20 min',L,H-6);x.fillText('jetzt',W-60,H-6);
-  x.strokeStyle='#58a6ff';x.lineWidth=3;x.beginPath();let st=false;
-  for(const h of hist){if(isNaN(h.temp))continue;const px=X(h.t),py=Y(h.temp);st?x.lineTo(px,py):x.moveTo(px,py);st=true}x.stroke();
-  x.fillStyle='#f0b429';for(const r of refs){if(r.t<t0)continue;x.beginPath();x.arc(X(r.t),Y(r.val),8,0,7);x.fill()}
-}
-function updDev(){
-  const v=refs.map(r=>r.temp-r.val).filter(v=>!isNaN(v));
-  if(!v.length)return;
-  const s=k=>(k>=0?'+':'')+k.toFixed(1).replace('.',',')+' K';
-  $('dLast').textContent=s(v[v.length-1]); $('dAvg').textContent=s(v.reduce((a,b)=>a+b,0)/v.length);
-}
-$('bRef').onclick=()=>{
-  const val=parseFloat($('ref').value.replace(',','.'));
-  if(isNaN(val)){$('msg').textContent='Bitte eine Zahl eintragen';return}
-  const last=hist[hist.length-1]; if(!last){$('msg').textContent='Noch keine Messung da';return}
-  refs.push({t:Date.now(),val,temp:last.temp});
-  if(rows.length) rows[rows.length-1]=rows[rows.length-1].replace(/,$/,','+val);   // Referenz in die letzte CSV-Zeile
-  updDev();draw();$('msg').textContent='';
-};
-$('bSend').onclick=async()=>{
-  if(!rxChar)return; sendOn=!sendOn;
-  try{await rxChar.writeValueWithoutResponse(new TextEncoder().encode(sendOn?'S1\n':'S0\n'))}catch(e){sendOn=!sendOn;$('msg').textContent='Senden nicht möglich: '+e.message}
+function crsTxt(c){if(isNaN(c))return '-';const n=['N','NO','O','SO','S','SW','W','NW'];return Math.round(c)+'° '+n[Math.round(c/45)%8]}
+function show(d){
+  $('batV').textContent=(d.bat/1000).toFixed(2).replace('.',',')+' V';$('batSub').textContent=d.usb?'USB':'';
+  $('batD').textContent=(d.bat/1000).toFixed(3).replace('.',',')+' V';$('usbD').textContent=d.usb?'angeschlossen':'nein';
+  $('bmeV').textContent=f(d.temp,1,'°C')+' · '+f(d.hum,0,'%')+' · '+f(d.press,0,'hPa');
+  $('gpsL').className='d '+(d.fix?'g':'y');$('gpsT').textContent=d.fix?'Fix':'kein Fix';$('gpsSats').textContent=d.sats+' Sat.';
+  $('gPos').textContent=d.fix&&!isNaN(d.lat)?d.lat.toFixed(5)+' N, '+d.lon.toFixed(5)+' E':'-';
+  $('gAlt').textContent=f(d.alt,0,'m');$('gHdop').textContent=f(d.hdop,1);
+  $('gKmh').textContent=f(d.kmh,1,'km/h');$('gCrs').textContent=crsTxt(d.course);
+  $('mKmh').textContent=isNaN(d.kmh)?'-':d.kmh.toFixed(0);$('mCrs').textContent=crsTxt(d.course);
+  const btOk=!isNaN(d.age)&&d.age<20;
+  $('lBt').className='d '+(btOk?'g':(d.rx>0?'y':''));
+  $('lFr').className='d '+(Date.now()-lastForeignMs<60000&&lastForeignMs?'g':(fTotalSeen>0?'y':''));
+  $('lRssiS').textContent=btOk?f(d.rssi,0,'dBm'):'-';
+  $('lMode').textContent=MODE[d.mode]+', Profil: '+(PROF[d.prof]||d.prof);
+  $('lCnt').textContent=d.tx+' / '+d.rx;
+  $('lSeq').textContent=(isNaN(d.txSeq)?'-':d.txSeq)+' / '+(isNaN(d.rxSeq)?'-':d.rxSeq);
+  $('lLoss').textContent=seqRecv?seqLost+' von '+(seqRecv+seqLost)+' ('+(100*seqLost/(seqRecv+seqLost)).toFixed(0)+' %)':'-';
+  $('lRs').textContent=f(d.rssi,0,'dBm')+' / '+f(d.snr,1,'dB');
+  $('lAge').textContent=isNaN(d.age)?'noch keins':'vor '+d.age+' s'+(d.peer==='B'?' (Base)':d.peer==='O'?' (Orbit)':'');
+  let pe='-';if(!isNaN(d.plat)&&!isNaN(d.plon)){pe=d.plat.toFixed(5)+', '+d.plon.toFixed(5);if(d.fix&&!isNaN(d.lat))pe+=' / '+Math.round(dist(d.lat,d.lon,d.plat,d.plon))+' m'}
+  $('lPeer').textContent=pe;$('fSum').textContent=isNaN(d.fTot)?fTotalSeen:d.fTot;
   $('bSend').textContent='Senden: '+(sendOn?'an':'aus');
+  chipUpd();
+}
+
+/* ---------- Diagramme ---------- */
+function stack(cv,rows,rowH){
+  const dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=rows.length*rowH;
+  cv.style.height=H+'px';cv.width=W*dpr;cv.height=H*dpr;
+  const x=cv.getContext('2d');x.scale(dpr,dpr);x.clearRect(0,0,W,H);
+  const now=Date.now(),t0=now-minutes*60e3,L=0,R=W-4;
+  rows.forEach((r,i)=>{
+    const y0=i*rowH+16,y1=(i+1)*rowH-6;
+    const pts=hist.filter(h=>h.t>=t0&&!isNaN(h[r.key]));
+    x.fillStyle='#8b949e';x.font='11px system-ui';x.fillText(r.label,2,i*rowH+11);
+    if(!pts.length){x.fillText('keine Daten',W-70,i*rowH+11);return}
+    let vals=pts.map(h=>h[r.key]);if(r.refs)vals=vals.concat(refs.filter(k=>k.t>=t0).map(k=>k.val));
+    let lo=Math.min(...vals),hi=Math.max(...vals);if(hi-lo<(r.minSpan||1)){const m=(hi+lo)/2;lo=m-(r.minSpan||1)/2;hi=m+(r.minSpan||1)/2}
+    const X=t=>L+(t-t0)/(minutes*60e3)*(R-L),Y=v=>y1-(v-lo)/(hi-lo)*(y1-y0);
+    x.strokeStyle='#21262d';x.beginPath();x.moveTo(L,y1);x.lineTo(R,y1);x.stroke();
+    x.fillStyle='#e6edf3';const lv=pts[pts.length-1][r.key];x.textAlign='right';x.fillText(lv.toFixed(r.dec??1)+(r.unit||'')+'  ['+lo.toFixed(r.dec??1)+' bis '+hi.toFixed(r.dec??1)+']',W-2,i*rowH+11);x.textAlign='left';
+    x.strokeStyle=r.color;x.lineWidth=2;x.beginPath();pts.forEach((h,k)=>{const px=X(h.t),py=Y(h[r.key]);k?(r.step?(x.lineTo(px,Y(pts[k-1][r.key])),x.lineTo(px,py)):x.lineTo(px,py)):x.moveTo(px,py)});x.stroke();
+    if(r.refs){x.fillStyle='#f0b429';refs.filter(k=>k.t>=t0).forEach(k=>{x.beginPath();x.arc(X(k.t),Y(k.val),5,0,7);x.fill()})}
+  });
+}
+const ROW_BAT=[{key:'bat',label:'Akku',unit:' V',color:'#4ade80',dec:2,minSpan:.2}];
+const ROW_BME=[{key:'temp',label:'Temperatur',unit:' °C',color:'#58a6ff',refs:true,minSpan:2},{key:'hum',label:'Feuchte',unit:' %',color:'#4ade80',minSpan:5,dec:0},{key:'press',label:'Druck',unit:' hPa',color:'#a78bfa',minSpan:2}];
+const ROW_ALL=[{key:'bat',label:'Akku',unit:' V',color:'#4ade80',dec:2,minSpan:.2},{key:'temp',label:'Temperatur',unit:' °C',color:'#58a6ff',refs:true,minSpan:2},
+  {key:'sats',label:'Satelliten',color:'#f0b429',dec:0,minSpan:4},{key:'hdop',label:'HDOP',color:'#fb923c',minSpan:2},{key:'kmh',label:'Geschwindigkeit',unit:' km/h',color:'#22d3ee',dec:0,minSpan:10},
+  {key:'rssi',label:'LoRa-Signal zum BoTwin',unit:' dBm',color:'#f472b6',dec:0,minSpan:10},{key:'fremd',label:'Fremdpakete (Summe)',color:'#a3a3a3',dec:0,minSpan:2,step:true}];
+function drawOpen(){
+  const o=s=>document.querySelector('[data-s='+s+']').classList.contains('open');
+  if(o('bat'))stack($('cBat'),ROW_BAT,80);
+  if(o('bme'))stack($('cBme'),ROW_BME,80);
+  if(o('all'))stack($('cAll'),ROW_ALL,64);
+}
+document.querySelectorAll('.r .h').forEach(h=>h.onclick=()=>{const r=h.parentElement;r.classList.toggle('open');h.querySelector('.ch').textContent=r.classList.contains('open')?'▾':'▸';drawOpen()});
+document.querySelectorAll('#seg button').forEach(b=>b.onclick=()=>{minutes=+b.dataset.min;document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('act',x===b));drawOpen()});
+
+/* ---------- Referenz ---------- */
+$('bRef').onclick=()=>{
+  const v=parseFloat($('ref').value.replace(',','.'));if(isNaN(v)||!last)return;
+  refs.push({t:Date.now(),val:v,temp:last.temp});
+  addRow({typ:'R',ms:last.ms,temp_C:isNaN(last.temp)?'':last.temp,referenz_C:v});
+  const dv=refs.map(r=>r.temp-r.val).filter(x=>!isNaN(x)),s=k=>(k>=0?'+':'')+k.toFixed(1).replace('.',',')+' K';
+  $('dLast').textContent=s(dv[dv.length-1]);$('dAvg').textContent=s(dv.reduce((a,b)=>a+b,0)/dv.length);drawOpen();
 };
-$('bCsv').onclick=()=>{
-  if(!rows.length){$('msg').textContent='Noch keine Daten';return}
-  const blob=new Blob([HEAD+'\n'+rows.join('\n')+'\n'],{type:'text/csv'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  const n=new Date();a.download='botwins_'+n.toISOString().slice(0,16).replace(/[:T]/g,'-')+'.csv';a.click();
-};
-function setConn(on,name){$('chip').textContent=on?'Verbunden: '+name:'Nicht verbunden';$('chip').className='chip'+(on?' on':'');$('bConn').textContent=on?'Trennen':'Verbinden'}
-$('bConn').onclick=async()=>{
-  if(dev&&dev.gatt.connected){dev.gatt.disconnect();return}
-  if(!navigator.bluetooth){$('msg').textContent='Web Bluetooth fehlt. Bitte Chrome auf Android verwenden.';return}
+
+/* ---------- Bluetooth mit automatischem Neuverbinden ---------- */
+function chipUpd(){
+  const c=$('chip');
+  if(dev&&dev.gatt.connected){
+    const stale=Date.now()-lastDMs>5000&&lastDMs;
+    c.textContent=(stale?'Keine Daten seit '+Math.round((Date.now()-lastDMs)/1000)+' s':'Verbunden: '+dev.name);c.className='chip'+(stale?'':' on');
+  }else if(wanted){c.textContent='Verbindung verloren, verbinde neu…';c.className='chip'}
+  else{c.textContent='Nicht verbunden';c.className='chip'}
+}
+setInterval(chipUpd,1000);
+let buf='';
+async function attach(){
+  const srv=await dev.gatt.connect();
+  const svc=await srv.getPrimaryService(NUS);
+  const ch=await svc.getCharacteristic(TX);
+  ch.addEventListener('characteristicvaluechanged',e=>{
+    buf+=new TextDecoder().decode(e.target.value);let i;
+    while((i=buf.indexOf('\n'))>=0){onLine(buf.slice(0,i));buf=buf.slice(i+1)}
+  });
+  await ch.startNotifications();
+  try{rxChar=await svc.getCharacteristic(RX);$('bSend').disabled=false}catch(e){rxChar=null}
+  buf='';
+}
+async function reconnectLoop(){
+  let n=0;
+  while(wanted&&dev&&!dev.gatt.connected){
+    try{await attach();addRow({typ:'E',text:'Verbindung wieder da'});sendOn=false;chipUpd();return}
+    catch(e){n++;await sleep(Math.min(2000+n*1000,8000))}
+  }
+}
+async function connectBtn(){
+  if(dev&&(dev.gatt.connected||wanted)){wanted=false;try{dev.gatt.disconnect()}catch(e){}dev=null;$('bConnB').textContent='Verbinden';chipUpd();return}
+  if(!navigator.bluetooth){$('chip').textContent='Web Bluetooth fehlt (Chrome auf Android nutzen)';return}
   try{
     dev=await navigator.bluetooth.requestDevice({filters:[{services:[NUS]},{namePrefix:'BoTwins'}],optionalServices:[NUS]});
-    dev.addEventListener('gattserverdisconnected',()=>{setConn(false);sendOn=false;$('bSend').disabled=true;$('msg').textContent='Verbindung verloren'});
-    const srv=await dev.gatt.connect();
-    const ch=await (await srv.getPrimaryService(NUS)).getCharacteristic(TX);
-    ch.addEventListener('characteristicvaluechanged',e=>{
-      buf+=new TextDecoder().decode(e.target.value);
-      let i;while((i=buf.indexOf('\n'))>=0){onLine(buf.slice(0,i));buf=buf.slice(i+1)}
-    });
-    await ch.startNotifications();
-    try{rxChar=await (await srv.getPrimaryService(NUS)).getCharacteristic(RX);$('bSend').disabled=false}catch(e){}
-    setConn(true,dev.name);$('msg').textContent='';
+    dev.addEventListener('gattserverdisconnected',()=>{sendOn=false;$('bSend').disabled=true;if(wanted){addRow({typ:'E',text:'Verbindung verloren'});chipUpd();reconnectLoop()}else chipUpd()});
+    wanted=true;await attach();$('bConnB').textContent='Trennen';
     try{wake=await navigator.wakeLock.request('screen')}catch(e){}
-  }catch(e){$('msg').textContent=e.name==='NotFoundError'?'Kein Gerät gewählt':'Fehler: '+e.message}
+  }catch(e){if(e.name==='NotFoundError'){$('chip').textContent='Kein Gerät gewählt'}else if(wanted&&dev){reconnectLoop()}else{$('chip').textContent='Fehler: '+e.message}}
+}
+$('bSend').onclick=async()=>{
+  if(!rxChar)return;sendOn=!sendOn;
+  try{await rxChar.writeValueWithoutResponse(new TextEncoder().encode(sendOn?'S1\n':'S0\n'))}catch(e){sendOn=!sendOn}
+  $('bSend').textContent='Senden: '+(sendOn?'an':'aus');
 };
-window.feed=onLine;   // zum Testen ohne Gerät
+document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'&&wanted){try{wake=await navigator.wakeLock.request('screen')}catch(e){}}});
+
+/* Verbinden-Knopf in die Kopfzeile */
+const cb=document.createElement('button');cb.id='bConnB';cb.textContent='Verbinden';cb.onclick=connectBtn;document.querySelector('.top').insertBefore(cb,$('chip').nextSibling);
+
+window.feed=onLine;   // zum Testen ohne Geraet
+idbOpen().then(showBanner);initMap();
 </script></body></html>
