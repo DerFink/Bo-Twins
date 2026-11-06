@@ -3,10 +3,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Bo Twins Test</title>
 <!-- Autor: Claude im Auftrag von Erich
-     Letzte Aenderung: 2026-11-06 09:20
+     Letzte Aenderung: 2026-11-06 09:35
      v1 2026-11-05 17:55  Erste Version: Bluetooth-Testseite (Live-Werte, Referenzvergleich, LoRa, CSV)
      v2 2026-11-05 21:40  Fremdpakete, Hoer-/Sendemodus, Knopf Senden
      v3 2026-11-05 22:15  Geraetesuche auch ueber den Dienst, nicht nur ueber den Namen
+     v5 2026-11-06 09:35  Geschwindigkeit/Kurs aus Positionen (schnell) bevorzugt, Bluetooth-Signalstaerke als eigene Zeile und in der CSV
      v4 2026-11-06 09:20  Neu gebaut: Karte im Hintergrund (Position des Orbits, Pfeil mit Kurs, Spur), Konsole mit aufklappbaren Zeilen,
                           Aufnahme per Knopf mit Sicherung im Browser (IndexedDB), automatisches Neuverbinden, Marker, Speed/Kurs/HDOP,
                           Paketnummern und Position des Gegenstuecks in der CSV -->
@@ -63,6 +64,9 @@ input.ref{width:80px;background:var(--bg);color:var(--tx);border:1px solid var(-
  <div class="r" data-s="bat"><div class="h"><b>Akku</b><span class="mu" id="batSub"></span><span class="v" id="batV">-</span><span class="ch">▸</span></div>
   <div class="det"><table><tr><td>Spannung</td><td id="batD">-</td></tr><tr><td>USB</td><td id="usbD">-</td></tr></table><canvas id="cBat"></canvas></div></div>
 
+ <div class="r" data-s="ble"><div class="h"><b>BLE</b><span class="d" id="bleL"></span><span id="bleT" class="mu">-</span><span class="v" id="bleV">-</span><span class="ch">▸</span></div>
+  <div class="det"><div class="mu" style="margin-bottom:4px">Gemessen vom Board an der Verbindung zum Handy. Besser als -80 dBm ist gut, schlechter als -90 dBm wird kritisch.</div><canvas id="cBle"></canvas></div></div>
+
  <div class="r" data-s="bme"><div class="h"><b>BME</b><span id="bmeV" class="mu">-</span><span class="v"></span><span class="ch">▸</span></div>
   <div class="det"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">Referenz
     <input class="ref" id="ref" inputmode="decimal" placeholder="21,8"> °C <button id="bRef" style="padding:7px 11px">Setzen</button></div>
@@ -71,7 +75,7 @@ input.ref{width:80px;background:var(--bg);color:var(--tx);border:1px solid var(-
 
  <div class="r" data-s="gps"><div class="h"><b>GPS</b><span class="d" id="gpsL"></span><span id="gpsT" class="mu">-</span><span class="v" id="gpsSats">-</span><span class="ch">▸</span></div>
   <div class="det"><table><tr><td>Position</td><td id="gPos">-</td></tr><tr><td>Höhe</td><td id="gAlt">-</td></tr>
-   <tr><td>HDOP (kleiner ist besser)</td><td id="gHdop">-</td></tr><tr><td>Geschwindigkeit</td><td id="gKmh">-</td></tr><tr><td>Kurs</td><td id="gCrs">-</td></tr></table></div></div>
+   <tr><td>HDOP (kleiner ist besser)</td><td id="gHdop">-</td></tr><tr><td>Geschwindigkeit (aus Positionen)</td><td id="gKmh">-</td></tr><tr><td>Kurs</td><td id="gCrs">-</td></tr></table></div></div>
 
  <div class="r" data-s="lora"><div class="h"><b>LoRa</b><span><span class="d" id="lBt"></span>BoTwin</span><span><span class="d" id="lFr"></span>Fremd</span><span class="v" id="lRssiS">-</span><span class="ch">▸</span></div>
   <div class="det"><table>
@@ -100,7 +104,7 @@ const MODE=['nur Hören','Antwort auf Gegenstück','Senden (manuell)'];
 const num=s=>(s===undefined||s==='-'||s==='')?NaN:parseFloat(s);
 const f=(v,d,u)=>isNaN(v)?'-':v.toFixed(d).replace('.',',')+(u?' '+u:'');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const HEAD=['zeit','typ','ms','temp_C','feuchte_pct','druck_hPa','fix','sats','hdop','lat','lon','hoehe_m','kmh','kurs_deg','akku_mV','usb','rolle','lora_tx','lora_rx','tx_seq','rx_seq','rssi_dBm','snr_dB','alter_rx_s','gegenstelle','gegen_lat','gegen_lon','profil','sendemodus','fremd_gesamt','referenz_C','text','fremd_profil','fremd_len','fremd_rssi','fremd_snr','fremd_crc','fw'];
+const HEAD=['zeit','typ','ms','temp_C','feuchte_pct','druck_hPa','fix','sats','hdop','lat','lon','hoehe_m','kmh','kurs_deg','akku_mV','usb','rolle','lora_tx','lora_rx','tx_seq','rx_seq','rssi_dBm','snr_dB','alter_rx_s','gegenstelle','gegen_lat','gegen_lon','profil','sendemodus','fremd_gesamt','referenz_C','text','fremd_profil','fremd_len','fremd_rssi','fremd_snr','fremd_crc','fw','kmh_pos','kurs_pos','ble_rssi_dBm'];
 
 /* ---------- Zustand ---------- */
 let hist=[], refs=[], last=null, lastDMs=0, lastLine=0;
@@ -169,7 +173,7 @@ function mapUpdate(d){
     if(map){
       if(!arrowEl)arrowEl=document.getElementById('arr');
       mOrbit.setLatLng(curPos).setOpacity(1);
-      if(arrowEl){const ok=!isNaN(d.course)&&d.kmh>2;arrowEl.style.transform='rotate('+(ok?d.course:0)+'deg)';arrowEl.style.opacity=ok?1:.7}
+      if(arrowEl){const ok=!isNaN(d.crs)&&d.spd>2;arrowEl.style.transform='rotate('+(ok?d.crs:0)+'deg)';arrowEl.style.opacity=ok?1:.7}
       const pts=track.getLatLngs();
       if(!trackLast||dist(trackLast[0],trackLast[1],d.lat,d.lon)>4){track.addLatLng(curPos);trackLast=curPos}
       const now=Date.now();
@@ -210,7 +214,8 @@ function onLine(line){
   const d={ms:+p[1],temp:num(p[2]),hum:num(p[3]),press:num(p[4]),fix:p[5]==='1',sats:+p[6],lat:num(p[7]),lon:num(p[8]),alt:num(p[9]),
     bat:+p[10],usb:p[11]==='1',role:p[12],tx:+p[13],rx:+p[14],rssi:num(p[15]),snr:num(p[16]),age:num(p[17]),peer:p[18],
     prof:p[19]===undefined?0:+p[19],mode:p[20]===undefined?0:+p[20],
-    kmh:num(p[21]),course:num(p[22]),hdop:num(p[23]),txSeq:num(p[24]),rxSeq:num(p[25]),plat:num(p[26]),plon:num(p[27]),fTot:num(p[28]),fw:p[29]||''};
+    kmh:num(p[21]),course:num(p[22]),hdop:num(p[23]),txSeq:num(p[24]),rxSeq:num(p[25]),plat:num(p[26]),plon:num(p[27]),fTot:num(p[28]),fw:p[29]||'',kmhP:num(p[30]),crsP:num(p[31]),ble:num(p[32])};
+  d.spd=!isNaN(d.kmhP)?d.kmhP:d.kmh; d.crs=!isNaN(d.kmhP)?d.crsP:d.course;   // schnelle Werte aus den Positionen bevorzugen
   last=d;
   // Paketnummern: Verluste zaehlen
   if(d.rx>rxCountPrev&&!isNaN(d.rxSeq)){
@@ -218,10 +223,10 @@ function onLine(line){
     seqRecv+=d.rx-rxCountPrev;seqPrev=d.rxSeq;
   }
   rxCountPrev=d.rx;
-  hist.push({t:now,temp:d.temp,hum:d.hum,press:d.press,bat:d.bat/1000,sats:d.sats,hdop:d.hdop,kmh:d.kmh,rssi:d.rx>0&&d.age<20?d.rssi:NaN,fremd:isNaN(d.fTot)?0:d.fTot});
+  hist.push({t:now,temp:d.temp,hum:d.hum,press:d.press,bat:d.bat/1000,sats:d.sats,hdop:d.hdop,kmh:d.spd,ble:d.ble,rssi:d.rx>0&&d.age<20?d.rssi:NaN,fremd:isNaN(d.fTot)?0:d.fTot});
   while(hist.length&&now-hist[0].t>3*3600e3)hist.shift();
   addRow({typ:'D',ms:d.ms,temp_C:isNaN(d.temp)?'':d.temp,feuchte_pct:isNaN(d.hum)?'':d.hum,druck_hPa:isNaN(d.press)?'':d.press,fix:d.fix?1:0,sats:d.sats,hdop:isNaN(d.hdop)?'':d.hdop,
-    lat:isNaN(d.lat)?'':d.lat,lon:isNaN(d.lon)?'':d.lon,hoehe_m:isNaN(d.alt)?'':d.alt,kmh:isNaN(d.kmh)?'':d.kmh,kurs_deg:isNaN(d.course)?'':d.course,
+    lat:isNaN(d.lat)?'':d.lat,lon:isNaN(d.lon)?'':d.lon,hoehe_m:isNaN(d.alt)?'':d.alt,kmh:isNaN(d.kmh)?'':d.kmh,kurs_deg:isNaN(d.course)?'':d.course,kmh_pos:isNaN(d.kmhP)?'':d.kmhP,kurs_pos:isNaN(d.crsP)?'':d.crsP,ble_rssi_dBm:isNaN(d.ble)?'':d.ble,
     akku_mV:d.bat,usb:d.usb?1:0,rolle:d.role,lora_tx:d.tx,lora_rx:d.rx,tx_seq:isNaN(d.txSeq)?'':d.txSeq,rx_seq:isNaN(d.rxSeq)?'':d.rxSeq,
     rssi_dBm:isNaN(d.rssi)?'':d.rssi,snr_dB:isNaN(d.snr)?'':d.snr,alter_rx_s:isNaN(d.age)?'':d.age,gegenstelle:d.peer==='-'?'':d.peer,
     gegen_lat:isNaN(d.plat)?'':d.plat,gegen_lon:isNaN(d.plon)?'':d.plon,profil:d.prof,sendemodus:d.mode,fremd_gesamt:isNaN(d.fTot)?'':d.fTot,fw:d.fw});
@@ -239,11 +244,12 @@ function show(d){
   $('batV').textContent=(d.bat/1000).toFixed(2).replace('.',',')+' V';$('batSub').textContent=d.usb?'USB':'';
   $('batD').textContent=(d.bat/1000).toFixed(3).replace('.',',')+' V';$('usbD').textContent=d.usb?'angeschlossen':'nein';
   $('bmeV').textContent=f(d.temp,1,'°C')+' · '+f(d.hum,0,'%')+' · '+f(d.press,0,'hPa');
+  $('bleL').className='d '+(isNaN(d.ble)?'':(d.ble>-80?'g':(d.ble>-90?'y':'rd')));$('bleT').textContent=isNaN(d.ble)?'kein Wert':(d.ble>-80?'gut':(d.ble>-90?'schwach':'kritisch'));$('bleV').textContent=f(d.ble,0,'dBm');
   $('gpsL').className='d '+(d.fix?'g':'y');$('gpsT').textContent=d.fix?'Fix':'kein Fix';$('gpsSats').textContent=d.sats+' Sat.';
   $('gPos').textContent=d.fix&&!isNaN(d.lat)?d.lat.toFixed(5)+' N, '+d.lon.toFixed(5)+' E':'-';
   $('gAlt').textContent=f(d.alt,0,'m');$('gHdop').textContent=f(d.hdop,1);
-  $('gKmh').textContent=f(d.kmh,1,'km/h');$('gCrs').textContent=crsTxt(d.course);
-  $('mKmh').textContent=isNaN(d.kmh)?'-':d.kmh.toFixed(0);$('mCrs').textContent=crsTxt(d.course);
+  $('gKmh').textContent=f(d.kmhP,1,'km/h')+' (Modul: '+f(d.kmh,1)+')';$('gCrs').textContent=crsTxt(d.crsP)+' (Modul: '+crsTxt(d.course)+')';
+  $('mKmh').textContent=isNaN(d.spd)?'-':d.spd.toFixed(0);$('mCrs').textContent=crsTxt(d.crs);
   const btOk=!isNaN(d.age)&&d.age<20;
   $('lBt').className='d '+(btOk?'g':(d.rx>0?'y':''));
   $('lFr').className='d '+(Date.now()-lastForeignMs<60000&&lastForeignMs?'g':(fTotalSeen>0?'y':''));
@@ -280,13 +286,16 @@ function stack(cv,rows,rowH){
     if(r.refs){x.fillStyle='#f0b429';refs.filter(k=>k.t>=t0).forEach(k=>{x.beginPath();x.arc(X(k.t),Y(k.val),5,0,7);x.fill()})}
   });
 }
+const ROW_BLE=[{key:'ble',label:'Bluetooth-Signal',unit:' dBm',color:'#22d3ee',dec:0,minSpan:10}];
 const ROW_BAT=[{key:'bat',label:'Akku',unit:' V',color:'#4ade80',dec:2,minSpan:.2}];
 const ROW_BME=[{key:'temp',label:'Temperatur',unit:' °C',color:'#58a6ff',refs:true,minSpan:2},{key:'hum',label:'Feuchte',unit:' %',color:'#4ade80',minSpan:5,dec:0},{key:'press',label:'Druck',unit:' hPa',color:'#a78bfa',minSpan:2}];
 const ROW_ALL=[{key:'bat',label:'Akku',unit:' V',color:'#4ade80',dec:2,minSpan:.2},{key:'temp',label:'Temperatur',unit:' °C',color:'#58a6ff',refs:true,minSpan:2},
   {key:'sats',label:'Satelliten',color:'#f0b429',dec:0,minSpan:4},{key:'hdop',label:'HDOP',color:'#fb923c',minSpan:2},{key:'kmh',label:'Geschwindigkeit',unit:' km/h',color:'#22d3ee',dec:0,minSpan:10},
+  {key:'ble',label:'Bluetooth-Signal zum Handy',unit:' dBm',color:'#22d3ee',dec:0,minSpan:10},
   {key:'rssi',label:'LoRa-Signal zum BoTwin',unit:' dBm',color:'#f472b6',dec:0,minSpan:10},{key:'fremd',label:'Fremdpakete (Summe)',color:'#a3a3a3',dec:0,minSpan:2,step:true}];
 function drawOpen(){
   const o=s=>document.querySelector('[data-s='+s+']').classList.contains('open');
+  if(o('ble'))stack($('cBle'),ROW_BLE,80);
   if(o('bat'))stack($('cBat'),ROW_BAT,80);
   if(o('bme'))stack($('cBme'),ROW_BME,80);
   if(o('all'))stack($('cAll'),ROW_ALL,64);
