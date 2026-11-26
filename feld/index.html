@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bo Twins</title>
+<!-- Autor: Claude im Auftrag von Erich | Letzte Aenderung: 2026-11-26 13:30
+ v1 2026-11-05 17:55 Erste Version: Bluetooth-Testseite (Live-Werte, Referenzvergleich, LoRa, CSV)
+ v2 2026-11-05 21:40 Fremdpakete, Hoer-/Sendemodus, Knopf Senden
+ v3 2026-11-26 13:30 Feldtest Tempelhofer Feld: Seiten Live, Karte (Leaflet/OpenStreetMap, ohne Netz Radarbild), Profil (Temperatur und Taupunkt ueber der Hoehe),
+     Test (bisherige Testseite); Taupunkt, Hoehe aus Druckunterschied Orbit/Base, Aufzeichnung auf dem Handy mit CSV und GPX; passt zu Firmware v7 (Felder 34 bis 38) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{--bg:#0d1117;--card:#161b22;--line:#30363d;--tx:#e6edf3;--mu:#8b949e;--ok:#4ade80;--ref:#f0b429;--sens:#58a6ff;--bad:#f87171}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px system-ui,sans-serif;padding:12px;max-width:560px;margin:auto}
+h1{font-size:18px;margin:0 0 6px}small{color:var(--mu)}
+.chip{display:inline-block;padding:4px 10px;border-radius:12px;background:#3a2a05;color:var(--ref);font-size:13px;margin:0 4px 4px 0}.chip.on{background:#12351f;color:var(--ok)}.chip.bad{background:#3a1212;color:var(--bad)}
+.tabs{display:flex;gap:4px;margin:8px 0}.tabs button{flex:1;background:var(--card);color:var(--mu);border:0;border-radius:9px;padding:9px 0;font-size:14px}.tabs button.a{background:#1f6feb;color:#fff}
+.row{display:flex;gap:8px;margin:8px 0}.t{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px;min-width:0}
+.t small{display:block;font-size:12px}.t b{font-size:20px;white-space:nowrap}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin:8px 0}
+input{width:80px;background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:16px}
+button{background:#1f6feb;color:#fff;border:0;border-radius:10px;padding:10px 14px;font-size:15px}button.g{background:var(--line)}button.r{background:#b62324}button:disabled{opacity:.5}
+table{width:100%;font-size:14px;border-collapse:collapse}td{padding:3px 0}td+td{text-align:right}
+canvas{width:100%;display:block;background:var(--bg);border-radius:8px}
+.ok{color:var(--ok)}.ref{color:var(--ref)}
+#map{height:330px;border-radius:12px;border:1px solid var(--line);background:#1d2a1d}
+.mk{width:24px;height:24px;border-radius:50%;border:2px solid #fff;color:#fff;font-weight:700;font-size:13px;line-height:20px;text-align:center}
+.mk.b{background:#1f6feb}.mk.o{background:#f0b429;color:#000}
+.page{display:none}.page.a{display:block}
+</style></head><body>
+<h1>Bo Twins</h1>
+<div><span class="chip" id="chip">Nicht verbunden</span><span class="chip" id="cOrb">Gegenstück: -</span><span class="chip" id="cRec">Aufzeichnung: aus</span></div>
+<small id="msg"></small>
+<div class="tabs"><button class="a" data-p="live">Live</button><button data-p="map">Karte</button><button data-p="prof">Profil</button><button data-p="test">Test</button></div>
+
+<!-- ============ LIVE ============ -->
+<div class="page a" id="p-live">
+ <div class="row">
+  <div class="t"><small>Temperatur</small><b id="vT">-</b></div>
+  <div class="t"><small>Feuchte</small><b id="vH">-</b></div>
+  <div class="t"><small>Druck</small><b id="vP">-</b></div>
+ </div>
+ <div class="row">
+  <div class="t"><small>Taupunkt</small><b id="vD">-</b></div>
+  <div class="t"><small>Akku</small><b id="vB">-</b></div>
+  <div class="t"><small>Geschwindigkeit</small><b id="vV">-</b></div>
+ </div>
+ <div class="card"><table>
+  <tr><td><b>Dieses Gerät</b></td><td id="role">-</td></tr>
+  <tr><td><b>GPS</b></td><td id="gState">-</td></tr>
+  <tr><td>Position</td><td id="gPos">-</td></tr>
+  <tr><td>Höhe (GPS)</td><td id="gAlt">-</td></tr>
+ </table></div>
+ <div class="card"><table>
+  <tr><td><b>Funk (LoRa)</b></td><td id="lState">-</td></tr>
+  <tr><td>Gesendet / Empfangen</td><td id="lCnt">-</td></tr>
+  <tr><td>Signalstärke (RSSI)</td><td id="lRssi">-</td></tr>
+  <tr><td>Signalqualität (SNR)</td><td id="lSnr">-</td></tr>
+  <tr><td>Letztes Paket</td><td id="lAge">-</td></tr>
+ </table></div>
+ <div class="card"><b>Gegenstück</b> <small id="peerRole"></small><table style="margin-top:6px">
+  <tr><td>Temperatur / Feuchte</td><td id="pTH">-</td></tr>
+  <tr><td>Taupunkt</td><td id="pD">-</td></tr>
+  <tr><td>Druck</td><td id="pP">-</td></tr>
+  <tr><td>Akku</td><td id="pB">-</td></tr>
+ </table></div>
+</div>
+
+<!-- ============ KARTE ============ -->
+<div class="page" id="p-map">
+ <div id="map"></div>
+ <canvas id="radar" width="900" height="700" style="display:none;border:1px solid var(--line)"></canvas>
+ <div class="row">
+  <div class="t"><small>Entfernung</small><b id="mDist">-</b></div>
+  <div class="t"><small>Peilung Base → Orbit</small><b id="mBrg">-</b></div>
+  <div class="t"><small>Orbit Höhe</small><b id="mAlt">-</b></div>
+ </div>
+ <div class="row">
+  <div class="t"><small>Funk (RSSI)</small><b id="mRssi">-</b></div>
+  <div class="t"><small>Orbit GPS</small><b id="mOs">-</b></div>
+  <div class="t"><small>Base GPS</small><b id="mBs">-</b></div>
+ </div>
+ <div class="row"><button class="g" style="flex:1" id="bOrb">Orbit zentrieren</button><button class="g" style="flex:1" id="bBoth">Beide zeigen</button><button class="g" style="flex:1" id="bView">Radar</button></div>
+ <small id="mHint">Kartenhintergrund © OpenStreetMap-Mitwirkende, braucht Mobilnetz. Ohne Netz zeigt „Radar“ beide Positionen nach Peilung und Entfernung (Norden oben).</small>
+</div>
+
+<!-- ============ PROFIL ============ -->
+<div class="page" id="p-prof">
+ <div class="card"><b>Vertikalprofil Orbit</b> <small>Höhe über Start</small>
+  <canvas id="cvP" width="900" height="760"></canvas>
+  <small><span style="color:#f87171">━</span> Temperatur &nbsp;<span style="color:#58a6ff">━</span> Taupunkt &nbsp;gestrichelt = Abstieg</small></div>
+ <div class="row">
+  <div class="t"><small>Orbit Temperatur</small><b id="oT">-</b></div>
+  <div class="t"><small>Taupunkt</small><b id="oD">-</b></div>
+  <div class="t"><small>Feuchte</small><b id="oH">-</b></div>
+ </div>
+ <div class="row">
+  <div class="t"><small>Höhe (Druck)</small><b id="oHb">-</b></div>
+  <div class="t"><small>Höhe (GPS)</small><b id="oHg">-</b></div>
+  <div class="t"><small>Max. Höhe</small><b id="oMax">-</b></div>
+ </div>
+ <div class="row">
+  <div class="t"><small>Temperaturgradient</small><b id="oGr">-</b></div>
+  <div class="t"><small>Kondensationsniveau (geschätzt)</small><b id="oCl">-</b></div>
+ </div>
+ <div class="row"><button style="flex:1" id="bStart">Start setzen</button><button class="r" style="flex:1" id="bStop">Aufzeichnung stoppen</button></div>
+ <div class="row"><button class="g" style="flex:1" id="bCsv">CSV speichern</button><button class="g" style="flex:1" id="bGpx">GPX speichern</button></div>
+ <small>Höhe: Druckunterschied Orbit gegen Base (Sensorabweichung wird beim Start herausgerechnet), GPS-Höhe als Gegenprobe. „Start setzen“ legt Bezugshöhe und Startplatz fest und leert das Profil. Kondensationsniveau ≈ 125 m je K Abstand zwischen Temperatur und Taupunkt, über Orbit-Höhe. Seite während der Fahrt nicht schließen, sonst gehen die Aufzeichnungsdaten verloren.</small>
+</div>
+
+<!-- ============ TEST ============ -->
+<div class="page" id="p-test">
+<div class="card"><b>Temperaturvergleich</b>
+ <div style="margin:8px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap">Referenzthermometer
+  <input id="ref" inputmode="decimal" placeholder="21,8"> °C <button id="bRef">Eintragen</button></div>
+ <canvas id="cv" width="700" height="300" style="height:150px"></canvas>
+ <small><span style="color:var(--sens)">━</span> Sensor &nbsp; <span class="ref">●</span> Referenz (Verlauf: letzte 20 min)</small>
+ <div style="margin-top:6px">Letzte Abweichung: <b class="ref" id="dLast">-</b> &nbsp; Mittel: <b id="dAvg">-</b></div></div>
+<div class="card"><table><tr><td>Modus</td><td id="lMode">-</td></tr></table>
+ <div style="margin-top:8px"><button id="bSend" class="g" disabled>Senden: aus</button> <small>Mit Firmware v7 senden beide Geräte dauernd. Der Knopf wirkt nur bei v6 oder AUTO_SEND 0.</small></div></div>
+<div class="card"><b>Fremdsignale</b> <small id="fSum">noch keine</small><table id="fTab" style="margin-top:6px"></table></div>
+</div>
+
+<div class="row"><button id="bConn" style="flex:1">Verbinden</button></div>
+<small id="hint"></small>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const NUS='6e400001-b5a3-f393-e0a9-e50e24dcca9e', TX='6e400003-b5a3-f393-e0a9-e50e24dcca9e', RX='6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+const $=id=>document.getElementById(id);
+const num=s=>(s===undefined||s==='-'||s==='')?NaN:parseFloat(s);
+const f=(v,d,u)=>isNaN(v)?'-':v.toFixed(d).replace('.',',')+(u?' '+u:'');
+const PROF=['Bo Twins','Meshtastic EU868','LoRaWAN 868,1','LoRaWAN 868,3','LoRaWAN 868,5'];
+const MODE=['nur Hören','Antwort auf Gegenstück','Senden (manuell)','Dauersenden (Feldtest)'];
+let buf='', dev=null, wake=null, rxChar=null, sendOn=false;
+
+// ---------- Rechnen ----------
+function dew(T,RH){ if(isNaN(T)||isNaN(RH)||RH<=0) return NaN; const g=Math.log(RH/100)+17.62*T/(243.12+T); return 243.12*g/(17.62-g); }
+function mxy(lat,lon,lat0,lon0){ return [(lon-lon0)*111320*Math.cos(lat0*Math.PI/180),(lat-lat0)*111320]; }
+function distBrg(la0,lo0,la1,lo1){ const [x,y]=mxy(la1,lo1,la0,lo0); let b=Math.atan2(x,y)*180/Math.PI; if(b<0)b+=360; return [Math.hypot(x,y),b]; }
+
+// ---------- Zustand ----------
+const rows=[], hist=[], refs=[];
+let rec=true, own=null, peer=null, orbit=null, base=null, lastD=null;
+const start={po0:null,d0:null,gps0:null,lat:NaN,lon:NaN};
+let pts=[];                    // Profilpunkte des Orbits
+const trB=[], trO=[];          // Spuren: {t,lat,lon,ele}
+let lastPeerSeq=null;
+
+function setStartNow(){
+  if(!orbit||isNaN(orbit.P)) return false;
+  start.po0=orbit.P; start.d0=(base&&!isNaN(base.P))?orbit.P-base.P:null; start.gps0=isNaN(orbit.alt)?null:orbit.alt;
+  const b=base&&!isNaN(base.lat)?base:(orbit&&!isNaN(orbit.lat)?orbit:null);
+  start.lat=b?b.lat:NaN; start.lon=b?b.lon:NaN; pts=[]; drawProfile(); return true;
+}
+function heightBaro(o,b){
+  if(isNaN(o.P)||isNaN(o.T)||start.po0===null) return NaN;
+  let pRef,Tm=o.T;
+  if(start.d0!==null&&b&&!isNaN(b.P)){ pRef=b.P+start.d0; if(!isNaN(b.T)) Tm=(o.T+b.T)/2; } else pRef=start.po0;
+  return 29.271*(Tm+273.15)*Math.log(pRef/o.P);
+}
+
+function parse(p){
+  const g=i=>p[i];
+  const o={role:g(12), T:num(g(2)),H:num(g(3)),P:num(g(4)),fix:g(5)==='1',sats:+g(6),lat:num(g(7)),lon:num(g(8)),alt:num(g(9)),bat:num(g(10)),usb:g(11)==='1',kmh:num(g(21))};
+  o.Td=dew(o.T,o.H);
+  const pr={role:g(18),lat:num(g(26)),lon:num(g(27)),alt:num(g(33)),T:num(g(34)),H:num(g(35)),P:num(g(36)),bat:num(g(37))};
+  pr.Td=dew(pr.T,pr.H);
+  const age=num(g(17));
+  const ok=!isNaN(age)&&age<60;
+  if(!ok){ pr.lat=pr.lon=pr.alt=pr.T=pr.H=pr.P=pr.bat=pr.Td=NaN; }
+  if(pr.role!=='B'&&pr.role!=='O') pr.role=o.role==='B'?'O':'B';
+  return {own:o,peer:pr,age,
+    rx:+g(14),tx:+g(13),rssi:num(g(15)),snr:num(g(16)),prof:g(19)===undefined?0:+g(19),mode:g(20)===undefined?0:+g(20),
+    peerSeq:g(25),ms:g(1),peerOk:ok};
+}
+
+function onLine(line){
+  const p=line.trim().split(',');
+  if(p[0]==='F'&&p.length>=8){onForeign(p);return}
+  if(p[0]!=='D'||p.length<19) return;
+  const d=parse(p); lastD=d; own=d.own; peer=d.peer;
+  const now=Date.now();
+  if(own.role==='O'){orbit=own;base=peer}else{base=own;orbit=peer}
+  const orbitHasData=!isNaN(orbit.T)&&!isNaN(orbit.P);
+  if(start.po0===null&&orbitHasData) setStartNow();
+  const newPeer=d.peerOk&&d.peerSeq!==lastPeerSeq; if(d.peerOk) lastPeerSeq=d.peerSeq;
+  // Spuren
+  if(rec){
+    if(base&&!isNaN(base.lat)&&(base===own||newPeer)) pushTrack(trB,now,base.lat,base.lon,base.alt);
+    if(orbit&&!isNaN(orbit.lat)&&(orbit===own||newPeer)) pushTrack(trO,now,orbit.lat,orbit.lon,orbit.alt);
+  }
+  // Profilpunkt
+  let hb=NaN,hg=NaN;
+  if(orbit&&orbitHasData){
+    hb=heightBaro(orbit,base);
+    hg=(start.gps0!==null&&!isNaN(orbit.alt))?orbit.alt-start.gps0:NaN;
+    if(rec&&!isNaN(hb)&&(orbit===own||newPeer)) pts.push({t:now,h:hb,T:orbit.T,Td:orbit.Td});
+  }
+  // CSV
+  if(rec){
+    const [dist,brg]=(base&&orbit&&!isNaN(base.lat)&&!isNaN(orbit.lat))?distBrg(base.lat,base.lon,orbit.lat,orbit.lon):[NaN,NaN];
+    rows.push([new Date(now).toISOString(),own.role,own.T,own.H,own.P,own.Td,own.fix?1:0,own.sats,own.lat,own.lon,own.alt,own.kmh,own.bat,
+      d.age,peer.T,peer.H,peer.P,peer.Td,peer.lat,peer.lon,peer.alt,peer.bat,hb,hg,d.rssi,d.snr,d.tx,d.rx,
+      isNaN(dist)?'':dist.toFixed(0),''].map(v=>(typeof v==='number'&&isNaN(v))?'':v).join(','));
+  }
+  hist.push({t:now,temp:own.T}); while(hist.length&&now-hist[0].t>20*60e3) hist.shift();
+  showLive(d); showMap(d); showProfile(d,hb,hg); drawTest();
+}
+function pushTrack(tr,t,lat,lon,ele){ const l=tr[tr.length-1]; if(l&&l.lat===lat&&l.lon===lon) return; tr.push({t,lat,lon,ele}); }
+
+// ---------- Live ----------
+function showLive(d){
+  const o=d.own,pr=d.peer;
+  $('vT').textContent=f(o.T,1,'°C'); $('vH').textContent=f(o.H,0,'%'); $('vP').textContent=f(o.P,0,'hPa');
+  $('vD').textContent=f(o.Td,1,'°C'); $('vB').textContent=isNaN(o.bat)?'-':(o.bat/1000).toFixed(2).replace('.',',')+' V'; $('vV').textContent=f(o.kmh,0,'km/h');
+  $('gState').textContent=o.fix?'Fix, '+o.sats+' Satelliten':'kein Fix ('+o.sats+' Sat.)'; $('gState').className=o.fix?'ok':'';
+  $('gPos').textContent=o.fix?o.lat.toFixed(5)+' N, '+o.lon.toFixed(5)+' E':'-'; $('gAlt').textContent=f(o.alt,0,'m');
+  $('role').textContent=(o.role==='B'?'Base':'Orbit')+(o.usb?', USB':'');
+  $('lCnt').textContent=d.tx+' / '+d.rx; $('lRssi').textContent=f(d.rssi,0,'dBm'); $('lSnr').textContent=f(d.snr,1,'dB');
+  $('lAge').textContent=isNaN(d.age)?'noch keins':'vor '+d.age+' s';
+  const ok=!isNaN(d.age)&&d.age<20;
+  $('lState').textContent=ok?'Empfang ok':(d.rx>0?'Funkstille':'noch nichts empfangen'); $('lState').className=ok?'ok':'';
+  $('lMode').textContent=(MODE[d.mode]||'?')+', Profil: '+(PROF[d.prof]||'?');
+  $('peerRole').textContent=pr.role==='B'?'(Base)':'(Orbit)';
+  $('pTH').textContent=f(pr.T,1,'°C')+' / '+f(pr.H,0,'%'); $('pD').textContent=f(pr.Td,1,'°C'); $('pP').textContent=f(pr.P,1,'hPa');
+  $('pB').textContent=isNaN(pr.bat)?'-':(pr.bat/1000).toFixed(2).replace('.',',')+' V';
+  const c=$('cOrb'); c.textContent=(pr.role==='B'?'Base':'Orbit')+': '+(ok?'Funk ok, '+f(d.rssi,0,'dBm'):(d.rx>0?'Funkstille':'nichts gehört')); c.className='chip '+(ok?'on':(d.rx>0?'bad':''));
+  $('bSend').textContent='Senden: '+(sendOn?'an':'aus');
+}
+
+// ---------- Karte ----------
+let map=null, mkB=null, mkO=null, lnB=null, lnO=null, useRadar=false, fitted=false;
+function initMap(){
+  if(map||typeof L==='undefined') return;
+  map=L.map('map',{zoomControl:true}).setView([52.4735,13.4055],15);   // Tempelhofer Feld
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+  mkB=L.marker([0,0],{icon:L.divIcon({className:'',html:'<div class="mk b">B</div>',iconSize:[24,24],iconAnchor:[12,12]})});
+  mkO=L.marker([0,0],{icon:L.divIcon({className:'',html:'<div class="mk o">O</div>',iconSize:[24,24],iconAnchor:[12,12]})});
+  lnB=L.polyline([],{color:'#58a6ff',weight:3}).addTo(map); lnO=L.polyline([],{color:'#f0b429',weight:3}).addTo(map);
+}
+function mapOn(){ return map&&!useRadar; }
+function showMap(d){
+  const hasB=base&&!isNaN(base.lat)&&base.lat!==0, hasO=orbit&&!isNaN(orbit.lat)&&orbit.lat!==0;
+  let dist=NaN,brg=NaN; if(hasB&&hasO)[dist,brg]=distBrg(base.lat,base.lon,orbit.lat,orbit.lon);
+  $('mDist').textContent=isNaN(dist)?'-':(dist>=1000?(dist/1000).toFixed(2).replace('.',',')+' km':dist.toFixed(0)+' m');
+  $('mBrg').textContent=isNaN(brg)?'-':brg.toFixed(0)+'°';
+  $('mAlt').textContent=pts.length?f(pts[pts.length-1].h,0,'m'):'-';
+  $('mRssi').textContent=f(d.rssi,0,'dBm');
+  const sOrb=orbit===own?own.sats:NaN, sBase=base===own?own.sats:NaN;
+  $('mOs').textContent=orbit===own?(own.fix?own.sats+' Sat.':'kein Fix'):(hasO?'Fix':'-');
+  $('mBs').textContent=base===own?(own.fix?own.sats+' Sat.':'kein Fix'):(hasB?'Fix':'-');
+  if(map){
+    if(hasB){ mkB.setLatLng([base.lat,base.lon]); if(!map.hasLayer(mkB)) mkB.addTo(map); }
+    if(hasO){ mkO.setLatLng([orbit.lat,orbit.lon]); if(!map.hasLayer(mkO)) mkO.addTo(map); }
+    lnB.setLatLngs(trB.map(q=>[q.lat,q.lon])); lnO.setLatLngs(trO.map(q=>[q.lat,q.lon]));
+    if(!fitted&&(hasB||hasO)){ fitMap(); fitted=true; }
+  }
+  if(useRadar||!map) drawRadar(hasB,hasO);
+}
+function fitMap(both){
+  if(!map) return;
+  const a=[]; if(base&&!isNaN(base.lat)&&base.lat!==0)a.push([base.lat,base.lon]); if(orbit&&!isNaN(orbit.lat)&&orbit.lat!==0)a.push([orbit.lat,orbit.lon]);
+  if(a.length===1) map.setView(a[0],17); else if(a.length>1) map.fitBounds(a,{padding:[40,40],maxZoom:18});
+}
+function drawRadar(hasB,hasO){
+  const c=$('radar'),x=c.getContext('2d'),W=c.width,H=c.height;
+  x.clearRect(0,0,W,H); x.fillStyle='#161b22'; x.fillRect(0,0,W,H);
+  const ref=hasB?base:(hasO?orbit:null); if(!ref){x.fillStyle='#8b949e';x.font='30px system-ui';x.fillText('Noch keine Position',20,50);return}
+  const all=[];
+  const addAll=a=>a.forEach(q=>all.push(mxy(q.lat,q.lon,ref.lat,ref.lon)));
+  addAll(trB);addAll(trO); if(hasB)all.push(mxy(base.lat,base.lon,ref.lat,ref.lon)); if(hasO)all.push(mxy(orbit.lat,orbit.lon,ref.lat,ref.lon));
+  let ext=100; for(const q of all) ext=Math.max(ext,Math.abs(q[0]),Math.abs(q[1]));
+  const steps=[100,200,500,1000,2000,5000,10000]; let R=steps.find(s=>s>=ext*1.15)||20000;
+  const cx=W/2,cy=H/2,S=Math.min(W,H)/2/R*0.92;
+  const X=m=>cx+m[0]*S, Y=m=>cy-m[1]*S;
+  x.strokeStyle='#2d3440';x.lineWidth=1;x.fillStyle='#8b949e';x.font='24px system-ui';
+  const g=R>=2000?500:(R>=500?100:50);
+  for(let r=g;r<=R;r+=g){x.beginPath();x.arc(cx,cy,r*S,0,7);x.stroke(); if(r%(g*2)===0||R<=200)x.fillText(r>=1000?(r/1000)+' km':r+' m',cx+4,cy-r*S-4)}
+  x.beginPath();x.moveTo(cx,0);x.lineTo(cx,H);x.moveTo(0,cy);x.lineTo(W,cy);x.stroke();
+  x.fillStyle='#e6edf3';x.fillText('N',cx+6,26);
+  const tr=(arr,col)=>{x.strokeStyle=col;x.lineWidth=4;x.beginPath();arr.forEach((q,i)=>{const m=mxy(q.lat,q.lon,ref.lat,ref.lon);i?x.lineTo(X(m),Y(m)):x.moveTo(X(m),Y(m))});x.stroke()};
+  tr(trB,'#58a6ff'); tr(trO,'#f0b429');
+  const mk=(p,col,t,fg)=>{const m=mxy(p.lat,p.lon,ref.lat,ref.lon);x.fillStyle=col;x.beginPath();x.arc(X(m),Y(m),20,0,7);x.fill();x.strokeStyle='#fff';x.lineWidth=3;x.stroke();x.fillStyle=fg;x.font='bold 24px system-ui';x.textAlign='center';x.fillText(t,X(m),Y(m)+8);x.textAlign='start'};
+  if(hasB) mk(base,'#1f6feb','B','#fff'); if(hasO) mk(orbit,'#f0b429','O','#000');
+}
+$('bOrb').onclick=()=>{ if(map&&orbit&&!isNaN(orbit.lat)) map.setView([orbit.lat,orbit.lon],17) };
+$('bBoth').onclick=()=>fitMap(true);
+$('bView').onclick=()=>{
+  useRadar=!useRadar; $('bView').textContent=useRadar?'Karte':'Radar';
+  $('map').style.display=useRadar?'none':'block'; $('radar').style.display=useRadar?'block':'none';
+  if(!useRadar&&map) setTimeout(()=>map.invalidateSize(),50); else if(lastD) showMap(lastD);
+};
+
+// ---------- Profil ----------
+function regress(a){ // Steigung T über Höhe, K pro 100 m
+  const v=a.filter(q=>!isNaN(q.T)&&!isNaN(q.h)); if(v.length<4) return NaN;
+  const hs=v.map(q=>q.h),hmax=Math.max(...hs),hmin=Math.min(...hs); if(hmax-hmin<10) return NaN;
+  const mh=hs.reduce((a,b)=>a+b)/v.length,mt=v.reduce((a,q)=>a+q.T,0)/v.length;
+  let sxy=0,sxx=0; for(const q of v){sxy+=(q.h-mh)*(q.T-mt);sxx+=(q.h-mh)**2} return sxx?sxy/sxx*100:NaN;
+}
+function showProfile(d,hb,hg){
+  const o=orbit||{};
+  $('oT').textContent=f(o.T,1,'°C'); $('oD').textContent=f(o.Td,1,'°C'); $('oH').textContent=f(o.H,0,'%');
+  $('oHb').textContent=f(hb,0,'m'); $('oHg').textContent=f(hg,0,'m');
+  $('oMax').textContent=pts.length?f(Math.max(...pts.map(q=>q.h)),0,'m'):'-';
+  $('oGr').textContent=f(regress(pts),1,'K/100 m');
+  const sp=o.T-o.Td; $('oCl').textContent=(isNaN(sp)||isNaN(hb))?'-':'≈ '+Math.round(hb+125*Math.max(sp,0))+' m';
+  drawProfile();
+}
+function drawProfile(){
+  const c=$('cvP'),x=c.getContext('2d'),W=c.width,H=c.height,L0=90,B=60,T=20,R=20;
+  x.clearRect(0,0,W,H);
+  if(!pts.length){x.fillStyle='#8b949e';x.font='30px system-ui';x.fillText('Noch keine Orbit-Daten mit Höhe',L0,H/2);return}
+  const hs=pts.map(q=>q.h); let ylo=Math.min(0,...hs),yhi=Math.max(20,...hs); const pad=(yhi-ylo)*0.08; ylo-=pad; yhi+=pad;
+  const ts=pts.flatMap(q=>[q.T,q.Td]).filter(v=>!isNaN(v)); let xlo=Math.min(...ts)-1,xhi=Math.max(...ts)+1; if(xhi-xlo<4){const m=(xhi+xlo)/2;xlo=m-2;xhi=m+2}
+  const X=v=>L0+(v-xlo)/(xhi-xlo)*(W-L0-R), Y=v=>T+(yhi-v)/(yhi-ylo)*(H-T-B);
+  x.strokeStyle='#21262d';x.fillStyle='#8b949e';x.font='24px system-ui';x.lineWidth=1;
+  const ys=niceStep(yhi-ylo,6); for(let v=Math.ceil(ylo/ys)*ys;v<=yhi;v+=ys){x.beginPath();x.moveTo(L0,Y(v));x.lineTo(W-R,Y(v));x.stroke();x.fillText(Math.round(v)+' m',4,Y(v)+8)}
+  const xs=niceStep(xhi-xlo,5); for(let v=Math.ceil(xlo/xs)*xs;v<=xhi;v+=xs){x.beginPath();x.moveTo(X(v),T);x.lineTo(X(v),H-B);x.stroke();x.fillText(v.toFixed(xs<1?1:0)+' °C',X(v)-24,H-B+30)}
+  const line=(key,col)=>{
+    x.strokeStyle=col;x.lineWidth=4;
+    for(let i=1;i<pts.length;i++){
+      const a=pts[i-1],b=pts[i]; if(isNaN(a[key])||isNaN(b[key])) continue;
+      x.setLineDash(b.h<a.h-0.3?[12,10]:[]); x.beginPath();x.moveTo(X(a[key]),Y(a.h));x.lineTo(X(b[key]),Y(b.h));x.stroke();
+    }
+    x.setLineDash([]); const l=pts[pts.length-1]; if(!isNaN(l[key])){x.fillStyle=col;x.beginPath();x.arc(X(l[key]),Y(l.h),9,0,7);x.fill()}
+  };
+  line('Td','#58a6ff'); line('T','#f87171');
+}
+function niceStep(range,n){ const r=range/n,m=Math.pow(10,Math.floor(Math.log10(r))),q=r/m; return (q<1.5?1:q<3.5?2:q<7.5?5:10)*m; }
+$('bStart').onclick=()=>{ $('msg').textContent=setStartNow()?'Start gesetzt, Profil geleert':'Noch keine Orbit-Messung da'; };
+$('bStop').onclick=()=>{
+  if(rec){ if(!confirm('Ist die Fahrt vorbei? Die Aufzeichnung wird gestoppt, die Daten bleiben für den Export erhalten.')) return; rec=false; }
+  else rec=true;
+  setRec();
+};
+function setRec(){ $('cRec').textContent=rec?'Aufzeichnung: läuft ('+rows.length+')':'Aufzeichnung: aus'; $('cRec').className='chip'+(rec?' on':''); $('bStop').textContent=rec?'Aufzeichnung stoppen':'Aufzeichnung starten'; $('bStop').className=rec?'r':''; $('bStop').style.flex='1'; }
+setInterval(setRec,2000); setRec();
+
+// ---------- Export ----------
+const HEAD='zeit,eigen_rolle,eigen_temp_C,eigen_feuchte_pct,eigen_druck_hPa,eigen_taupunkt_C,eigen_fix,eigen_sats,eigen_lat,eigen_lon,eigen_hoehe_gps_m,eigen_kmh,eigen_akku_mV,gegen_alter_s,gegen_temp_C,gegen_feuchte_pct,gegen_druck_hPa,gegen_taupunkt_C,gegen_lat,gegen_lon,gegen_hoehe_gps_m,gegen_akku_mV,orbit_hoehe_druck_m,orbit_hoehe_gps_rel_m,lora_rssi_dBm,lora_snr_dB,lora_tx,lora_rx,entfernung_m,referenz_C';
+function save(name,mime,text){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([text],{type:mime})); a.download=name; a.click(); }
+const stamp=()=>new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
+$('bCsv').onclick=()=>{ if(!rows.length){$('msg').textContent='Noch keine Daten';return} save('botwins_'+stamp()+'.csv','text/csv',HEAD+'\n'+rows.join('\n')+'\n'); };
+$('bGpx').onclick=()=>{
+  if(!trB.length&&!trO.length){$('msg').textContent='Noch keine Positionen';return}
+  const trk=(n,a)=>a.length?'<trk><name>'+n+'</name><trkseg>'+a.map(q=>'<trkpt lat="'+q.lat.toFixed(6)+'" lon="'+q.lon.toFixed(6)+'">'+(isNaN(q.ele)?'':'<ele>'+q.ele.toFixed(1)+'</ele>')+'<time>'+new Date(q.t).toISOString()+'</time></trkpt>').join('')+'</trkseg></trk>':'';
+  save('botwins_'+stamp()+'.gpx','application/gpx+xml','<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Bo Twins" xmlns="http://www.topografix.com/GPX/1/1">'+trk('Base',trB)+trk('Orbit',trO)+'</gpx>\n');
+};
+
+// ---------- Test-Seite (wie bisher) ----------
+const fcount=[0,0,0,0,0], flist=[];
+function onForeign(p){
+  const i=+p[2]; fcount[i]++;
+  flist.unshift(new Date().toLocaleTimeString('de-DE')+'|'+PROF[i]+'|'+p[3]+' Byte, '+p[4]+' dBm, SNR '+p[5]+(p[6]==='1'?'':' (Prüfsumme falsch)'));
+  flist.length=Math.min(flist.length,6);
+  $('fSum').textContent=PROF.map((n,k)=>n+': '+fcount[k]).filter((x,k)=>k>0).join(' | ');
+  $('fTab').innerHTML=flist.map(x=>{const q=x.split('|');return '<tr><td>'+q[0]+' '+q[1]+'</td><td>'+q[2]+'</td></tr>'}).join('');
+}
+function drawTest(){
+  const c=$('cv'),x=c.getContext('2d'),W=c.width,H=c.height,L=60,B=30,T=14;
+  x.clearRect(0,0,W,H);
+  const now=Date.now(),t0=now-20*60e3;
+  const vals=hist.map(h=>h.temp).concat(refs.map(r=>r.val)).filter(v=>!isNaN(v));
+  if(!vals.length){return}
+  let lo=Math.min(...vals)-.5,hi=Math.max(...vals)+.5; if(hi-lo<2){const m=(hi+lo)/2;lo=m-1;hi=m+1}
+  const X=t=>L+(t-t0)/(20*60e3)*(W-L-8), Y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
+  x.strokeStyle='#21262d';x.fillStyle='#8b949e';x.font='22px system-ui';x.lineWidth=1;
+  for(let i=0;i<=3;i++){const v=lo+(hi-lo)*i/3;x.beginPath();x.moveTo(L,Y(v));x.lineTo(W-8,Y(v));x.stroke();x.fillText(v.toFixed(1),2,Y(v)+7)}
+  x.fillText('vor 20 min',L,H-6);x.fillText('jetzt',W-60,H-6);
+  x.strokeStyle='#58a6ff';x.lineWidth=3;x.beginPath();let st=false;
+  for(const h of hist){if(isNaN(h.temp))continue;const px=X(h.t),py=Y(h.temp);st?x.lineTo(px,py):x.moveTo(px,py);st=true}x.stroke();
+  x.fillStyle='#f0b429';for(const r of refs){if(r.t<t0)continue;x.beginPath();x.arc(X(r.t),Y(r.val),8,0,7);x.fill()}
+}
+function updDev(){
+  const v=refs.map(r=>r.temp-r.val).filter(v=>!isNaN(v)); if(!v.length)return;
+  const s=k=>(k>=0?'+':'')+k.toFixed(1).replace('.',',')+' K';
+  $('dLast').textContent=s(v[v.length-1]); $('dAvg').textContent=s(v.reduce((a,b)=>a+b,0)/v.length);
+}
+$('bRef').onclick=()=>{
+  const val=parseFloat($('ref').value.replace(',','.')); if(isNaN(val)){$('msg').textContent='Bitte eine Zahl eintragen';return}
+  const last=hist[hist.length-1]; if(!last){$('msg').textContent='Noch keine Messung da';return}
+  refs.push({t:Date.now(),val,temp:last.temp});
+  if(rows.length) rows[rows.length-1]=rows[rows.length-1].replace(/,$/,','+val);
+  updDev();drawTest();$('msg').textContent='';
+};
+$('bSend').onclick=async()=>{
+  if(!rxChar)return; sendOn=!sendOn;
+  try{await rxChar.writeValueWithoutResponse(new TextEncoder().encode(sendOn?'S1\n':'S0\n'))}catch(e){sendOn=!sendOn;$('msg').textContent='Senden nicht möglich: '+e.message}
+  $('bSend').textContent='Senden: '+(sendOn?'an':'aus');
+};
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('a',x===b));
+  document.querySelectorAll('.page').forEach(x=>x.classList.toggle('a',x.id==='p-'+b.dataset.p));
+  if(b.dataset.p==='map'){ initMap(); if(map) setTimeout(()=>{map.invalidateSize(); if(lastD) showMap(lastD)},50); else if(!useRadar){ $('bView').click(); $('mHint').textContent='Kartenbibliothek nicht geladen (kein Netz?). Radarbild aktiv.' } }
+  if(b.dataset.p==='prof') drawProfile();
+});
+
+// ---------- Bluetooth ----------
+function setConn(on,name){$('chip').textContent=on?'Verbunden: '+name:'Nicht verbunden';$('chip').className='chip'+(on?' on':'');$('bConn').textContent=on?'Trennen':'Verbinden'}
+$('bConn').onclick=async()=>{
+  if(dev&&dev.gatt.connected){dev.gatt.disconnect();return}
+  if(!navigator.bluetooth){$('msg').textContent='Web Bluetooth fehlt. Bitte Chrome auf Android verwenden.';return}
+  try{
+    dev=await navigator.bluetooth.requestDevice({filters:[{namePrefix:'BoTwins'}],optionalServices:[NUS]});
+    dev.addEventListener('gattserverdisconnected',()=>{setConn(false);sendOn=false;$('bSend').disabled=true;$('msg').textContent='Verbindung verloren, Aufzeichnung bleibt erhalten. Erneut verbinden.'});
+    const srv=await dev.gatt.connect();
+    const ch=await (await srv.getPrimaryService(NUS)).getCharacteristic(TX);
+    ch.addEventListener('characteristicvaluechanged',e=>{
+      buf+=new TextDecoder().decode(e.target.value);
+      let i;while((i=buf.indexOf('\n'))>=0){onLine(buf.slice(0,i));buf=buf.slice(i+1)}
+    });
+    await ch.startNotifications();
+    try{rxChar=await (await srv.getPrimaryService(NUS)).getCharacteristic(RX);$('bSend').disabled=false}catch(e){}
+    setConn(true,dev.name);$('msg').textContent='';
+    try{wake=await navigator.wakeLock.request('screen')}catch(e){}
+  }catch(e){$('msg').textContent=e.name==='NotFoundError'?'Kein Gerät gewählt':'Fehler: '+e.message}
+};
+window.feed=onLine;   // zum Testen ohne Gerät
+</script></body></html>
