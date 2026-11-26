@@ -2,12 +2,13 @@
 <html lang="de"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Bo Twins</title>
-<!-- Autor: Claude im Auftrag von Erich | Letzte Aenderung: 2026-11-26 13:10
+<!-- Autor: Claude im Auftrag von Erich | Letzte Aenderung: 2026-11-26 13:25
  v1 2026-11-05 17:55 Erste Version: Bluetooth-Testseite (Live-Werte, Referenzvergleich, LoRa, CSV)
  v2 2026-11-05 21:40 Fremdpakete, Hoer-/Sendemodus, Knopf Senden
  v3 2026-11-26 13:30 Feldtest Tempelhofer Feld: Seiten Live, Karte (Leaflet/OpenStreetMap, ohne Netz Radarbild), Profil (Temperatur und Taupunkt ueber der Hoehe),
      Test (bisherige Testseite); Taupunkt, Hoehe aus Druckunterschied Orbit/Base, Aufzeichnung auf dem Handy mit CSV und GPX; passt zu Firmware v7 (Felder 34 bis 38)
- v4 2026-11-26 13:10 Geraetesuche auch ueber den Bluetooth-Dienst, nicht nur ueber den Namen (wie in der Testseite v3; ohne das fand Chrome das Geraet nicht) -->
+ v4 2026-11-26 13:10 Geraetesuche auch ueber den Bluetooth-Dienst, nicht nur ueber den Namen (wie in der Testseite v3; ohne das fand Chrome das Geraet nicht)
+ v5 2026-11-26 13:25 Anzeige "Verbunden: null" behoben: Name kommt aus der Rolle (Base/Orbit) des Geraets -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 :root{--bg:#0d1117;--card:#161b22;--line:#30363d;--tx:#e6edf3;--mu:#8b949e;--ok:#4ade80;--ref:#f0b429;--sens:#58a6ff;--bad:#f87171}
@@ -217,6 +218,7 @@ function showLive(d){
   $('gState').textContent=o.fix?'Fix, '+o.sats+' Satelliten':'kein Fix ('+o.sats+' Sat.)'; $('gState').className=o.fix?'ok':'';
   $('gPos').textContent=o.fix?o.lat.toFixed(5)+' N, '+o.lon.toFixed(5)+' E':'-'; $('gAlt').textContent=f(o.alt,0,'m');
   $('role').textContent=(o.role==='B'?'Base':'Orbit')+(o.usb?', USB':'');
+  if(dev&&dev.gatt&&dev.gatt.connected){$('chip').textContent='Verbunden: '+(o.role==='B'?'Base':'Orbit');$('chip').className='chip on'}
   $('lCnt').textContent=d.tx+' / '+d.rx; $('lRssi').textContent=f(d.rssi,0,'dBm'); $('lSnr').textContent=f(d.snr,1,'dB');
   $('lAge').textContent=isNaN(d.age)?'noch keins':'vor '+d.age+' s';
   const ok=!isNaN(d.age)&&d.age<20;
@@ -415,7 +417,7 @@ $('bConn').onclick=async()=>{
     });
     await ch.startNotifications();
     try{rxChar=await (await srv.getPrimaryService(NUS)).getCharacteristic(RX);$('bSend').disabled=false}catch(e){}
-    setConn(true,dev.name);$('msg').textContent='';
+    setConn(true,dev.name||'Bo Twins');$('msg').textContent='';
     try{wake=await navigator.wakeLock.request('screen')}catch(e){}
   }catch(e){$('msg').textContent=e.name==='NotFoundError'?'Kein Gerät gewählt':'Fehler: '+e.message}
 };
