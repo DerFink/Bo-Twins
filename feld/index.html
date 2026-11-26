@@ -2,11 +2,12 @@
 <html lang="de"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Bo Twins</title>
-<!-- Autor: Claude im Auftrag von Erich | Letzte Aenderung: 2026-11-26 13:30
+<!-- Autor: Claude im Auftrag von Erich | Letzte Aenderung: 2026-11-26 13:10
  v1 2026-11-05 17:55 Erste Version: Bluetooth-Testseite (Live-Werte, Referenzvergleich, LoRa, CSV)
  v2 2026-11-05 21:40 Fremdpakete, Hoer-/Sendemodus, Knopf Senden
  v3 2026-11-26 13:30 Feldtest Tempelhofer Feld: Seiten Live, Karte (Leaflet/OpenStreetMap, ohne Netz Radarbild), Profil (Temperatur und Taupunkt ueber der Hoehe),
-     Test (bisherige Testseite); Taupunkt, Hoehe aus Druckunterschied Orbit/Base, Aufzeichnung auf dem Handy mit CSV und GPX; passt zu Firmware v7 (Felder 34 bis 38) -->
+     Test (bisherige Testseite); Taupunkt, Hoehe aus Druckunterschied Orbit/Base, Aufzeichnung auf dem Handy mit CSV und GPX; passt zu Firmware v7 (Felder 34 bis 38)
+ v4 2026-11-26 13:10 Geraetesuche auch ueber den Bluetooth-Dienst, nicht nur ueber den Namen (wie in der Testseite v3; ohne das fand Chrome das Geraet nicht) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 :root{--bg:#0d1117;--card:#161b22;--line:#30363d;--tx:#e6edf3;--mu:#8b949e;--ok:#4ade80;--ref:#f0b429;--sens:#58a6ff;--bad:#f87171}
@@ -404,7 +405,7 @@ $('bConn').onclick=async()=>{
   if(dev&&dev.gatt.connected){dev.gatt.disconnect();return}
   if(!navigator.bluetooth){$('msg').textContent='Web Bluetooth fehlt. Bitte Chrome auf Android verwenden.';return}
   try{
-    dev=await navigator.bluetooth.requestDevice({filters:[{namePrefix:'BoTwins'}],optionalServices:[NUS]});
+    dev=await navigator.bluetooth.requestDevice({filters:[{services:[NUS]},{namePrefix:'BoTwins'}],optionalServices:[NUS]});
     dev.addEventListener('gattserverdisconnected',()=>{setConn(false);sendOn=false;$('bSend').disabled=true;$('msg').textContent='Verbindung verloren, Aufzeichnung bleibt erhalten. Erneut verbinden.'});
     const srv=await dev.gatt.connect();
     const ch=await (await srv.getPrimaryService(NUS)).getCharacteristic(TX);
