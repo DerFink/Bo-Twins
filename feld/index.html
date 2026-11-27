@@ -2,7 +2,7 @@
 <html lang="de"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Bo Twins</title>
-<!-- Autor: Claude im Auftrag von Erich | Letzte Aenderung: 2026-11-27 18:10
+<!-- Autor: Claude im Auftrag von Erich | Letzte Aenderung: 2026-11-27 19:05
  v1 2026-11-05 17:55 Erste Version: Bluetooth-Testseite (Live-Werte, Referenzvergleich, LoRa, CSV)
  v2 2026-11-05 21:40 Fremdpakete, Hoer-/Sendemodus, Knopf Senden
  v3 2026-11-26 13:30 Feldtest Tempelhofer Feld: Seiten Live, Karte (Leaflet/OpenStreetMap, ohne Netz Radarbild), Profil (Temperatur und Taupunkt ueber der Hoehe),
@@ -11,7 +11,10 @@
  v6 2026-11-26 13:50 Statusfeld oben mit drei klaren Zeilen (Bluetooth Handy-Geraet, Funk Base-Orbit, Aufnahme); Aufnahme nur noch per Start/Stopp-Knopf, Sicherung im Browser alle 10 s, GPX nur aus der Aufnahme
  v5 2026-11-26 13:25 Anzeige "Verbunden: null" behoben: Name kommt aus der Rolle (Base/Orbit) des Geraets
  v7 2026-11-27 18:10 Sicherung der Aufnahme in IndexedDB (jede Zeile und jeder GPX-Punkt sofort, auch nach Neuladen/Absturz des Browsers wieder da; localStorage nur noch als Ersatz);
-     automatisches Wiederverbinden nach Verbindungsabbruch (Aufnahme laeuft weiter), Bildschirm-Wachhalten wird nach Wechsel der App erneuert -->
+     automatisches Wiederverbinden nach Verbindungsabbruch (Aufnahme laeuft weiter), Bildschirm-Wachhalten wird nach Wechsel der App erneuert
+ v8 2026-11-27 19:05 GPS-Filter (weniger als 5 Satelliten, Spruenge groesser als die Geschwindigkeit erlaubt, nach Aussetzern erst nach 3 stimmigen Punkten), nur gute Punkte in Karte, Spur und GPX;
+     Base-Position wird bei Stillstand ueber viele Punkte gemittelt; Zeit der Messwerte aus der Geraetezeit statt aus der Ankunftszeit (bei gesperrtem Handy kamen Werte gebuendelt an,
+     Zeitstempel und Geschwindigkeitsrechnung waren dann falsch); Satellitenzahl des Gegenstuecks (Feld 39 der Firmware v8) wird angezeigt; CSV: neue Spalten eigen_gps_ok, gegen_gps_ok vor referenz_C -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 :root{--bg:#0d1117;--card:#161b22;--line:#30363d;--tx:#e6edf3;--mu:#8b949e;--ok:#4ade80;--ref:#f0b429;--sens:#58a6ff;--bad:#f87171}
@@ -176,30 +179,70 @@ function parse(p){
   const g=i=>p[i];
   const o={role:g(12), T:num(g(2)),H:num(g(3)),P:num(g(4)),fix:g(5)==='1',sats:+g(6),lat:num(g(7)),lon:num(g(8)),alt:num(g(9)),bat:num(g(10)),usb:g(11)==='1',kmh:num(g(21))};
   o.Td=dew(o.T,o.H);
-  const pr={role:g(18),lat:num(g(26)),lon:num(g(27)),alt:num(g(33)),T:num(g(34)),H:num(g(35)),P:num(g(36)),bat:num(g(37))};
+  const pr={role:g(18),lat:num(g(26)),lon:num(g(27)),alt:num(g(33)),T:num(g(34)),H:num(g(35)),P:num(g(36)),bat:num(g(37)),sats:num(g(38)),fix:!isNaN(num(g(26)))};
   pr.Td=dew(pr.T,pr.H);
   const age=num(g(17));
   const ok=!isNaN(age)&&age<60;
-  if(!ok){ pr.lat=pr.lon=pr.alt=pr.T=pr.H=pr.P=pr.bat=pr.Td=NaN; }
+  if(!ok){ pr.lat=pr.lon=pr.alt=pr.T=pr.H=pr.P=pr.bat=pr.Td=pr.sats=NaN; pr.fix=false; }
   if(pr.role!=='B'&&pr.role!=='O') pr.role=o.role==='B'?'O':'B';
   return {own:o,peer:pr,age,
     rx:+g(14),tx:+g(13),rssi:num(g(15)),snr:num(g(16)),prof:g(19)===undefined?0:+g(19),mode:g(20)===undefined?0:+g(20),
     peerSeq:g(25),ms:g(1),peerOk:ok};
 }
 
+// ---------- GPS-Filter und Zeit ----------
+// Zeit: das Handy bekommt die Werte bei gesperrtem Bildschirm oft gebuendelt. Darum kommt die Zeit aus der Geraetezeit (ms) plus dem kleinsten Abstand zur Handyuhr.
+let tOff=null, lastMs=-1;
+function devTime(ms){
+  ms=+ms; if(isNaN(ms)) return Date.now();
+  const off=Date.now()-ms; if(tOff===null||ms<lastMs||off<tOff) tOff=off; lastMs=ms;
+  return ms+tOff;
+}
+// GPS: Punkt ist gut bei Fix, mindestens GPS_MINSAT Satelliten (wenn bekannt) und wenn der Sprung zur letzten guten Position zur Geschwindigkeit passt.
+// Nach einer Luecke oder einem Sprung werden erst GPS_WARM stimmige Punkte hintereinander angenommen.
+const GPS_MINSAT=5, GPS_WARM_OWN=3, GPS_WARM_PEER=2;
+const mkG=()=>({acc:null,cand:null,streak:0,ok:false,bad:0,good:0});
+const G={own:mkG(),peer:mkG()};
+function gpsStep(s,q,t,warm,cap){
+  const bad=!q.fix||isNaN(q.lat)||q.lat===0||(!isNaN(q.sats)&&q.sats<GPS_MINSAT);
+  if(bad){ s.ok=false; s.bad++; return false; }
+  const lim=dt=>{ dt=Math.min(Math.max(dt,0.5),cap); const v=isNaN(q.kmh)?15:q.kmh/3.6; return v*1.5*dt+8+3*dt; };
+  const dd=a=>distBrg(a.lat,a.lon,q.lat,q.lon)[0];
+  if(s.cand&&t-s.cand.t<=cap*1000&&dd(s.cand)<=lim((t-s.cand.t)/1000)) s.streak++; else s.streak=0;
+  s.cand={t,lat:q.lat,lon:q.lon};
+  let ok=false;
+  if(s.acc&&t-s.acc.t<=cap*1000&&dd(s.acc)<=lim((t-s.acc.t)/1000)) ok=true; else if(s.streak>=warm) ok=true;
+  if(ok){ s.acc={t,lat:q.lat,lon:q.lon,alt:q.alt}; s.good++; } else s.bad++;
+  s.ok=ok; return ok;
+}
+// Base-Position: bei Stillstand wird ueber viele gute Punkte gemittelt (Rauschen, wandernde Position), bei Bewegung ueber 8 m folgt sie dem letzten Punkt.
+const BA={lat:NaN,lon:NaN,n:0};
+function baseAvgAdd(lat,lon){
+  if(BA.n&&distBrg(BA.lat,BA.lon,lat,lon)[0]<=8){ BA.n=Math.min(BA.n+1,300); BA.lat+=(lat-BA.lat)/BA.n; BA.lon+=(lon-BA.lon)/BA.n; }
+  else { BA.lat=lat; BA.lon=lon; BA.n=1; }
+}
+
 function onLine(line){
   const p=line.trim().split(',');
   if(p[0]==='F'&&p.length>=8){onForeign(p);return}
   if(p[0]!=='D'||p.length<19) return;
-  const d=parse(p); lastD=d; own=d.own; peer=d.peer;
-  const now=Date.now();
+  const d=parse(p); lastD=d;
+  const now=devTime(d.ms);
+  const newPeer=d.peerOk&&d.peerSeq!==lastPeerSeq; if(d.peerOk) lastPeerSeq=d.peerSeq;
+  // GPS-Filter: own/peer enthalten ab hier nur gute Positionen (letzte gute, falls der aktuelle Punkt verworfen wurde); die Rohwerte bleiben in d.own/d.peer
+  const ownOk=gpsStep(G.own,d.own,now,GPS_WARM_OWN,5);
+  const peerOk=newPeer?gpsStep(G.peer,d.peer,now,GPS_WARM_PEER,15):false;
+  own=Object.assign({},d.own,{lat:G.own.acc?G.own.acc.lat:NaN,lon:G.own.acc?G.own.acc.lon:NaN,alt:G.own.acc?G.own.acc.alt:NaN});
+  peer=Object.assign({},d.peer,{lat:G.peer.acc?G.peer.acc.lat:NaN,lon:G.peer.acc?G.peer.acc.lon:NaN,alt:G.peer.acc?G.peer.acc.alt:NaN});
+  if(!d.peerOk){peer.lat=peer.lon=peer.alt=NaN}
   if(own.role==='O'){orbit=own;base=peer}else{base=own;orbit=peer}
+  if(base===own?ownOk:peerOk) baseAvgAdd(base.lat,base.lon);
+  if(BA.n>1&&base&&!isNaN(base.lat)) {base.lat=BA.lat;base.lon=BA.lon}
   const orbitHasData=!isNaN(orbit.T)&&!isNaN(orbit.P);
   if(start.po0===null&&orbitHasData) setStartNow();
-  const newPeer=d.peerOk&&d.peerSeq!==lastPeerSeq; if(d.peerOk) lastPeerSeq=d.peerSeq;
   // Spuren
-  if(base&&!isNaN(base.lat)&&(base===own||newPeer)){ pushTrack(trB,now,base.lat,base.lon,base.alt); if(rec) recTrack(recTrB,'B',now,base.lat,base.lon,base.alt); }
-  if(orbit&&!isNaN(orbit.lat)&&(orbit===own||newPeer)){ pushTrack(trO,now,orbit.lat,orbit.lon,orbit.alt); if(rec) recTrack(recTrO,'O',now,orbit.lat,orbit.lon,orbit.alt); }
+  if(base&&!isNaN(base.lat)&&(base===own?ownOk:peerOk)){ pushTrack(trB,now,base.lat,base.lon,base.alt); if(rec) recTrack(recTrB,'B',now,base.lat,base.lon,base.alt); }
+  if(orbit&&!isNaN(orbit.lat)&&(orbit===own?ownOk:peerOk)){ pushTrack(trO,now,orbit.lat,orbit.lon,orbit.alt); if(rec) recTrack(recTrO,'O',now,orbit.lat,orbit.lon,orbit.alt); }
   // Profilpunkt
   let hb=NaN,hg=NaN;
   if(orbit&&orbitHasData){
@@ -210,9 +253,9 @@ function onLine(line){
   // CSV
   if(rec){
     const [dist,brg]=(base&&orbit&&!isNaN(base.lat)&&!isNaN(orbit.lat))?distBrg(base.lat,base.lon,orbit.lat,orbit.lon):[NaN,NaN];
-    rows.push([new Date(now).toISOString(),own.role,own.T,own.H,own.P,own.Td,own.fix?1:0,own.sats,own.lat,own.lon,own.alt,own.kmh,own.bat,
-      d.age,peer.T,peer.H,peer.P,peer.Td,peer.lat,peer.lon,peer.alt,peer.bat,hb,hg,d.rssi,d.snr,d.tx,d.rx,
-      isNaN(dist)?'':dist.toFixed(0),''].map(v=>(typeof v==='number'&&isNaN(v))?'':v).join(','));
+    rows.push([new Date(now).toISOString(),own.role,own.T,own.H,own.P,own.Td,own.fix?1:0,own.sats,d.own.lat,d.own.lon,d.own.alt,own.kmh,own.bat,
+      d.age,peer.T,peer.H,peer.P,peer.Td,d.peer.lat,d.peer.lon,d.peer.alt,peer.bat,hb,hg,d.rssi,d.snr,d.tx,d.rx,
+      isNaN(dist)?'':dist.toFixed(0),ownOk?1:0,newPeer?(peerOk?1:0):'',''].map(v=>(typeof v==='number'&&isNaN(v))?'':v).join(','));
     idbRow(rows[rows.length-1]); backup(false);
   }
   hist.push({t:now,temp:own.T}); while(hist.length&&now-hist[0].t>20*60e3) hist.shift();
@@ -251,6 +294,13 @@ function initMap(){
   lnB=L.polyline([],{color:'#58a6ff',weight:3}).addTo(map); lnO=L.polyline([],{color:'#f0b429',weight:3}).addTo(map);
 }
 function mapOn(){ return map&&!useRadar; }
+function gpsTxt(o,isOwn){
+  if(!o) return '-';
+  const g=isOwn?G.own:G.peer, sat=!isNaN(o.sats)&&o.sats>0?o.sats+' Sat.':'';
+  if(isOwn) return !o.fix?'kein Fix ('+o.sats+' Sat.)':(g.ok?sat:sat+' · unsicher, Punkt verworfen');
+  if(isNaN(o.lat)||o.lat===0) return o.fix?'-':'kein Fix';
+  return (sat||'Fix')+(g.ok||!g.bad?'':' · zuletzt verworfen');
+}
 function showMap(d){
   const hasB=base&&!isNaN(base.lat)&&base.lat!==0, hasO=orbit&&!isNaN(orbit.lat)&&orbit.lat!==0;
   let dist=NaN,brg=NaN; if(hasB&&hasO)[dist,brg]=distBrg(base.lat,base.lon,orbit.lat,orbit.lon);
@@ -259,8 +309,8 @@ function showMap(d){
   $('mAlt').textContent=pts.length?f(pts[pts.length-1].h,0,'m'):'-';
   $('mRssi').textContent=f(d.rssi,0,'dBm');
   const sOrb=orbit===own?own.sats:NaN, sBase=base===own?own.sats:NaN;
-  $('mOs').textContent=orbit===own?(own.fix?own.sats+' Sat.':'kein Fix'):(hasO?'Fix':'-');
-  $('mBs').textContent=base===own?(own.fix?own.sats+' Sat.':'kein Fix'):(hasB?'Fix':'-');
+  $('mOs').textContent=gpsTxt(orbit,orbit===own);
+  $('mBs').textContent=gpsTxt(base,base===own)+(BA.n>=10?' · Ø '+BA.n+' Pkt.':'');
   if(map){
     if(hasB){ mkB.setLatLng([base.lat,base.lon]); if(!map.hasLayer(mkB)) mkB.addTo(map); }
     if(hasO){ mkO.setLatLng([orbit.lat,orbit.lon]); if(!map.hasLayer(mkO)) mkO.addTo(map); }
@@ -399,7 +449,7 @@ function updStatus(){
 setInterval(updStatus,1000); updStatus();
 
 // ---------- Export ----------
-const HEAD='zeit,eigen_rolle,eigen_temp_C,eigen_feuchte_pct,eigen_druck_hPa,eigen_taupunkt_C,eigen_fix,eigen_sats,eigen_lat,eigen_lon,eigen_hoehe_gps_m,eigen_kmh,eigen_akku_mV,gegen_alter_s,gegen_temp_C,gegen_feuchte_pct,gegen_druck_hPa,gegen_taupunkt_C,gegen_lat,gegen_lon,gegen_hoehe_gps_m,gegen_akku_mV,orbit_hoehe_druck_m,orbit_hoehe_gps_rel_m,lora_rssi_dBm,lora_snr_dB,lora_tx,lora_rx,entfernung_m,referenz_C';
+const HEAD='zeit,eigen_rolle,eigen_temp_C,eigen_feuchte_pct,eigen_druck_hPa,eigen_taupunkt_C,eigen_fix,eigen_sats,eigen_lat,eigen_lon,eigen_hoehe_gps_m,eigen_kmh,eigen_akku_mV,gegen_alter_s,gegen_temp_C,gegen_feuchte_pct,gegen_druck_hPa,gegen_taupunkt_C,gegen_lat,gegen_lon,gegen_hoehe_gps_m,gegen_akku_mV,orbit_hoehe_druck_m,orbit_hoehe_gps_rel_m,lora_rssi_dBm,lora_snr_dB,lora_tx,lora_rx,entfernung_m,eigen_gps_ok,gegen_gps_ok,referenz_C';
 function save(name,mime,text){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([text],{type:mime})); a.download=name; a.click(); }
 const stamp=()=>new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
 $('bCsv').onclick=()=>{ if(!rows.length){$('msg').textContent='Noch keine Daten';return} save('botwins_'+stamp()+'.csv','text/csv',HEAD+'\n'+rows.join('\n')+'\n'); };
