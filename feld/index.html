@@ -2,14 +2,16 @@
 <html lang="de"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Bo Twins</title>
-<!-- Autor: Claude im Auftrag von Erich | Letzte Aenderung: 2026-11-26 13:50
+<!-- Autor: Claude im Auftrag von Erich | Letzte Aenderung: 2026-11-27 18:10
  v1 2026-11-05 17:55 Erste Version: Bluetooth-Testseite (Live-Werte, Referenzvergleich, LoRa, CSV)
  v2 2026-11-05 21:40 Fremdpakete, Hoer-/Sendemodus, Knopf Senden
  v3 2026-11-26 13:30 Feldtest Tempelhofer Feld: Seiten Live, Karte (Leaflet/OpenStreetMap, ohne Netz Radarbild), Profil (Temperatur und Taupunkt ueber der Hoehe),
      Test (bisherige Testseite); Taupunkt, Hoehe aus Druckunterschied Orbit/Base, Aufzeichnung auf dem Handy mit CSV und GPX; passt zu Firmware v7 (Felder 34 bis 38)
  v4 2026-11-26 13:10 Geraetesuche auch ueber den Bluetooth-Dienst, nicht nur ueber den Namen (wie in der Testseite v3; ohne das fand Chrome das Geraet nicht)
  v6 2026-11-26 13:50 Statusfeld oben mit drei klaren Zeilen (Bluetooth Handy-Geraet, Funk Base-Orbit, Aufnahme); Aufnahme nur noch per Start/Stopp-Knopf, Sicherung im Browser alle 10 s, GPX nur aus der Aufnahme
- v5 2026-11-26 13:25 Anzeige "Verbunden: null" behoben: Name kommt aus der Rolle (Base/Orbit) des Geraets -->
+ v5 2026-11-26 13:25 Anzeige "Verbunden: null" behoben: Name kommt aus der Rolle (Base/Orbit) des Geraets
+ v7 2026-11-27 18:10 Sicherung der Aufnahme in IndexedDB (jede Zeile und jeder GPX-Punkt sofort, auch nach Neuladen/Absturz des Browsers wieder da; localStorage nur noch als Ersatz);
+     automatisches Wiederverbinden nach Verbindungsabbruch (Aufnahme laeuft weiter), Bildschirm-Wachhalten wird nach Wechsel der App erneuert -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 :root{--bg:#0d1117;--card:#161b22;--line:#30363d;--tx:#e6edf3;--mu:#8b949e;--ok:#4ade80;--ref:#f0b429;--sens:#58a6ff;--bad:#f87171}
@@ -140,7 +142,8 @@ const num=s=>(s===undefined||s==='-'||s==='')?NaN:parseFloat(s);
 const f=(v,d,u)=>isNaN(v)?'-':v.toFixed(d).replace('.',',')+(u?' '+u:'');
 const PROF=['Bo Twins','Meshtastic EU868','LoRaWAN 868,1','LoRaWAN 868,3','LoRaWAN 868,5'];
 const MODE=['nur Hören','Antwort auf Gegenstück','Senden (manuell)','Dauersenden (Feldtest)'];
-let buf='', dev=null, wake=null, rxChar=null, sendOn=false;
+let buf='', dev=null, wake=null, rxChar=null, sendOn=false, wanted=false;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 // ---------- Rechnen ----------
 function dew(T,RH){ if(isNaN(T)||isNaN(RH)||RH<=0) return NaN; const g=Math.log(RH/100)+17.62*T/(243.12+T); return 243.12*g/(17.62-g); }
@@ -195,8 +198,8 @@ function onLine(line){
   if(start.po0===null&&orbitHasData) setStartNow();
   const newPeer=d.peerOk&&d.peerSeq!==lastPeerSeq; if(d.peerOk) lastPeerSeq=d.peerSeq;
   // Spuren
-  if(base&&!isNaN(base.lat)&&(base===own||newPeer)){ pushTrack(trB,now,base.lat,base.lon,base.alt); if(rec) pushTrack(recTrB,now,base.lat,base.lon,base.alt); }
-  if(orbit&&!isNaN(orbit.lat)&&(orbit===own||newPeer)){ pushTrack(trO,now,orbit.lat,orbit.lon,orbit.alt); if(rec) pushTrack(recTrO,now,orbit.lat,orbit.lon,orbit.alt); }
+  if(base&&!isNaN(base.lat)&&(base===own||newPeer)){ pushTrack(trB,now,base.lat,base.lon,base.alt); if(rec) recTrack(recTrB,'B',now,base.lat,base.lon,base.alt); }
+  if(orbit&&!isNaN(orbit.lat)&&(orbit===own||newPeer)){ pushTrack(trO,now,orbit.lat,orbit.lon,orbit.alt); if(rec) recTrack(recTrO,'O',now,orbit.lat,orbit.lon,orbit.alt); }
   // Profilpunkt
   let hb=NaN,hg=NaN;
   if(orbit&&orbitHasData){
@@ -210,12 +213,13 @@ function onLine(line){
     rows.push([new Date(now).toISOString(),own.role,own.T,own.H,own.P,own.Td,own.fix?1:0,own.sats,own.lat,own.lon,own.alt,own.kmh,own.bat,
       d.age,peer.T,peer.H,peer.P,peer.Td,peer.lat,peer.lon,peer.alt,peer.bat,hb,hg,d.rssi,d.snr,d.tx,d.rx,
       isNaN(dist)?'':dist.toFixed(0),''].map(v=>(typeof v==='number'&&isNaN(v))?'':v).join(','));
-    backup(false);
+    idbRow(rows[rows.length-1]); backup(false);
   }
   hist.push({t:now,temp:own.T}); while(hist.length&&now-hist[0].t>20*60e3) hist.shift();
   updStatus(); showLive(d); showMap(d); showProfile(d,hb,hg); drawTest();
 }
-function pushTrack(tr,t,lat,lon,ele){ const l=tr[tr.length-1]; if(l&&l.lat===lat&&l.lon===lon) return; tr.push({t,lat,lon,ele}); }
+function pushTrack(tr,t,lat,lon,ele){ const l=tr[tr.length-1]; if(l&&l.lat===lat&&l.lon===lon) return false; tr.push({t,lat,lon,ele}); return true; }
+function recTrack(tr,key,t,lat,lon,ele){ if(pushTrack(tr,t,lat,lon,ele)) idbAdd({k:key,v:tr[tr.length-1]}); }
 
 // ---------- Live ----------
 function showLive(d){
@@ -337,14 +341,34 @@ function drawProfile(){
 }
 function niceStep(range,n){ const r=range/n,m=Math.pow(10,Math.floor(Math.log10(r))),q=r/m; return (q<1.5?1:q<3.5?2:q<7.5?5:10)*m; }
 $('bStart').onclick=()=>{ $('msg').textContent=setStartNow()?'Start gesetzt, Profil geleert':'Noch keine Orbit-Messung da'; };
-let lastBk=0;
-function backup(force){ const n=Date.now(); if(!force&&n-lastBk<10000) return; lastBk=n; try{localStorage.setItem('botwins_rows',rows.join('\n'))}catch(e){} }
-try{ const b=localStorage.getItem('botwins_rows'); if(b){ b.split('\n').forEach(l=>{if(l)rows.push(l)}); } }catch(e){}
-let restored=rows.length>0;
+// ---------- Sicherung der Aufnahme ----------
+// IndexedDB: jede CSV-Zeile und jeder GPX-Punkt wird sofort gesichert und ist nach Neuladen oder Absturz des Browsers wieder da.
+// Ist IndexedDB nicht nutzbar, sichert die Seite wie bisher alle 10 s die CSV-Zeilen in localStorage.
+let idb=null, lastRowId=null, lastBk=0, restored=false;
+function idbOpen(){return new Promise(res=>{try{
+  const r=indexedDB.open('botwins-feld',1);
+  r.onupgradeneeded=()=>{r.result.createObjectStore('rec',{keyPath:'id',autoIncrement:true})};
+  r.onsuccess=()=>{idb=r.result;res()};r.onerror=()=>res();r.onblocked=()=>res()}catch(e){res()}})}
+function idbAdd(o,cb){if(!idb)return;try{const q=idb.transaction('rec','readwrite').objectStore('rec').add(o);if(cb)q.onsuccess=()=>cb(q.result)}catch(e){}}
+function idbRow(line){idbAdd({k:'r',v:line},id=>{lastRowId=id})}
+function idbSetLastRow(line){if(!idb||lastRowId===null)return;try{idb.transaction('rec','readwrite').objectStore('rec').put({id:lastRowId,k:'r',v:line})}catch(e){}}
+function idbAll(){return new Promise(res=>{if(!idb)return res([]);try{const q=idb.transaction('rec').objectStore('rec').getAll();q.onsuccess=()=>res(q.result);q.onerror=()=>res([])}catch(e){res([])}})}
+function idbClear(){return new Promise(res=>{if(!idb)return res();try{const t=idb.transaction('rec','readwrite');t.objectStore('rec').clear();t.oncomplete=()=>res();t.onerror=()=>res()}catch(e){res()}})}
+function backup(force){ if(idb) return; const n=Date.now(); if(!force&&n-lastBk<10000) return; lastBk=n; try{localStorage.setItem('botwins_rows',rows.join('\n'))}catch(e){} }
+async function restore(){
+  await idbOpen();
+  if(idb){
+    const all=await idbAll();
+    for(const o of all){ if(o.k==='r'){ lastRowId=o.id; rows.push(o.v) } else if(o.k==='B') recTrB.push(o.v); else if(o.k==='O') recTrO.push(o.v) }
+  } else {
+    try{ const b=localStorage.getItem('botwins_rows'); if(b){ b.split('\n').forEach(l=>{if(l)rows.push(l)}); } }catch(e){}
+  }
+  restored=rows.length>0; updStatus();
+}
 $('bStop').onclick=()=>{
   if(!rec){
     if(rows.length&&!confirm('Es gibt noch eine nicht neu gestartete Aufnahme mit '+rows.length+' Werten. Neue Aufnahme starten und die alte verwerfen? Speichere die alte vorher als CSV.')) return;
-    rows.length=0; recTrB.length=0; recTrO.length=0; restored=false; try{localStorage.removeItem('botwins_rows')}catch(e){}
+    rows.length=0; recTrB.length=0; recTrO.length=0; restored=false; lastRowId=null; idbClear(); try{localStorage.removeItem('botwins_rows')}catch(e){}
     rec=true; $('msg').textContent='Aufnahme gestartet';
   } else {
     rec=false; backup(true); $('msg').textContent='Aufnahme gestoppt, '+rows.length+' Werte. Jetzt „CSV speichern“ drücken.';
@@ -355,8 +379,8 @@ function updStatus(){
   const conn=!!(dev&&dev.gatt&&dev.gatt.connected);
   const rn=r=>r==='B'?'Base':'Orbit';
   // 1 Bluetooth
-  $('dBt').className='dot '+(conn?'ok':'bad');
-  $('sBt').textContent=conn?'verbunden mit '+(own?rn(own.role):'Gerät'):'NICHT verbunden';
+  $('dBt').className='dot '+(conn?'ok':(wanted?'wait':'bad'));
+  $('sBt').textContent=conn?'verbunden mit '+(own?rn(own.role):'Gerät'):(wanted?'Verbindung weg, verbinde neu …':'NICHT verbunden');
   // 2 Funk
   let cls='wait',txt='Handy nicht verbunden';
   if(conn&&!lastD){txt='warte auf Daten'}
@@ -418,7 +442,7 @@ $('bRef').onclick=()=>{
   const val=parseFloat($('ref').value.replace(',','.')); if(isNaN(val)){$('msg').textContent='Bitte eine Zahl eintragen';return}
   const last=hist[hist.length-1]; if(!last){$('msg').textContent='Noch keine Messung da';return}
   refs.push({t:Date.now(),val,temp:last.temp});
-  if(rows.length) rows[rows.length-1]=rows[rows.length-1].replace(/,$/,','+val);
+  if(rows.length) {rows[rows.length-1]=rows[rows.length-1].replace(/,$/,','+val); idbSetLastRow(rows[rows.length-1]);}
   updDev();drawTest();$('msg').textContent='';
 };
 $('bSend').onclick=async()=>{
@@ -436,24 +460,48 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
 });
 
 // ---------- Bluetooth ----------
-function setConn(on,name){$('bConn').textContent=on?'Trennen':'Verbinden';updStatus()}
+function setConn(on){$('bConn').textContent=on?'Trennen':(wanted?'Abbrechen':'Verbinden');updStatus()}
+async function attach(){
+  const srv=await dev.gatt.connect();
+  const svc=await srv.getPrimaryService(NUS);
+  const ch=await svc.getCharacteristic(TX);
+  buf='';
+  ch.addEventListener('characteristicvaluechanged',e=>{
+    buf+=new TextDecoder().decode(e.target.value);
+    let i;while((i=buf.indexOf('\n'))>=0){onLine(buf.slice(0,i));buf=buf.slice(i+1)}
+  });
+  await ch.startNotifications();
+  try{rxChar=await svc.getCharacteristic(RX);$('bSend').disabled=false}catch(e){rxChar=null}
+  sendOn=false;$('bSend').textContent='Senden: aus';
+  setConn(true);
+  try{wake=await navigator.wakeLock.request('screen')}catch(e){}
+}
+async function reconnectLoop(){
+  let n=0;
+  while(wanted&&dev&&!dev.gatt.connected){
+    try{await attach();$('msg').textContent='Verbindung wieder da';return}
+    catch(e){n++;await sleep(Math.min(2000+n*1000,8000))}
+  }
+}
 $('bConn').onclick=async()=>{
-  if(dev&&dev.gatt.connected){dev.gatt.disconnect();return}
+  if(dev&&(dev.gatt.connected||wanted)){wanted=false;try{dev.gatt.disconnect()}catch(e){}setConn(false);return}
   if(!navigator.bluetooth){$('msg').textContent='Web Bluetooth fehlt. Bitte Chrome auf Android verwenden.';return}
   try{
     dev=await navigator.bluetooth.requestDevice({filters:[{services:[NUS]},{namePrefix:'BoTwins'}],optionalServices:[NUS]});
-    dev.addEventListener('gattserverdisconnected',()=>{setConn(false);sendOn=false;$('bSend').disabled=true;$('msg').textContent='Bluetooth-Verbindung verloren. Die Aufnahme bleibt erhalten, aber es kommen keine neuen Werte. Erneut verbinden.'});
-    const srv=await dev.gatt.connect();
-    const ch=await (await srv.getPrimaryService(NUS)).getCharacteristic(TX);
-    ch.addEventListener('characteristicvaluechanged',e=>{
-      buf+=new TextDecoder().decode(e.target.value);
-      let i;while((i=buf.indexOf('\n'))>=0){onLine(buf.slice(0,i));buf=buf.slice(i+1)}
+    dev.addEventListener('gattserverdisconnected',()=>{
+      sendOn=false;$('bSend').disabled=true;
+      if(wanted){$('msg').textContent='Bluetooth-Verbindung verloren, die Aufnahme läuft weiter. Verbinde neu …';setConn(false);reconnectLoop()}
+      else{$('msg').textContent='Bluetooth getrennt';setConn(false)}
     });
-    await ch.startNotifications();
-    try{rxChar=await (await srv.getPrimaryService(NUS)).getCharacteristic(RX);$('bSend').disabled=false}catch(e){}
-    setConn(true,dev.name||'Bo Twins');$('msg').textContent='';
-    try{wake=await navigator.wakeLock.request('screen')}catch(e){}
-  }catch(e){$('msg').textContent=e.name==='NotFoundError'?'Kein Gerät gewählt':'Fehler: '+e.message}
+    wanted=true;$('msg').textContent='';
+    await attach();
+  }catch(e){
+    if(e.name==='NotFoundError'){wanted=false;setConn(false);$('msg').textContent='Kein Gerät gewählt'}
+    else if(wanted&&dev){$('msg').textContent='Verbinden dauert, neuer Versuch …';setConn(false);reconnectLoop()}
+    else{wanted=false;setConn(false);$('msg').textContent='Fehler: '+e.message}
+  }
 };
+document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'&&wanted){try{wake=await navigator.wakeLock.request('screen')}catch(e){}}});
 window.feed=onLine;   // zum Testen ohne Gerät
+restore();
 </script></body></html>
